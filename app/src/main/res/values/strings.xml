@@ -32,4 +32,25 @@
     <string name="register_unit_ml">ml</string>
     <string name="register_unit_age">tuổi</string>
     <string name="register_unit_year">năm</string>
+    <string name="home_title">Sống\nvà uống nước!</string>
+    <string name="home_progress_value">34%</string>
+    <string name="home_progress_detail">415ml của 1.2l</string>
+    <string name="home_drinks_title">Đồ uống hôm nay đã được thêm vào</string>
+    <string name="home_edit">Chỉnh sửa</string>
+    <string name="home_add">Thêm</string>
+    <string name="home_smoothie_amount">1.000 ml</string>
+    <string name="home_smoothie">Sinh tố</string>
+    <string name="home_tea_amount">100 ml</string>
+    <string name="home_tea">Trà</string>
+    <string name="home_time">09:58</string>
+    <string name="home_weekly_title">Thống kê trong tuần</string>
+    <string name="home_more">Thêm nữa</string>
+    <string name="home_weekly_avg">Phần trăm trung bình hằng ngày</string>
+    <string name="home_weekly_percent">67%</string>
+    <string name="home_weekly_total">Tổng số trong tuần</string>
+    <string name="home_weekly_total_value">1.490 ml</string>
+    <string name="home_nav_water">Nước của tôi</string>
+    <string name="home_nav_weight">Cân nặng</string>
+    <string name="home_nav_stats">Thống kê</string>
+    <string name="home_nav_settings">Cài đặt</string>
 </resources>

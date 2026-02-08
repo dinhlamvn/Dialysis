@@ -24,6 +24,10 @@
         <activity
             android:name="com.dialysis.app.ui.register.RegisterActivity"
             android:exported="false" />
+
+        <activity
+            android:name="com.dialysis.app.ui.home.HomeActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

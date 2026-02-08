@@ -38,12 +38,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dialysis.app.R
+import com.dialysis.app.router.Router
 import java.time.Year
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -71,6 +74,8 @@ fun RegisterScreen() {
     var age by remember { mutableIntStateOf(32) }
     var dialysisYear by remember { mutableIntStateOf(2022) }
     var urinePerDay by remember { mutableIntStateOf(285) }
+    val context = LocalContext.current
+    val view = LocalView.current
 
     val weightValues = remember { (30..150).toList() }
     val ageValues = remember { (18..80).toList() }
@@ -128,7 +133,14 @@ fun RegisterScreen() {
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
-            onClick = { if (currentStep < TotalSteps - 1) currentStep += 1 },
+            onClick = {
+                if (currentStep < TotalSteps - 1) {
+                    currentStep += 1
+                } else {
+                    context.startActivity(Router.home(context))
+                    (view.context as? android.app.Activity)?.finish()
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
