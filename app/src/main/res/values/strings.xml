@@ -14,4 +14,22 @@
     <string name="intro_button_signup">Đăng ký</string>
     <string name="intro_text_login">Đăng nhập</string>
     <string name="intro_text_skip">Bỏ qua đăng ký</string>
+    <string name="register_title">Chọn giới tính của bạn</string>
+    <string name="register_subtitle">Chúng tôi sẽ tính toán mục tiêu nước hàng ngày riêng cho bạn</string>
+    <string name="register_gender_male">Nam</string>
+    <string name="register_gender_female">Nữ</string>
+    <string name="register_next">Tiếp theo</string>
+    <string name="register_finish">Hoàn tất</string>
+    <string name="register_weight_title">Chọn cân nặng của bạn</string>
+    <string name="register_age_title">Chọn tuổi của bạn</string>
+    <string name="register_name_title">Tên của bạn</string>
+    <string name="register_dialysis_year_title">Chọn Thời gian đã chạy thận nhân tạo (năm)</string>
+    <string name="register_sessions_title">Nhập Số lần chạy thận/tuần</string>
+    <string name="register_urine_title">Chọn Lượng nước tiểu/ngày</string>
+    <string name="register_done_title">Hoàn tất đăng ký</string>
+    <string name="register_done_desc">Thông tin của bạn đã sẵn sàng để bắt đầu.</string>
+    <string name="register_unit_kg">kg</string>
+    <string name="register_unit_ml">ml</string>
+    <string name="register_unit_age">tuổi</string>
+    <string name="register_unit_year">năm</string>
 </resources>

@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dialysis.app.R
+import com.dialysis.app.router.Router
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -101,6 +103,7 @@ fun IntroScreen() {
     val startIndex = 1000
     val pagerState = rememberPagerState(initialPage = startIndex) { pageCount }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val cardWidth = screenWidth * 0.7f
     val horizontalPadding = ((screenWidth - cardWidth) / 2f).coerceAtLeast(0.dp)
@@ -177,12 +180,12 @@ fun IntroScreen() {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Button(
-                onClick = {},
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(56.dp),
+        Button(
+            onClick = { context.startActivity(Router.register(context)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(56.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
             ) {
