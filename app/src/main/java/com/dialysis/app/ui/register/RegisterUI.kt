@@ -20,8 +20,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dialysis.app.R
 import com.dialysis.app.router.Router
+import com.dialysis.app.ui.components.PrimaryButton
 import java.time.Year
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -132,7 +131,12 @@ fun RegisterScreen() {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Button(
+        PrimaryButton(
+            text = if (currentStep == TotalSteps - 1) {
+                stringResource(R.string.register_finish)
+            } else {
+                stringResource(R.string.register_next)
+            },
             onClick = {
                 if (currentStep < TotalSteps - 1) {
                     currentStep += 1
@@ -141,24 +145,8 @@ fun RegisterScreen() {
                     (view.context as? android.app.Activity)?.finish()
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .height(56.dp),
-            shape = RoundedCornerShape(28.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
-        ) {
-            Text(
-                text = if (currentStep == TotalSteps - 1) {
-                    stringResource(R.string.register_finish)
-                } else {
-                    stringResource(R.string.register_next)
-                },
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
     }

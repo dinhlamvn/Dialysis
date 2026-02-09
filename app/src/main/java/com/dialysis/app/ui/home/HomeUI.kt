@@ -1,6 +1,7 @@
 package com.dialysis.app.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,12 +27,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dialysis.app.R
+import com.dialysis.app.router.Router
 
 private val BlueTop = Color(0xFF2D6FDD)
 private val BlueBottom = Color(0xFF1A50C9)
@@ -144,6 +147,7 @@ private fun WaterCircle() {
 
 @Composable
 private fun DrinksSection() {
+    val context = LocalContext.current
     Column(modifier = Modifier.padding(horizontal = 24.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -159,7 +163,10 @@ private fun DrinksSection() {
             Text(
                 text = stringResource(R.string.home_edit),
                 color = AccentBlue,
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                modifier = Modifier.clickable {
+                    context.startActivity(Router.dailyReport(context))
+                }
             )
         }
 

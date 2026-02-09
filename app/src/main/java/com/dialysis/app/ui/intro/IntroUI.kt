@@ -12,17 +12,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -44,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dialysis.app.R
 import com.dialysis.app.router.Router
+import com.dialysis.app.ui.components.PrimaryButton
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -180,22 +179,11 @@ fun IntroScreen() {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-        Button(
+        PrimaryButton(
+            text = stringResource(R.string.intro_button_signup),
             onClick = { context.startActivity(Router.register(context)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
-            ) {
-                Text(
-                    text = stringResource(R.string.intro_button_signup),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
-                )
-            }
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
 
             Spacer(modifier = Modifier.height(14.dp))
 

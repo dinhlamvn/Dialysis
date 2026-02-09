@@ -28,6 +28,18 @@
         <activity
             android:name="com.dialysis.app.ui.home.HomeActivity"
             android:exported="false" />
+
+        <activity
+            android:name="com.dialysis.app.ui.daily.DailyReportActivity"
+            android:exported="false" />
+
+        <activity
+            android:name="com.dialysis.app.ui.drink.list.DrinkListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name="com.dialysis.app.ui.drink.create.CreateDrinkActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
