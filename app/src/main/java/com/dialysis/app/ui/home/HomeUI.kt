@@ -1,6 +1,7 @@
 package com.dialysis.app.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -99,7 +101,7 @@ private fun HeaderCard() {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    WaterCircle()
+                    PersonFigure()
                     Column {
                         Text(
                             text = stringResource(R.string.home_progress_value),
@@ -140,6 +142,85 @@ private fun WaterCircle() {
                     .fillMaxWidth()
                     .height(28.dp)
                     .background(Color.White)
+            )
+        }
+    }
+}
+
+@Composable
+private fun PersonFigure() {
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    Box(
+        modifier = Modifier
+            .width(120.dp)
+            .height(screenHeight * 0.3f),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+
+            val bodyColor = Color(0xFF2C63C8)
+            val legColor = Color.White
+
+            val headRadius = w * 0.15f
+            val headCenter = androidx.compose.ui.geometry.Offset(w * 0.5f, h * 0.24f)
+
+            val torsoTop = h * 0.36f
+            val torsoBottom = h * 0.62f
+            val torsoTopWidth = w * 0.34f
+            val torsoBottomWidth = w * 0.46f
+            val shoulderY = h * 0.40f
+            val armEndY = h * 0.50f
+            val armEndOffsetX = w * 0.10f
+
+            val legWidth = w * 0.16f
+            val legHeight = h * 0.34f
+            val legTop = h * 0.64f
+            val legGap = w * 0.08f
+
+            drawCircle(
+                color = bodyColor,
+                radius = headRadius,
+                center = headCenter
+            )
+
+            val torsoPath = androidx.compose.ui.graphics.Path().apply {
+                moveTo(w * 0.5f - torsoTopWidth / 2f, torsoTop)
+                lineTo(w * 0.5f + torsoTopWidth / 2f, torsoTop)
+                lineTo(w * 0.5f + torsoBottomWidth / 2f, torsoBottom)
+                lineTo(w * 0.5f - torsoBottomWidth / 2f, torsoBottom)
+                close()
+            }
+
+            drawPath(torsoPath, bodyColor)
+
+            drawRoundRect(
+                color = bodyColor,
+                topLeft = androidx.compose.ui.geometry.Offset(w * 0.5f - torsoTopWidth / 2f - armEndOffsetX - w * 0.22f, shoulderY),
+                size = androidx.compose.ui.geometry.Size(w * 0.22f, armEndY - shoulderY),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(40f, 40f)
+            )
+
+            drawRoundRect(
+                color = bodyColor,
+                topLeft = androidx.compose.ui.geometry.Offset(w * 0.5f + torsoTopWidth / 2f + armEndOffsetX, shoulderY),
+                size = androidx.compose.ui.geometry.Size(w * 0.22f, armEndY - shoulderY),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(40f, 40f)
+            )
+
+            drawRoundRect(
+                color = legColor,
+                topLeft = androidx.compose.ui.geometry.Offset(w * 0.5f - legGap - legWidth, legTop),
+                size = androidx.compose.ui.geometry.Size(legWidth, legHeight),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(40f, 40f)
+            )
+
+            drawRoundRect(
+                color = legColor,
+                topLeft = androidx.compose.ui.geometry.Offset(w * 0.5f + legGap, legTop),
+                size = androidx.compose.ui.geometry.Size(legWidth, legHeight),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(40f, 40f)
             )
         }
     }
@@ -382,18 +463,25 @@ private fun WeeklySection() {
 
 @Composable
 private fun BottomNav() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(0.dp),
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 10.dp)
     ) {
-        BottomItem(label = stringResource(R.string.home_nav_water), active = true)
-        BottomItem(label = stringResource(R.string.home_nav_weight), active = false)
-        FloatingAddButton()
-        BottomItem(label = stringResource(R.string.home_nav_stats), active = false)
-        BottomItem(label = stringResource(R.string.home_nav_settings), active = false)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White)
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomItem(label = stringResource(R.string.home_nav_water), active = true)
+            BottomItem(label = stringResource(R.string.home_nav_weight), active = false)
+            FloatingAddButton()
+            BottomItem(label = stringResource(R.string.home_nav_stats), active = false)
+            BottomItem(label = stringResource(R.string.home_nav_settings), active = false)
+        }
     }
 }
 

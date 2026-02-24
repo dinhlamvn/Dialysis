@@ -187,12 +187,13 @@ fun IntroScreen() {
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            Text(
-                text = stringResource(R.string.intro_text_login),
-                color = AccentBlue,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
+        Text(
+            text = stringResource(R.string.intro_text_login),
+            color = AccentBlue,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.clickable { context.startActivity(Router.home(context)) }
+        )
 
             Spacer(modifier = Modifier.height(6.dp))
 
