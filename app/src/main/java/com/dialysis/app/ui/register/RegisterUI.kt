@@ -1,8 +1,11 @@
 package com.dialysis.app.ui.register
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,27 +20,27 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,9 +49,9 @@ import androidx.compose.ui.unit.sp
 import com.dialysis.app.R
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.PrimaryButton
-import java.time.Year
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import java.time.Year
 
 private val PageBackground = Color(0xFFFFFFFF)
 private val TitleColor = Color(0xFF111111)
@@ -101,28 +104,33 @@ fun RegisterScreen() {
                 selectedGender = selectedGender,
                 onGenderSelect = { selectedGender = it }
             )
+
             1 -> WeightStep(
                 weight = weight,
                 values = weightValues,
                 onWeightChange = { weight = it }
             )
+
             2 -> AgeStep(
                 age = age,
                 values = ageValues,
                 onAgeChange = { age = it }
             )
+
             3 -> NameStep(name = name, onNameChange = { name = it })
             4 -> DialysisYearStep(
                 year = dialysisYear,
                 values = dialysisYearValues,
                 onYearChange = { dialysisYear = it }
             )
+
             5 -> SessionsStep(value = sessionsPerWeek, onValueChange = { sessionsPerWeek = it })
             6 -> UrineStep(
                 value = urinePerDay,
                 values = urineValues,
                 onValueChange = { urinePerDay = it }
             )
+
             else -> SummaryStep(
                 title = stringResource(R.string.register_done_title),
                 description = stringResource(R.string.register_done_desc)
@@ -207,7 +215,7 @@ private fun GenderStep(
         GenderCard(
             modifier = Modifier.weight(1f),
             title = stringResource(R.string.register_gender_male),
-            avatarLabel = "M",
+            avatar = R.drawable.ic_male,
             isSelected = selectedGender == Gender.Male,
             accent = AccentBlue,
             onClick = { onGenderSelect(Gender.Male) }
@@ -215,7 +223,7 @@ private fun GenderStep(
         GenderCard(
             modifier = Modifier.weight(1f),
             title = stringResource(R.string.register_gender_female),
-            avatarLabel = "F",
+            avatar = R.drawable.ic_female,
             isSelected = selectedGender == Gender.Female,
             accent = AccentPurple,
             onClick = { onGenderSelect(Gender.Female) }
@@ -362,7 +370,7 @@ private fun YearCircleScrollPicker(
     LaunchedEffect(listState) {
         snapshotFlow { listState.layoutInfo }
             .map { layoutInfo ->
-                val center = (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
+                val center = (screenWidth / 2f).value.toInt()
                 val closest = layoutInfo.visibleItemsInfo.minByOrNull { item ->
                     kotlin.math.abs((item.offset + item.size / 2) - center)
                 }
@@ -463,9 +471,10 @@ private fun ScrollSelector(
     val itemWidth = 72.dp
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val density = LocalDensity.current
-    val horizontalPadding = (screenWidth - itemWidth) / 2f
+    val horizontalPadding = 0.dp
     val listState = rememberLazyListState(
-        initialFirstVisibleItemIndex = values.indexOf(selectedValue).coerceAtLeast(0)
+        initialFirstVisibleItemIndex = values.indexOf(selectedValue).coerceAtLeast(0),
+        initialFirstVisibleItemScrollOffset = 90
     )
     val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
     LaunchedEffect(listState) {
@@ -500,12 +509,12 @@ private fun ScrollSelector(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-    LazyRow(
-        state = listState,
-        flingBehavior = snapFlingBehavior,
-        contentPadding = PaddingValues(horizontal = horizontalPadding),
-        horizontalArrangement = Arrangement.spacedBy(itemSpacing)
-    ) {
+        LazyRow(
+            state = listState,
+            flingBehavior = snapFlingBehavior,
+            contentPadding = PaddingValues(horizontal = horizontalPadding),
+            horizontalArrangement = Arrangement.spacedBy(itemSpacing)
+        ) {
             items(values.size) { index ->
                 val value = values[index]
                 val isSelected = value == selectedValue
@@ -563,7 +572,7 @@ private fun CirclePicker(values: List<String>, selectedIndex: Int) {
 private fun GenderCard(
     modifier: Modifier,
     title: String,
-    avatarLabel: String,
+    @DrawableRes avatar: Int,
     isSelected: Boolean,
     accent: Color,
     onClick: () -> Unit
@@ -590,11 +599,10 @@ private fun GenderCard(
                 .background(avatarColor),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = avatarLabel,
-                color = if (isSelected) Color.White else accent,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
+            Image(
+                painter = painterResource(avatar),
+                modifier = Modifier.fillMaxSize(),
+                contentDescription = "avatar"
             )
         }
 
