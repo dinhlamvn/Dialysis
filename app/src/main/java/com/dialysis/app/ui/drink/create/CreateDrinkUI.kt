@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,12 +30,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.dialysis.app.R
 import com.dialysis.app.ui.components.PrimaryButton
+import com.dialysis.app.ui.components.TextStyles
 
 private val PageBackground = Color(0xFFFFFFFF)
 private val AccentBlue = Color(0xFF1877F2)
@@ -79,8 +77,7 @@ fun CreateDrinkScreen() {
         Text(
             text = stringResource(R.string.create_drink_title),
             color = TextDark,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = TextStyles.titleMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -90,8 +87,7 @@ fun CreateDrinkScreen() {
         Text(
             text = stringResource(R.string.create_drink_amount),
             color = AccentBlue,
-            fontSize = 34.sp,
-            fontWeight = FontWeight.Bold,
+            style = TextStyles.titleMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -101,7 +97,7 @@ fun CreateDrinkScreen() {
         Text(
             text = stringResource(R.string.create_drink_subtitle),
             color = TextMuted,
-            fontSize = 16.sp,
+            style = TextStyles.body,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -132,7 +128,7 @@ fun CreateDrinkScreen() {
             Text(
                 text = stringResource(R.string.create_drink_time),
                 color = TextMuted,
-                fontSize = 20.sp
+                style = TextStyles.titleMedium
             )
             Spacer(modifier = Modifier.width(10.dp))
             BoxPencil()
@@ -159,7 +155,7 @@ private fun TopBar() {
         Text(
             text = "<",
             color = TextDark,
-            fontSize = 22.sp
+            style = TextStyles.titleMedium
         )
     }
 }
@@ -189,8 +185,7 @@ private fun VolumeCard(option: DrinkOption, selected: Boolean, onClick: () -> Un
             Text(
                 text = option.value,
                 color = textColor,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = TextStyles.titleMedium,
                 textAlign = TextAlign.Center
             )
             if (!option.label.isNullOrBlank()) {
@@ -198,7 +193,7 @@ private fun VolumeCard(option: DrinkOption, selected: Boolean, onClick: () -> Un
                 Text(
                     text = option.label,
                     color = TextMuted,
-                    fontSize = 12.sp,
+                    style = TextStyles.caption,
                     textAlign = TextAlign.Center
                 )
             }
@@ -215,7 +210,7 @@ private fun BoxPencil() {
             .background(Color(0xFFE6E6EB)),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = "✎", fontSize = 10.sp, color = TextMuted)
+        Text(text = "✎", style = TextStyles.caption, color = TextMuted)
     }
 }
 

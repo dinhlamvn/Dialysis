@@ -35,7 +35,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -43,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.dialysis.app.R
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.PrimaryButton
+import com.dialysis.app.ui.components.TextStyles
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -118,8 +118,7 @@ fun IntroScreen() {
         Text(
             text = stringResource(R.string.intro_title),
             color = TitleColor,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = TextStyles.titleMedium,
             textAlign = TextAlign.Center,
             lineHeight = 28.sp
         )
@@ -190,8 +189,7 @@ fun IntroScreen() {
         Text(
             text = stringResource(R.string.intro_text_login),
             color = AccentBlue,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
+            style = TextStyles.bodyMedium,
             modifier = Modifier.clickable { context.startActivity(Router.home(context)) }
         )
 
@@ -200,7 +198,7 @@ fun IntroScreen() {
             Text(
                 text = stringResource(R.string.intro_text_skip),
                 color = BodyGray,
-                fontSize = 14.sp
+                style = TextStyles.body
             )
         }
     }
@@ -252,8 +250,7 @@ private fun IntroCard(
             Text(
                 text = data.title,
                 color = data.accent,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = TextStyles.titleMedium,
                 textAlign = TextAlign.Center
             )
 
@@ -262,7 +259,7 @@ private fun IntroCard(
             Text(
                 text = data.description,
                 color = BodyGray,
-                fontSize = 14.sp,
+                style = TextStyles.body,
                 textAlign = TextAlign.Center,
                 lineHeight = 18.sp
             )

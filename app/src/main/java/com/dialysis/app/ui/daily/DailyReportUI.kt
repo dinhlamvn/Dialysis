@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,13 +23,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.dialysis.app.R
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.PrimaryButton
+import com.dialysis.app.ui.components.TextStyles
 
 private val PageBackground = Color(0xFFFFFFFF)
 private val AccentBlue = Color(0xFF1877F2)
@@ -99,15 +97,14 @@ private fun TopBar() {
             Text(
                 text = "<",
                 color = TextDark,
-                fontSize = 20.sp
+                style = TextStyles.titleMedium
             )
         }
 
         Text(
             text = stringResource(R.string.daily_date),
             color = TextDark,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = TextStyles.titleMedium,
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center
         )
@@ -143,8 +140,7 @@ private fun ProgressBar(progress: Float) {
         Text(
             text = stringResource(R.string.daily_progress),
             color = TextDark,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold
+            style = TextStyles.titleMedium
         )
     }
 }
@@ -187,21 +183,20 @@ private fun DrinkItem(title: String, subtitle: String, time: String) {
                 Text(
                     text = title,
                     color = TextDark,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
+                    style = TextStyles.titleMedium
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = subtitle,
                     color = TextMuted,
-                    fontSize = 13.sp
+                    style = TextStyles.body
                 )
             }
 
             Text(
                 text = time,
                 color = TextMuted,
-                fontSize = 14.sp
+                style = TextStyles.body
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -213,10 +208,10 @@ private fun DrinkItem(title: String, subtitle: String, time: String) {
                     .background(Color(0xFFFFF4E3)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "🗑",
-                    fontSize = 14.sp
-                )
+            Text(
+                text = "🗑",
+                style = TextStyles.body
+            )
             }
         }
     }

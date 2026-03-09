@@ -9,9 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 
 private val AccentBlue = Color(0xFF1877F2)
@@ -33,8 +31,7 @@ fun PrimaryButton(
     ) {
         Text(
             text = text,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = TextStyles.titleMedium,
             color = Color.White
         )
     }

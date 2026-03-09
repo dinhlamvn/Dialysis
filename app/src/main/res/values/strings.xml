@@ -14,6 +14,14 @@
     <string name="intro_button_signup">Đăng ký</string>
     <string name="intro_text_login">Đăng nhập</string>
     <string name="intro_text_skip">Bỏ qua đăng ký</string>
+    <string name="register_auth_title">Đăng ký tài khoản</string>
+    <string name="register_field_email_or_phone">Email / Số điện thoại</string>
+    <string name="register_field_password">Mật khẩu</string>
+    <string name="register_field_confirm_password">Xác nhận mật khẩu</string>
+    <string name="register_create_account">Đăng ký</string>
+    <string name="otp_verify_title">Xác minh OTP</string>
+    <string name="otp_verify_field_code">Nhập mã OTP (6 số)</string>
+    <string name="otp_verify_confirm">Xác Nhận</string>
     <string name="register_title">Chọn giới tính của bạn</string>
     <string name="register_subtitle">Chúng tôi sẽ tính toán mục tiêu nước hàng ngày riêng cho bạn</string>
     <string name="register_gender_male">Nam</string>

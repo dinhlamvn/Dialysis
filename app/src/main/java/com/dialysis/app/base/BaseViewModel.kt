@@ -1,8 +1,13 @@
 package com.dialysis.app.base
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlin.reflect.KProperty1
 
 abstract class BaseViewModel<S : BaseState>(
@@ -16,13 +21,13 @@ abstract class BaseViewModel<S : BaseState>(
 
     fun <T> flowOf(mapper: (S) -> T) = stateManager.state.map(mapper)
 
-    fun <A> flowOf(
+    protected fun <A> flowOf(
         property: KProperty1<S, A>
     ) = stateManager.state.map { state ->
         property.get(state)
     }.distinctUntilChanged()
 
-    fun <A, B> flowOf(
+    protected fun <A, B> flowOf(
         property1: KProperty1<S, A>,
         property2: KProperty1<S, B>
     ) = stateManager.state.map { state ->
@@ -32,7 +37,7 @@ abstract class BaseViewModel<S : BaseState>(
         )
     }.distinctUntilChanged()
 
-    fun <A, B, C> flowOf(
+    protected fun <A, B, C> flowOf(
         property1: KProperty1<S, A>,
         property2: KProperty1<S, B>,
         property3: KProperty1<S, C>
@@ -44,7 +49,7 @@ abstract class BaseViewModel<S : BaseState>(
         )
     }.distinctUntilChanged()
 
-    fun <A, B, C, D> flowOf(
+    protected fun <A, B, C, D> flowOf(
         property1: KProperty1<S, A>,
         property2: KProperty1<S, B>,
         property3: KProperty1<S, C>,
@@ -58,7 +63,7 @@ abstract class BaseViewModel<S : BaseState>(
         )
     }.distinctUntilChanged()
 
-    fun <A, B, C, D, E> flowOf(
+    protected fun <A, B, C, D, E> flowOf(
         property1: KProperty1<S, A>,
         property2: KProperty1<S, B>,
         property3: KProperty1<S, C>,
@@ -74,7 +79,7 @@ abstract class BaseViewModel<S : BaseState>(
         )
     }.distinctUntilChanged()
 
-    fun <A, B, C, D, E, F> flowOf(
+    protected fun <A, B, C, D, E, F> flowOf(
         property1: KProperty1<S, A>,
         property2: KProperty1<S, B>,
         property3: KProperty1<S, C>,
@@ -92,7 +97,7 @@ abstract class BaseViewModel<S : BaseState>(
         )
     }.distinctUntilChanged()
 
-    fun <A, B, C, D, E, F, G> flowOf(
+    protected fun <A, B, C, D, E, F, G> flowOf(
         property1: KProperty1<S, A>,
         property2: KProperty1<S, B>,
         property3: KProperty1<S, C>,
@@ -111,4 +116,9 @@ abstract class BaseViewModel<S : BaseState>(
             property7.get(state),
         )
     }.distinctUntilChanged()
+
+    protected fun <T> Flow<T>.collectStateUI(initValue: T): StateFlow<T> = this.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(3_000), initValue
+    )
 }

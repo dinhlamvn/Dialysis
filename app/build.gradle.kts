@@ -34,6 +34,18 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    flavorDimensions("default")
+    productFlavors {
+        create("dev") {
+            buildConfigField("String", "SERVER_URL", "\"https://dialysis-intake.io.vn/\"")
+        }
+
+        create("prod") {
+            buildConfigField("String", "SERVER_URL", "\"https://dialysis-intake.io.vn/\"")
+        }
     }
 }
 
@@ -50,4 +62,8 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.11.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
     implementation("androidx.compose.ui:ui-tooling-preview")
+
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter)
+    implementation(libs.http.logging)
 }

@@ -22,7 +22,15 @@
         </activity>
 
         <activity
+            android:name="com.dialysis.app.ui.info.InfoActivity"
+            android:exported="false" />
+
+        <activity
             android:name="com.dialysis.app.ui.register.RegisterActivity"
+            android:exported="false" />
+
+        <activity
+            android:name="com.dialysis.app.ui.otpverify.OtpVerifyActivity"
             android:exported="false" />
 
         <activity

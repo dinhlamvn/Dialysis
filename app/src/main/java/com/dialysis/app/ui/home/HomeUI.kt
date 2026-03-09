@@ -26,17 +26,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.dialysis.app.R
 import com.dialysis.app.router.Router
+import com.dialysis.app.ui.components.TextStyles
 
 private val BlueTop = Color(0xFF2D6FDD)
 private val BlueBottom = Color(0xFF1A50C9)
@@ -90,8 +93,7 @@ private fun HeaderCard() {
                 Text(
                     text = stringResource(R.string.home_title),
                     color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = TextStyles.titleMedium,
                     textAlign = TextAlign.Center
                 )
 
@@ -101,18 +103,17 @@ private fun HeaderCard() {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    PersonFigure()
+                    WaterCircle()
                     Column {
                         Text(
                             text = stringResource(R.string.home_progress_value),
                             color = Color.White,
-                            fontSize = 36.sp,
-                            fontWeight = FontWeight.Bold
+                            style = TextStyles.titleMedium
                         )
                         Text(
                             text = stringResource(R.string.home_progress_detail),
                             color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 16.sp
+                            style = TextStyles.body
                         )
                     }
                 }
@@ -160,67 +161,83 @@ private fun PersonFigure() {
             val w = size.width
             val h = size.height
 
-            val bodyColor = Color(0xFF2C63C8)
+            val bodyColor = Color(0xFF2F6BDB)
+            val headColor = Color(0xFF4D84EC)
             val legColor = Color.White
 
-            val headRadius = w * 0.15f
-            val headCenter = androidx.compose.ui.geometry.Offset(w * 0.5f, h * 0.24f)
-
-            val torsoTop = h * 0.36f
-            val torsoBottom = h * 0.62f
-            val torsoTopWidth = w * 0.34f
-            val torsoBottomWidth = w * 0.46f
-            val shoulderY = h * 0.40f
-            val armEndY = h * 0.50f
-            val armEndOffsetX = w * 0.10f
-
-            val legWidth = w * 0.16f
-            val legHeight = h * 0.34f
-            val legTop = h * 0.64f
-            val legGap = w * 0.08f
-
+            // Head
             drawCircle(
-                color = bodyColor,
-                radius = headRadius,
-                center = headCenter
+                color = headColor,
+                radius = w * 0.095f,
+                center = Offset(w * 0.5f, h * 0.14f)
             )
 
-            val torsoPath = androidx.compose.ui.graphics.Path().apply {
-                moveTo(w * 0.5f - torsoTopWidth / 2f, torsoTop)
-                lineTo(w * 0.5f + torsoTopWidth / 2f, torsoTop)
-                lineTo(w * 0.5f + torsoBottomWidth / 2f, torsoBottom)
-                lineTo(w * 0.5f - torsoBottomWidth / 2f, torsoBottom)
+            // Arms
+            drawLine(
+                color = bodyColor,
+                start = Offset(w * 0.20f, h * 0.33f),
+                end = Offset(w * 0.39f, h * 0.24f),
+                strokeWidth = w * 0.10f,
+                cap = StrokeCap.Round
+            )
+            drawLine(
+                color = bodyColor,
+                start = Offset(w * 0.61f, h * 0.24f),
+                end = Offset(w * 0.80f, h * 0.33f),
+                strokeWidth = w * 0.10f,
+                cap = StrokeCap.Round
+            )
+
+            // Body
+            val bodyPath = Path().apply {
+                moveTo(w * 0.36f, h * 0.24f)
+                lineTo(w * 0.64f, h * 0.24f)
+                lineTo(w * 0.64f, h * 0.68f)
+                lineTo(w * 0.36f, h * 0.68f)
                 close()
             }
-
-            drawPath(torsoPath, bodyColor)
-
-            drawRoundRect(
+            drawPath(
+                path = bodyPath,
                 color = bodyColor,
-                topLeft = androidx.compose.ui.geometry.Offset(w * 0.5f - torsoTopWidth / 2f - armEndOffsetX - w * 0.22f, shoulderY),
-                size = androidx.compose.ui.geometry.Size(w * 0.22f, armEndY - shoulderY),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(40f, 40f)
+                style = Fill
             )
 
-            drawRoundRect(
+            drawLine(
                 color = bodyColor,
-                topLeft = androidx.compose.ui.geometry.Offset(w * 0.5f + torsoTopWidth / 2f + armEndOffsetX, shoulderY),
-                size = androidx.compose.ui.geometry.Size(w * 0.22f, armEndY - shoulderY),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(40f, 40f)
+                start = Offset(w * 0.36f, h * 0.28f),
+                end = Offset(w * 0.36f, h * 0.64f),
+                strokeWidth = w * 0.12f,
+                cap = StrokeCap.Round
+            )
+            drawLine(
+                color = bodyColor,
+                start = Offset(w * 0.64f, h * 0.28f),
+                end = Offset(w * 0.64f, h * 0.64f),
+                strokeWidth = w * 0.12f,
+                cap = StrokeCap.Round
+            )
+            drawLine(
+                color = bodyColor,
+                start = Offset(w * 0.42f, h * 0.24f),
+                end = Offset(w * 0.58f, h * 0.24f),
+                strokeWidth = w * 0.12f,
+                cap = StrokeCap.Round
             )
 
-            drawRoundRect(
+            // Fixed legs
+            drawLine(
                 color = legColor,
-                topLeft = androidx.compose.ui.geometry.Offset(w * 0.5f - legGap - legWidth, legTop),
-                size = androidx.compose.ui.geometry.Size(legWidth, legHeight),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(40f, 40f)
+                start = Offset(w * 0.46f, h * 0.70f),
+                end = Offset(w * 0.33f, h * 0.96f),
+                strokeWidth = w * 0.11f,
+                cap = StrokeCap.Round
             )
-
-            drawRoundRect(
+            drawLine(
                 color = legColor,
-                topLeft = androidx.compose.ui.geometry.Offset(w * 0.5f + legGap, legTop),
-                size = androidx.compose.ui.geometry.Size(legWidth, legHeight),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(40f, 40f)
+                start = Offset(w * 0.54f, h * 0.70f),
+                end = Offset(w * 0.67f, h * 0.96f),
+                strokeWidth = w * 0.11f,
+                cap = StrokeCap.Round
             )
         }
     }
@@ -238,13 +255,12 @@ private fun DrinksSection() {
             Text(
                 text = stringResource(R.string.home_drinks_title),
                 color = TextDark,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
+                style = TextStyles.titleMedium
             )
             Text(
                 text = stringResource(R.string.home_edit),
                 color = AccentBlue,
-                fontSize = 14.sp,
+                style = TextStyles.bodyMedium,
                 modifier = Modifier.clickable {
                     context.startActivity(Router.dailyReport(context))
                 }
@@ -297,14 +313,14 @@ private fun SmallDrinkCard(title: String, subtitle: String) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = title,
-                    fontSize = 28.sp,
-                    color = AccentBlue
+                    color = AccentBlue,
+                    style = TextStyles.titleMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = subtitle,
-                    fontSize = 12.sp,
-                    color = TextMuted
+                    color = TextMuted,
+                    style = TextStyles.caption
                 )
             }
         }
@@ -336,19 +352,18 @@ private fun DrinkCard(amount: String, name: String, time: String) {
             Text(
                 text = amount,
                 color = AccentBlue,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold
+                style = TextStyles.bodyMedium
             )
             Text(
                 text = name,
                 color = TextDark,
-                fontSize = 12.sp
+                style = TextStyles.body
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = time,
                 color = TextMuted,
-                fontSize = 11.sp
+                style = TextStyles.caption
             )
         }
     }
@@ -365,13 +380,12 @@ private fun WeeklySection() {
             Text(
                 text = stringResource(R.string.home_weekly_title),
                 color = TextDark,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
+                style = TextStyles.titleMedium
             )
             Text(
                 text = stringResource(R.string.home_more),
                 color = AccentBlue,
-                fontSize = 14.sp
+                style = TextStyles.bodyMedium
             )
         }
 
@@ -409,14 +423,14 @@ private fun WeeklySection() {
                                     Text(
                                         text = day,
                                         color = Color.White,
-                                        fontSize = 10.sp
+                                        style = TextStyles.caption
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = "0 ml",
                                     color = Color.White.copy(alpha = 0.8f),
-                                    fontSize = 10.sp
+                                    style = TextStyles.caption
                                 )
                             }
                         }
@@ -432,26 +446,24 @@ private fun WeeklySection() {
                             Text(
                                 text = stringResource(R.string.home_weekly_avg),
                                 color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 12.sp
+                                style = TextStyles.body
                             )
                             Text(
                                 text = stringResource(R.string.home_weekly_percent),
                                 color = Color.White,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold
+                                style = TextStyles.titleMedium
                             )
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
                                 text = stringResource(R.string.home_weekly_total),
                                 color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 12.sp
+                                style = TextStyles.body
                             )
                             Text(
                                 text = stringResource(R.string.home_weekly_total_value),
                                 color = Color.White,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold
+                                style = TextStyles.titleMedium
                             )
                         }
                     }
@@ -498,7 +510,7 @@ private fun BottomItem(label: String, active: Boolean) {
         Text(
             text = label,
             color = if (active) AccentBlue else TextMuted,
-            fontSize = 11.sp
+            style = TextStyles.caption
         )
     }
 }
@@ -515,7 +527,7 @@ private fun FloatingAddButton() {
         Text(
             text = "+",
             color = Color.White,
-            fontSize = 24.sp
+            style = TextStyles.titleMedium
         )
     }
 }

@@ -27,12 +27,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.dialysis.app.R
 import com.dialysis.app.router.Router
+import com.dialysis.app.ui.components.TextStyles
 
 private val PageBackground = Color(0xFFFFFFFF)
 private val CardBackground = Color(0xFFE9E9EE)
@@ -55,8 +54,7 @@ fun DrinkListScreen() {
         Text(
             text = stringResource(R.string.drink_list_title),
             color = TextDark,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = TextStyles.titleMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -109,7 +107,7 @@ private fun TopBar() {
         ) {
             Text(
                 text = "⚙",
-                fontSize = 16.sp
+                style = TextStyles.body
             )
         }
     }
@@ -150,7 +148,7 @@ private fun DrinkCard(item: DrinkItemData) {
             Text(
                 text = item.title,
                 color = TextDark,
-                fontSize = 13.sp,
+                style = TextStyles.body,
                 textAlign = TextAlign.Center
             )
         }
