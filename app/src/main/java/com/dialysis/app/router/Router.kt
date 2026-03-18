@@ -7,12 +7,14 @@ import com.dialysis.app.ui.drink.create.CreateDrinkActivity
 import com.dialysis.app.ui.drink.list.DrinkListActivity
 import com.dialysis.app.ui.home.HomeActivity
 import com.dialysis.app.ui.info.InfoActivity
+import com.dialysis.app.ui.login.LoginActivity
 import com.dialysis.app.ui.otpverify.OtpVerifyActivity
 import com.dialysis.app.ui.register.RegisterActivity
 
 object Router {
     const val EXTRA_OTP_IDENTIFIER_TYPE = "extra_otp_identifier_type"
     const val EXTRA_OTP_IDENTIFIER = "extra_otp_identifier"
+    const val EXTRA_DRINK_NAME = "extra_drink_name"
 
     fun register(context: Context): Intent {
         return Intent(context, RegisterActivity::class.java)
@@ -26,6 +28,10 @@ object Router {
         return Intent(context, HomeActivity::class.java)
     }
 
+    fun login(context: Context): Intent {
+        return Intent(context, LoginActivity::class.java)
+    }
+
     fun dailyReport(context: Context): Intent {
         return Intent(context, DailyReportActivity::class.java)
     }
@@ -36,6 +42,12 @@ object Router {
 
     fun createDrink(context: Context): Intent {
         return Intent(context, CreateDrinkActivity::class.java)
+    }
+
+    fun createDrink(context: Context, drinkName: String): Intent {
+        return Intent(context, CreateDrinkActivity::class.java).apply {
+            putExtra(EXTRA_DRINK_NAME, drinkName)
+        }
     }
 
     fun otpVerify(context: Context): Intent {

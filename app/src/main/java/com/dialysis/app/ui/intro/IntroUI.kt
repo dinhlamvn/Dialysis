@@ -190,7 +190,7 @@ fun IntroScreen() {
             text = stringResource(R.string.intro_text_login),
             color = AccentBlue,
             style = TextStyles.bodyMedium,
-            modifier = Modifier.clickable { context.startActivity(Router.home(context)) }
+            modifier = Modifier.clickable { context.startActivity(Router.login(context)) }
         )
 
             Spacer(modifier = Modifier.height(6.dp))

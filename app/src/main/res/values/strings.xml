@@ -88,6 +88,9 @@
     <string name="create_drink_time">9:58 SA</string>
     <string name="create_drink_add">Thêm</string>
     <string name="create_drink_custom">thể tích tùy chọn</string>
+    <string name="create_drink_custom_input_title">Nhập thể tích tùy chọn</string>
+    <string name="create_drink_custom_input_label">Số ml</string>
+    <string name="common_cancel">Hủy</string>
     <string name="drink_unit_espresso">espresso</string>
     <string name="drink_unit_glass">glass</string>
     <string name="drink_unit_cup">cup</string>

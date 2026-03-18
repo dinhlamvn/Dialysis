@@ -1,21 +1,11 @@
 package com.dialysis.app.data.network.services
 
-import com.dialysis.app.data.network.request.RegisterRequest
-import com.dialysis.app.data.network.request.VerifyOtpRequest
 import com.dialysis.app.data.network.response.ApiResponse
-import com.dialysis.app.data.network.response.RegisterResponse
-import retrofit2.http.Body
-import retrofit2.http.POST
+import com.dialysis.app.data.network.response.LoginUser
+import retrofit2.http.GET
 
 interface AppServices {
 
-    @POST("mobile/auth/register")
-    suspend fun register(
-        @Body request: RegisterRequest
-    ): ApiResponse<RegisterResponse>
-
-    @POST("mobile/auth/verify-otp")
-    suspend fun verifyOtp(
-        @Body request: VerifyOtpRequest
-    ): ApiResponse<Any>
+    @GET("mobile/auth/me")
+    suspend fun me(): ApiResponse<LoginUser>
 }

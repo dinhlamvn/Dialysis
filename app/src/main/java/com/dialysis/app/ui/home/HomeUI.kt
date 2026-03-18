@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,8 +22,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,9 +42,13 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dialysis.app.R
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.TextStyles
+import com.dialysis.app.ui.drink.create.CreateDrinkScreen
+import com.dialysis.app.ui.drink.list.DrinkListScreen
 
 private val BlueTop = Color(0xFF2D6FDD)
 private val BlueBottom = Color(0xFF1A50C9)
@@ -49,8 +58,15 @@ private val TextDark = Color(0xFF111111)
 private val TextMuted = Color(0xFF8E8E93)
 private val AccentBlue = Color(0xFF1877F2)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
+    val drinks by viewModel.drinksState.collectAsStateWithLifecycle()
+    val showDrinkListSheet by viewModel.showDrinkListSheetState.collectAsStateWithLifecycle()
+    val selectedDrinkName by viewModel.selectedDrinkNameState.collectAsStateWithLifecycle()
+    val drinkListSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val createDrinkSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -60,15 +76,57 @@ fun HomeScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        DrinksSection()
+        DrinksSection(
+            drinks = drinks,
+            onAddDrinkClick = viewModel::openDrinkListSheet
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        WeeklySection()
+        WeeklySection(
+            onMoreClick = viewModel::openDrinkListSheet
+        )
 
         Spacer(modifier = Modifier.weight(1f))
 
         BottomNav()
+    }
+
+    if (showDrinkListSheet) {
+        ModalBottomSheet(
+            sheetState = drinkListSheetState,
+            onDismissRequest = viewModel::closeDrinkListSheet
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.8f)
+            ) {
+                DrinkListScreen(
+                    onDrinkClick = viewModel::onDrinkSelected
+                )
+            }
+        }
+    }
+
+    selectedDrinkName?.let { drinkName ->
+        ModalBottomSheet(
+            sheetState = createDrinkSheetState,
+            onDismissRequest = viewModel::dismissCreateDrinkSheet
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.8f)
+            ) {
+                CreateDrinkScreen(
+                    drinkName = drinkName,
+                    onAddDrink = { name, amount, time ->
+                        viewModel.addDrink(name = name, amount = amount, time = time)
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -244,7 +302,10 @@ private fun PersonFigure() {
 }
 
 @Composable
-private fun DrinksSection() {
+private fun DrinksSection(
+    drinks: List<HomeDrinkItemState>,
+    onAddDrinkClick: () -> Unit
+) {
     val context = LocalContext.current
     Column(modifier = Modifier.padding(horizontal = 24.dp)) {
         Row(
@@ -276,33 +337,34 @@ private fun DrinksSection() {
             item {
                 SmallDrinkCard(
                     title = "+",
-                    subtitle = stringResource(R.string.home_add)
+                    subtitle = stringResource(R.string.home_add),
+                    onClick = onAddDrinkClick
                 )
             }
-            item {
-                DrinkCard(
-                    amount = stringResource(R.string.home_smoothie_amount),
-                    name = stringResource(R.string.home_smoothie),
-                    time = stringResource(R.string.home_time)
-                )
-            }
-            item {
-                DrinkCard(
-                    amount = stringResource(R.string.home_tea_amount),
-                    name = stringResource(R.string.home_tea),
-                    time = stringResource(R.string.home_time)
-                )
+            drinks.forEach { drink ->
+                item {
+                    DrinkCard(
+                        amount = drink.amount,
+                        name = drink.name,
+                        time = drink.time
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun SmallDrinkCard(title: String, subtitle: String) {
+private fun SmallDrinkCard(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .size(width = 110.dp, height = 130.dp),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
+        onClick = onClick
     ) {
         Box(
             modifier = Modifier
@@ -370,7 +432,9 @@ private fun DrinkCard(amount: String, name: String, time: String) {
 }
 
 @Composable
-private fun WeeklySection() {
+private fun WeeklySection(
+    onMoreClick: () -> Unit
+) {
     Column(modifier = Modifier.padding(horizontal = 24.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -385,7 +449,8 @@ private fun WeeklySection() {
             Text(
                 text = stringResource(R.string.home_more),
                 color = AccentBlue,
-                style = TextStyles.bodyMedium
+                style = TextStyles.bodyMedium,
+                modifier = Modifier.clickable { onMoreClick() }
             )
         }
 

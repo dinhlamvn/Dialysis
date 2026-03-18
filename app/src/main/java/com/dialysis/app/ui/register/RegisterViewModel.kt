@@ -49,7 +49,7 @@ class RegisterViewModel : BaseViewModel<RegisterState>(RegisterState()) {
                 )
 
                 val result = NetworkManager.resolve {
-                    NetworkManager.appServices.register(request)
+                    NetworkManager.appPublicServices.register(request)
                 }
                 if (result.isSuccess) {
                     setState {

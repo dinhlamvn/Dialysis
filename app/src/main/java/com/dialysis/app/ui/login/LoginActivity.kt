@@ -1,4 +1,4 @@
-package com.dialysis.app.ui.otpverify
+package com.dialysis.app.ui.login
 
 import android.os.Bundle
 import androidx.compose.runtime.Composable
@@ -10,28 +10,24 @@ import com.dialysis.app.router.Router
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class OtpVerifyActivity : BaseActivity() {
-    private val viewModel: OtpVerifyViewModel by viewModel()
+class LoginActivity : BaseActivity() {
+    private val viewModel: LoginViewModel by viewModel()
 
     @Composable
     override fun ContentView() {
-        OtpVerifyScreen(viewModel = viewModel)
+        LoginScreen(viewModel = viewModel)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val identifierType = intent?.getStringExtra(Router.EXTRA_OTP_IDENTIFIER_TYPE).orEmpty()
-        val identifier = intent?.getStringExtra(Router.EXTRA_OTP_IDENTIFIER).orEmpty()
-        viewModel.setIdentifierData(identifierType = identifierType, identifier = identifier)
-
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.flowOf(OtpVerifyState::isVerifySuccess)
-                        .collect { isVerifySuccess ->
-                            if (isVerifySuccess) {
-                                startActivity(Router.home(this@OtpVerifyActivity))
+                    viewModel.flowOf(LoginState::isLoginSuccess)
+                        .collect { isLoginSuccess ->
+                            if (isLoginSuccess) {
+                                startActivity(Router.home(this@LoginActivity))
                                 finish()
                             }
                         }

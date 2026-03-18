@@ -5,18 +5,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
@@ -25,12 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dialysis.app.R
-import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.TextStyles
 
 private val PageBackground = Color(0xFFFFFFFF)
@@ -39,45 +34,39 @@ private val TextDark = Color(0xFF111111)
 private val IconGray = Color(0xFFB9BCC4)
 
 @Composable
-fun DrinkListScreen() {
-    val context = LocalContext.current
+fun DrinkListScreen(
+    onDrinkClick: (String) -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(PageBackground)
             .padding(horizontal = 24.dp, vertical = 20.dp)
     ) {
-        TopBar()
+        HeaderBar()
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Text(
-            text = stringResource(R.string.drink_list_title),
-            color = TextDark,
-            style = TextStyles.titleMedium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+        val drinkNames = listOf(
+            stringResource(R.string.drink_water),
+            stringResource(R.string.drink_coffee),
+            stringResource(R.string.drink_tea),
+            stringResource(R.string.drink_soda),
+            stringResource(R.string.drink_fruit_water),
+            stringResource(R.string.drink_milk),
+            stringResource(R.string.drink_yogurt),
+            stringResource(R.string.drink_smoothie),
+            stringResource(R.string.drink_beer),
+            stringResource(R.string.drink_coconut),
+            stringResource(R.string.drink_soup),
+            stringResource(R.string.drink_other),
         )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        val items = listOf(
-            DrinkItemData(stringResource(R.string.drink_water)),
-            DrinkItemData(stringResource(R.string.drink_coffee)),
-            DrinkItemData(stringResource(R.string.drink_tea)),
-            DrinkItemData(stringResource(R.string.drink_soda)),
-            DrinkItemData(stringResource(R.string.drink_fruit_water)),
-            DrinkItemData(stringResource(R.string.drink_milk)),
-            DrinkItemData(stringResource(R.string.drink_yogurt)),
-            DrinkItemData(stringResource(R.string.drink_smoothie)),
-            DrinkItemData(stringResource(R.string.drink_beer)),
-            DrinkItemData(stringResource(R.string.drink_coconut)),
-            DrinkItemData(stringResource(R.string.drink_soup)),
+        val items = drinkNames.map { name ->
             DrinkItemData(
-                stringResource(R.string.drink_other),
-                onClick = { context.startActivity(Router.createDrink(context)) }
+                title = name,
+                onClick = { onDrinkClick(name) }
             )
-        )
+        }
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
@@ -93,23 +82,17 @@ fun DrinkListScreen() {
 }
 
 @Composable
-private fun TopBar() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
+private fun HeaderBar() {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.drink_list_title),
+            color = TextDark,
+            style = TextStyles.titleMedium,
+            textAlign = TextAlign.Center,
             modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(Color(0xFFF2F2F7)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "⚙",
-                style = TextStyles.body
-            )
-        }
+                .align(Alignment.Center)
+                .fillMaxWidth()
+        )
     }
 }
 

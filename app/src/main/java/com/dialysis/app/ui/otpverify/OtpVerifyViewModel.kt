@@ -4,10 +4,13 @@ import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.data.network.request.VerifyOtpRequest
+import com.dialysis.app.sharepref.AccountSharePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class OtpVerifyViewModel : BaseViewModel<OtpVerifyState>(OtpVerifyState()) {
+class OtpVerifyViewModel(
+    private val accountSharePref: AccountSharePref
+) : BaseViewModel<OtpVerifyState>(OtpVerifyState()) {
 
     val identifierTypeState = flowOf(OtpVerifyState::identifierType).collectStateUI("")
     val identifierState = flowOf(OtpVerifyState::identifier).collectStateUI("")
@@ -56,10 +59,13 @@ class OtpVerifyViewModel : BaseViewModel<OtpVerifyState>(OtpVerifyState()) {
                 )
 
                 val result = NetworkManager.resolve {
-                    NetworkManager.appServices.verifyOtp(request)
+                    NetworkManager.appPublicServices.verifyOtp(request)
                 }
 
                 if (result.isSuccess) {
+                    val data = result.getOrNull() ?: return@launch
+                    accountSharePref.setToken(data.token)
+                    accountSharePref.setTokenType(data.tokenType)
                     setState {
                         copy(
                             isVerifying = false,

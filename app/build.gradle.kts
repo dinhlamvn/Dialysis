@@ -66,4 +66,5 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter)
     implementation(libs.http.logging)
+    implementation(libs.koin.android)
 }

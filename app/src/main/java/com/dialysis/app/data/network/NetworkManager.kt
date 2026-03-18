@@ -4,6 +4,7 @@ import com.dialysis.app.BuildConfig
 import com.dialysis.app.data.network.interceptor.DefaultHeadersInterceptor
 import com.dialysis.app.data.network.response.ApiResponse
 import com.dialysis.app.data.network.services.AppServices
+import com.dialysis.app.data.network.services.AppPublicServices
 import com.dialysis.app.extensions.parseNetworkErrorResponse
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -24,6 +25,12 @@ object NetworkManager {
 
     private val retrofitBuilder =
         Retrofit.Builder().addConverterFactory(GsonConverterFactory.create(appGson))
+
+    val appPublicServices: AppPublicServices by lazy {
+        retrofitBuilder.baseUrl(BuildConfig.SERVER_URL)
+            .buildWithClient(okHttpClient)
+            .create(AppPublicServices::class.java)
+    }
 
     val appServices: AppServices by lazy {
         retrofitBuilder.baseUrl(BuildConfig.SERVER_URL)
