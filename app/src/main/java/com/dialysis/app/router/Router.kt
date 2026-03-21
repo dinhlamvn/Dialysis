@@ -10,6 +10,7 @@ import com.dialysis.app.ui.info.InfoActivity
 import com.dialysis.app.ui.login.LoginActivity
 import com.dialysis.app.ui.otpverify.OtpVerifyActivity
 import com.dialysis.app.ui.register.RegisterActivity
+import com.dialysis.app.ui.weight.WeightActivity
 
 object Router {
     const val EXTRA_OTP_IDENTIFIER_TYPE = "extra_otp_identifier_type"
@@ -30,6 +31,10 @@ object Router {
 
     fun login(context: Context): Intent {
         return Intent(context, LoginActivity::class.java)
+    }
+
+    fun weight(context: Context): Intent {
+        return Intent(context, WeightActivity::class.java)
     }
 
     fun dailyReport(context: Context): Intent {

@@ -1,12 +1,64 @@
 package com.dialysis.app.ui.home
 
+import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
+import com.dialysis.app.data.local.WaterTrackingRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class HomeViewModel : BaseViewModel<HomeState>(HomeState()) {
+class HomeViewModel(
+    private val waterTrackingRepository: WaterTrackingRepository
+) : BaseViewModel<HomeState>(HomeState()) {
 
     val drinksState = flowOf(HomeState::drinks).collectStateUI(emptyList())
     val showDrinkListSheetState = flowOf(HomeState::showDrinkListSheet).collectStateUI(false)
+    val showDailyReportSheetState = flowOf(HomeState::showDailyReportSheet).collectStateUI(false)
     val selectedDrinkNameState = flowOf(HomeState::selectedDrinkName).collectStateUI(null)
+    val todayTotalMlState = flowOf(HomeState::todayTotalMl).collectStateUI(0)
+    val weekTotalMlState = flowOf(HomeState::weekTotalMl).collectStateUI(0)
+    val monthTotalMlState = flowOf(HomeState::monthTotalMl).collectStateUI(0)
+    val weekDailyMlState = flowOf(HomeState::weekDailyMl).collectStateUI(listOf(0, 0, 0, 0, 0, 0, 0))
+
+    init {
+        val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+        waterTrackingRepository.observeTodayEntries()
+            .onEach { entries ->
+                setState {
+                    copy(
+                        drinks = entries.map { entry ->
+                            HomeDrinkItemState(
+                                amount = "${entry.amountMl} ml",
+                                name = entry.drinkName,
+                                time = timeFormatter.format(Date(entry.createdAt))
+                            )
+                        }
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+
+        waterTrackingRepository.observeTodayTotalMl()
+            .onEach { total -> setState { copy(todayTotalMl = total) } }
+            .launchIn(viewModelScope)
+
+        waterTrackingRepository.observeWeekTotalMl()
+            .onEach { total -> setState { copy(weekTotalMl = total) } }
+            .launchIn(viewModelScope)
+
+        waterTrackingRepository.observeMonthTotalMl()
+            .onEach { total -> setState { copy(monthTotalMl = total) } }
+            .launchIn(viewModelScope)
+
+        waterTrackingRepository.observeWeekDailyMl()
+            .onEach { totals -> setState { copy(weekDailyMl = totals) } }
+            .launchIn(viewModelScope)
+    }
 
     fun openDrinkListSheet() = setState {
         copy(showDrinkListSheet = true)
@@ -14,6 +66,14 @@ class HomeViewModel : BaseViewModel<HomeState>(HomeState()) {
 
     fun closeDrinkListSheet() = setState {
         copy(showDrinkListSheet = false)
+    }
+
+    fun openDailyReportSheet() = setState {
+        copy(showDailyReportSheet = true)
+    }
+
+    fun closeDailyReportSheet() = setState {
+        copy(showDailyReportSheet = false)
     }
 
     fun onDrinkSelected(drinkName: String) = setState {
@@ -27,16 +87,18 @@ class HomeViewModel : BaseViewModel<HomeState>(HomeState()) {
         copy(selectedDrinkName = null)
     }
 
-    fun addDrink(name: String, amount: String, time: String) = setState {
-        copy(
-            drinks = listOf(
-                HomeDrinkItemState(
-                    amount = amount,
-                    name = name,
-                    time = time
-                )
-            ) + drinks,
-            selectedDrinkName = null
-        )
+    fun addDrink(name: String, amount: String, _time: String) {
+        setState { copy(selectedDrinkName = null) }
+        viewModelScope.launch(Dispatchers.IO) {
+            waterTrackingRepository.addEntry(
+                drinkName = name,
+                amountMl = amount.extractMlValue()
+            )
+        }
     }
+}
+
+private fun String.extractMlValue(): Int {
+    val digits = replace("[^0-9]".toRegex(), "")
+    return digits.toIntOrNull() ?: 0
 }

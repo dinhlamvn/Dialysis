@@ -71,11 +71,10 @@ fun CreateDrinkScreen(
     val customInput by viewModel.customInputState.collectAsStateWithLifecycle()
     val customMl by viewModel.customMlState.collectAsStateWithLifecycle()
     val selectedTimeText by viewModel.selectedTimeTextState.collectAsStateWithLifecycle()
-    val defaultTimeText = stringResource(R.string.create_drink_time)
 
     LaunchedEffect(drinkName) {
         viewModel.updateDrinkName(drinkName)
-        viewModel.resetForm(defaultTimeText)
+        viewModel.resetForm(currentTimeText())
     }
 
     val options = listOf(
@@ -101,7 +100,7 @@ fun CreateDrinkScreen(
     }
     val fallbackDrinkTitle = stringResource(R.string.create_drink_title)
     val displayDrinkName = if (stateDrinkName.isNotBlank()) stateDrinkName else fallbackDrinkTitle
-    val displayTimeText = selectedTimeText.ifBlank { defaultTimeText }
+    val displayTimeText = selectedTimeText.ifBlank { currentTimeText() }
 
     Column(
         modifier = Modifier
@@ -346,6 +345,14 @@ private fun formatTime(hour: Int, minute: Int): String {
         .format(calendar.time)
         .replace("AM", "SA")
         .replace("PM", "CH")
+}
+
+private fun currentTimeText(): String {
+    val current = Calendar.getInstance()
+    return formatTime(
+        hour = current.get(Calendar.HOUR_OF_DAY),
+        minute = current.get(Calendar.MINUTE)
+    )
 }
 
 private data class DrinkOption(

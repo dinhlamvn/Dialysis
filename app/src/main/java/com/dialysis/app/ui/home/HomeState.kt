@@ -11,5 +11,10 @@ data class HomeDrinkItemState(
 data class HomeState(
     val drinks: List<HomeDrinkItemState> = emptyList(),
     val showDrinkListSheet: Boolean = false,
+    val showDailyReportSheet: Boolean = false,
     val selectedDrinkName: String? = null,
+    val todayTotalMl: Int = 0,
+    val weekTotalMl: Int = 0,
+    val monthTotalMl: Int = 0,
+    val weekDailyMl: List<Int> = listOf(0, 0, 0, 0, 0, 0, 0),
 ) : BaseState

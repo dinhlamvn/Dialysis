@@ -47,6 +47,10 @@
             android:exported="false" />
 
         <activity
+            android:name="com.dialysis.app.ui.weight.WeightActivity"
+            android:exported="false" />
+
+        <activity
             android:name="com.dialysis.app.ui.drink.list.DrinkListActivity"
             android:exported="false" />
 

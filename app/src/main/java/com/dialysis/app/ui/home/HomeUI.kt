@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,18 +36,20 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dialysis.app.R
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.TextStyles
+import com.dialysis.app.ui.daily.DailyReportScreen
+import com.dialysis.app.ui.daily.DailyReportViewModel
 import com.dialysis.app.ui.drink.create.CreateDrinkScreen
 import com.dialysis.app.ui.drink.list.DrinkListScreen
 
@@ -60,11 +63,17 @@ private val AccentBlue = Color(0xFF1877F2)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(
+    viewModel: HomeViewModel,
+    dailyReportViewModel: DailyReportViewModel,
+    showBottomNav: Boolean = true
+) {
     val drinks by viewModel.drinksState.collectAsStateWithLifecycle()
     val showDrinkListSheet by viewModel.showDrinkListSheetState.collectAsStateWithLifecycle()
+    val showDailyReportSheet by viewModel.showDailyReportSheetState.collectAsStateWithLifecycle()
     val selectedDrinkName by viewModel.selectedDrinkNameState.collectAsStateWithLifecycle()
     val drinkListSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val dailyReportSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val createDrinkSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Column(
@@ -72,24 +81,31 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
             .fillMaxSize()
             .background(Color.White)
     ) {
-        HeaderCard()
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(bottom = 16.dp)
+        ) {
+            item {
+                HeaderCard()
+            }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            item {
+                DrinksSection(
+                    drinks = drinks,
+                    onAddDrinkClick = viewModel::openDrinkListSheet,
+                    onEditClick = viewModel::openDailyReportSheet
+                )
+            }
 
-        DrinksSection(
-            drinks = drinks,
-            onAddDrinkClick = viewModel::openDrinkListSheet
-        )
+            item {
+                StatisticsListSection(onMoreClick = viewModel::openDrinkListSheet)
+            }
+        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        WeeklySection(
-            onMoreClick = viewModel::openDrinkListSheet
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        BottomNav()
+        if (showBottomNav) {
+            BottomNav()
+        }
     }
 
     if (showDrinkListSheet) {
@@ -109,6 +125,21 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
         }
     }
 
+    if (showDailyReportSheet) {
+        ModalBottomSheet(
+            sheetState = dailyReportSheetState,
+            onDismissRequest = viewModel::closeDailyReportSheet
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.8f)
+            ) {
+                DailyReportScreen(viewModel = dailyReportViewModel)
+            }
+        }
+    }
+
     selectedDrinkName?.let { drinkName ->
         ModalBottomSheet(
             sheetState = createDrinkSheetState,
@@ -122,7 +153,7 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
                 CreateDrinkScreen(
                     drinkName = drinkName,
                     onAddDrink = { name, amount, time ->
-                        viewModel.addDrink(name = name, amount = amount, time = time)
+                        viewModel.addDrink(name = name, amount = amount, _time = time)
                     }
                 )
             }
@@ -304,9 +335,9 @@ private fun PersonFigure() {
 @Composable
 private fun DrinksSection(
     drinks: List<HomeDrinkItemState>,
-    onAddDrinkClick: () -> Unit
+    onAddDrinkClick: () -> Unit,
+    onEditClick: () -> Unit
 ) {
-    val context = LocalContext.current
     Column(modifier = Modifier.padding(horizontal = 24.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -322,9 +353,7 @@ private fun DrinksSection(
                 text = stringResource(R.string.home_edit),
                 color = AccentBlue,
                 style = TextStyles.bodyMedium,
-                modifier = Modifier.clickable {
-                    context.startActivity(Router.dailyReport(context))
-                }
+                modifier = Modifier.clickable(onClick = onEditClick)
             )
         }
 
@@ -539,7 +568,201 @@ private fun WeeklySection(
 }
 
 @Composable
+private fun StatisticsListSection(onMoreClick: () -> Unit) {
+    Column(
+        modifier = Modifier.padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "Statistics for the week", color = TextDark, style = TextStyles.titleMedium)
+            Text(
+                text = "More",
+                color = AccentBlue,
+                style = TextStyles.bodyMedium,
+                modifier = Modifier.clickable { onMoreClick() }
+            )
+        }
+
+        StatsChartCard()
+        BannerCard(
+            background = Color(0xFFFF6B39),
+            title = "Weight progress  >",
+            description = "Track your weight dynamics and\nenhance your well-being with My\nWater",
+            titleColor = Color.White,
+            descriptionColor = Color.White.copy(alpha = 0.95f)
+        )
+        BannerCard(
+            background = Color(0xFFE8EBEF),
+            title = "Full version\nTry 3 days for free",
+            description = "Full version will help you reach your\ndaily goal faster!",
+            titleColor = AccentBlue,
+            descriptionColor = TextDark.copy(alpha = 0.85f)
+        )
+        TipOfDayCard()
+    }
+}
+
+@Composable
+private fun StatsChartCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(240.dp),
+        shape = RoundedCornerShape(24.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.linearGradient(listOf(Color(0xFF8FD300), Color(0xFF00C53A))))
+                .padding(16.dp)
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Text(text = "Goal: 1.9l", color = Color.White, style = TextStyles.titleMedium)
+                Spacer(modifier = Modifier.height(12.dp))
+                WeekChart()
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeekChart() {
+    val yLabels = listOf("2.4 l", "1.6 l", "0.8 l", "0 l")
+    val days = listOf("Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed")
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(130.dp)
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val gridColor = Color.White.copy(alpha = 0.25f)
+                val goalColor = Color.White.copy(alpha = 0.85f)
+                val lines = listOf(0.08f, 0.33f, 0.62f, 0.92f)
+                lines.forEachIndexed { index, ratio ->
+                    val y = size.height * ratio
+                    drawLine(
+                        color = if (index == 1) goalColor else gridColor,
+                        start = Offset(0f, y),
+                        end = Offset(size.width, y),
+                        strokeWidth = if (index == 1) 4f else 2f,
+                        pathEffect = if (index == 1) {
+                            PathEffect.dashPathEffect(floatArrayOf(22f, 12f), 0f)
+                        } else {
+                            null
+                        }
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                yLabels.forEach { label ->
+                    Text(text = label, color = Color.White, style = TextStyles.caption)
+                }
+            }
+
+            Text(
+                text = "Goal",
+                color = Color.White,
+                style = TextStyles.bodyMedium,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 44.dp, top = 24.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            days.forEach { day ->
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "0 l", color = Color.White, style = TextStyles.caption)
+                    Text(text = day, color = Color.White, style = TextStyles.body)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BannerCard(
+    background: Color,
+    title: String,
+    description: String,
+    titleColor: Color,
+    descriptionColor: Color
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(170.dp),
+        shape = RoundedCornerShape(24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(background)
+                .padding(20.dp)
+        ) {
+            Text(text = title, color = titleColor, style = TextStyles.titleMedium)
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(text = description, color = descriptionColor, style = TextStyles.body)
+        }
+    }
+}
+
+@Composable
+private fun TipOfDayCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(260.dp),
+        shape = RoundedCornerShape(24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF6B900))
+                .padding(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Tip of the day", color = Color.White, style = TextStyles.titleMedium)
+                Text(text = "more tips  >", color = Color.White, style = TextStyles.bodyMedium)
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "Having your first glass of water as\nsoon as you wake up can normalize\nyour bodily functions and top up your\nwater balance.",
+                color = Color.White,
+                style = TextStyles.body
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Card(shape = RoundedCornerShape(30.dp)) {
+                Text(
+                    text = "Share advice",
+                    color = Color(0xFFF6B900),
+                    style = TextStyles.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun BottomNav() {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(0.dp),
@@ -553,18 +776,25 @@ private fun BottomNav() {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomItem(label = stringResource(R.string.home_nav_water), active = true)
-            BottomItem(label = stringResource(R.string.home_nav_weight), active = false)
+            BottomItem(label = stringResource(R.string.home_nav_water), active = true, onClick = {})
+            BottomItem(
+                label = stringResource(R.string.home_nav_weight),
+                active = false,
+                onClick = { context.startActivity(Router.weight(context)) }
+            )
             FloatingAddButton()
-            BottomItem(label = stringResource(R.string.home_nav_stats), active = false)
-            BottomItem(label = stringResource(R.string.home_nav_settings), active = false)
+            BottomItem(label = stringResource(R.string.home_nav_stats), active = false, onClick = {})
+            BottomItem(label = stringResource(R.string.home_nav_settings), active = false, onClick = {})
         }
     }
 }
 
 @Composable
-private fun BottomItem(label: String, active: Boolean) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+private fun BottomItem(label: String, active: Boolean, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
         Box(
             modifier = Modifier
                 .size(24.dp)
