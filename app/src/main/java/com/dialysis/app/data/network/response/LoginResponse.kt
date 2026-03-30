@@ -27,7 +27,7 @@ data class LoginUser(
     @SerializedName("initial_weight")
     val initialWeight: Double?,
     @SerializedName("gender")
-    val gender: Int?,
+    val gender: String?,
     @SerializedName("age")
     val age: Int?,
     @SerializedName("dialysis_start_year")
