@@ -46,12 +46,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dialysis.app.R
+import com.dialysis.app.config.AppGoals
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.daily.DailyReportScreen
 import com.dialysis.app.ui.daily.DailyReportViewModel
 import com.dialysis.app.ui.drink.create.CreateDrinkScreen
 import com.dialysis.app.ui.drink.list.DrinkListScreen
+import kotlin.math.ceil
+import kotlin.math.max
 
 private val BlueTop = Color(0xFF2D6FDD)
 private val BlueBottom = Color(0xFF1A50C9)
@@ -66,9 +69,13 @@ private val AccentBlue = Color(0xFF1877F2)
 fun HomeScreen(
     viewModel: HomeViewModel,
     dailyReportViewModel: DailyReportViewModel,
-    showBottomNav: Boolean = true
+    showBottomNav: Boolean = true,
+    onStatisticsMoreClick: () -> Unit = {},
+    onWeightProgressClick: () -> Unit = {}
 ) {
     val drinks by viewModel.drinksState.collectAsStateWithLifecycle()
+    val todayTotalMl by viewModel.todayTotalMlState.collectAsStateWithLifecycle()
+    val weekDailyMl by viewModel.weekDailyMlState.collectAsStateWithLifecycle()
     val showDrinkListSheet by viewModel.showDrinkListSheetState.collectAsStateWithLifecycle()
     val showDailyReportSheet by viewModel.showDailyReportSheetState.collectAsStateWithLifecycle()
     val selectedDrinkName by viewModel.selectedDrinkNameState.collectAsStateWithLifecycle()
@@ -87,7 +94,7 @@ fun HomeScreen(
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
             item {
-                HeaderCard()
+                HeaderCard(todayTotalMl = todayTotalMl)
             }
 
             item {
@@ -99,7 +106,11 @@ fun HomeScreen(
             }
 
             item {
-                StatisticsListSection(onMoreClick = viewModel::openDrinkListSheet)
+                StatisticsListSection(
+                    weekDailyMl = weekDailyMl,
+                    onMoreClick = onStatisticsMoreClick,
+                    onWeightProgressClick = onWeightProgressClick
+                )
             }
         }
 
@@ -152,6 +163,7 @@ fun HomeScreen(
             ) {
                 CreateDrinkScreen(
                     drinkName = drinkName,
+                    onBackClick = viewModel::backToDrinkListFromCreate,
                     onAddDrink = { name, amount, time ->
                         viewModel.addDrink(name = name, amount = amount, _time = time)
                     }
@@ -162,7 +174,11 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HeaderCard() {
+private fun HeaderCard(todayTotalMl: Int) {
+    val goalMl = AppGoals.DAILY_WATER_GOAL_ML
+    val progress = (todayTotalMl / goalMl.toFloat()).coerceIn(0f, 1f)
+    val progressPercent = (progress * 100).toInt()
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -192,15 +208,15 @@ private fun HeaderCard() {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    WaterCircle()
+                    WaterCircle(progress = progress)
                     Column {
                         Text(
-                            text = stringResource(R.string.home_progress_value),
+                            text = "$progressPercent%",
                             color = Color.White,
                             style = TextStyles.titleMedium
                         )
                         Text(
-                            text = stringResource(R.string.home_progress_detail),
+                            text = "${todayTotalMl}ml của ${goalMl / 1000f}l",
                             color = Color.White.copy(alpha = 0.8f),
                             style = TextStyles.body
                         )
@@ -212,7 +228,7 @@ private fun HeaderCard() {
 }
 
 @Composable
-private fun WaterCircle() {
+private fun WaterCircle(progress: Float) {
     Box(
         modifier = Modifier
             .size(110.dp)
@@ -230,7 +246,7 @@ private fun WaterCircle() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(28.dp)
+                    .height((88.dp * progress).coerceIn(8.dp, 88.dp))
                     .background(Color.White)
             )
         }
@@ -568,7 +584,11 @@ private fun WeeklySection(
 }
 
 @Composable
-private fun StatisticsListSection(onMoreClick: () -> Unit) {
+private fun StatisticsListSection(
+    weekDailyMl: List<Int>,
+    onMoreClick: () -> Unit,
+    onWeightProgressClick: () -> Unit
+) {
     Column(
         modifier = Modifier.padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -587,31 +607,28 @@ private fun StatisticsListSection(onMoreClick: () -> Unit) {
             )
         }
 
-        StatsChartCard()
+        StatsChartCard(weekDailyMl = weekDailyMl)
         BannerCard(
             background = Color(0xFFFF6B39),
             title = "Weight progress  >",
             description = "Track your weight dynamics and\nenhance your well-being with My\nWater",
             titleColor = Color.White,
-            descriptionColor = Color.White.copy(alpha = 0.95f)
-        )
-        BannerCard(
-            background = Color(0xFFE8EBEF),
-            title = "Full version\nTry 3 days for free",
-            description = "Full version will help you reach your\ndaily goal faster!",
-            titleColor = AccentBlue,
-            descriptionColor = TextDark.copy(alpha = 0.85f)
+            descriptionColor = Color.White.copy(alpha = 0.95f),
+            onClick = onWeightProgressClick
         )
         TipOfDayCard()
     }
 }
 
 @Composable
-private fun StatsChartCard() {
+private fun StatsChartCard(weekDailyMl: List<Int>) {
+    val goalMl = AppGoals.DAILY_WATER_GOAL_ML
+    val safeValues = if (weekDailyMl.size == 7) weekDailyMl else List(7) { 0 }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(240.dp),
+            .height(300.dp),
         shape = RoundedCornerShape(24.dp)
     ) {
         Box(
@@ -621,75 +638,160 @@ private fun StatsChartCard() {
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                Text(text = "Goal: 1.9l", color = Color.White, style = TextStyles.titleMedium)
+                Text(
+                    text = "Goal: ${formatMlToCompactLitres(goalMl)}",
+                    color = Color.White,
+                    style = TextStyles.titleMedium
+                )
                 Spacer(modifier = Modifier.height(12.dp))
-                WeekChart()
+                WeekChart(
+                    weekDailyMl = safeValues,
+                    goalMl = goalMl
+                )
             }
         }
     }
 }
 
 @Composable
-private fun WeekChart() {
-    val yLabels = listOf("2.4 l", "1.6 l", "0.8 l", "0 l")
-    val days = listOf("Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed")
+private fun WeekChart(
+    weekDailyMl: List<Int>,
+    goalMl: Int
+) {
+    val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val maxValue = max(goalMl, weekDailyMl.maxOrNull() ?: 0)
+    val chartMax = max(1, ceil(maxValue / 300f).toInt() * 300)
+    val ySteps = List(4) { index -> chartMax - ((chartMax / 3f) * index).toInt() }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(130.dp)
+                .weight(1f)
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val gridColor = Color.White.copy(alpha = 0.25f)
-                val goalColor = Color.White.copy(alpha = 0.85f)
-                val lines = listOf(0.08f, 0.33f, 0.62f, 0.92f)
-                lines.forEachIndexed { index, ratio ->
-                    val y = size.height * ratio
-                    drawLine(
-                        color = if (index == 1) goalColor else gridColor,
-                        start = Offset(0f, y),
-                        end = Offset(size.width, y),
-                        strokeWidth = if (index == 1) 4f else 2f,
-                        pathEffect = if (index == 1) {
-                            PathEffect.dashPathEffect(floatArrayOf(22f, 12f), 0f)
-                        } else {
-                            null
+            Row(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .width(44.dp)
+                        .fillMaxHeight()
+                        .padding(bottom = 28.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    ySteps.forEach { labelValue ->
+                        Text(
+                            text = formatChartAxisLabel(labelValue),
+                            color = Color.White,
+                            style = TextStyles.caption
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(bottom = 28.dp)
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val gridColor = Color.White.copy(alpha = 0.18f)
+                        val goalColor = Color.White.copy(alpha = 0.95f)
+                        val lineCount = 4
+
+                        repeat(lineCount) { index ->
+                            val y = if (lineCount == 1) 0f else size.height * index / (lineCount - 1)
+                            drawLine(
+                                color = gridColor,
+                                start = Offset(0f, y),
+                                end = Offset(size.width, y),
+                                strokeWidth = 2f
+                            )
                         }
+
+                        val goalRatio = 1f - (goalMl / chartMax.toFloat()).coerceIn(0f, 1f)
+                        val goalY = size.height * goalRatio
+                        drawLine(
+                            color = goalColor,
+                            start = Offset(0f, goalY),
+                            end = Offset(size.width, goalY),
+                            strokeWidth = 3f,
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(28f, 14f), 0f)
+                        )
+                    }
+
+                    Text(
+                        text = "Goal",
+                        color = Color.White,
+                        style = TextStyles.bodyMedium,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(start = 10.dp, top = 10.dp)
                     )
-                }
-            }
 
-            Column(
-                modifier = Modifier.fillMaxHeight(),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                yLabels.forEach { label ->
-                    Text(text = label, color = Color.White, style = TextStyles.caption)
-                }
-            }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        days.forEachIndexed { index, day ->
+                            val value = weekDailyMl.getOrElse(index) { 0 }
+                            val barRatio = (value / chartMax.toFloat()).coerceIn(0f, 1f)
 
-            Text(
-                text = "Goal",
-                color = Color.White,
-                style = TextStyles.bodyMedium,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = 44.dp, top = 24.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            days.forEach { day ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "0 l", color = Color.White, style = TextStyles.caption)
-                    Text(text = day, color = Color.White, style = TextStyles.body)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Bottom,
+                                modifier = Modifier.fillMaxHeight()
+                            ) {
+                                Text(
+                                    text = formatBarValueLabel(value),
+                                    color = Color.White,
+                                    style = TextStyles.caption
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Box(
+                                    modifier = Modifier.height(112.dp),
+                                    contentAlignment = Alignment.BottomCenter
+                                ) {
+                                    if (value > 0) {
+                                        Box(
+                                            modifier = Modifier
+                                                .width(26.dp)
+                                                .height((112.dp * barRatio).coerceAtLeast(10.dp))
+                                                .clip(RoundedCornerShape(16.dp))
+                                                .background(Color.White.copy(alpha = 0.95f))
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(text = day, color = Color.White, style = TextStyles.body)
+                            }
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+private fun formatChartAxisLabel(valueMl: Int): String {
+    return if (valueMl == 0) {
+        "0 l"
+    } else {
+        String.format("%.1f l", valueMl / 1000f)
+    }
+}
+
+private fun formatBarValueLabel(valueMl: Int): String {
+    return if (valueMl == 0) {
+        "0 l"
+    } else {
+        String.format("%.1f l", valueMl / 1000f)
+    }
+}
+
+private fun formatMlToCompactLitres(valueMl: Int): String {
+    return String.format("%.2fl", valueMl / 1000f)
 }
 
 @Composable
@@ -698,12 +800,20 @@ private fun BannerCard(
     title: String,
     description: String,
     titleColor: Color,
-    descriptionColor: Color
+    descriptionColor: Color,
+    onClick: (() -> Unit)? = null
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(170.dp),
+            .height(170.dp)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable { onClick() }
+                } else {
+                    Modifier
+                }
+            ),
         shape = RoundedCornerShape(24.dp)
     ) {
         Column(

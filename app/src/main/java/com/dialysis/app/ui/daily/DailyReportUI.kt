@@ -52,6 +52,7 @@ private val IconTint = Color(0xFFF2B04A)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyReportScreen(viewModel: DailyReportViewModel) {
+    val selectedDateLabel by viewModel.selectedDateLabelState.collectAsStateWithLifecycle()
     val drinks by viewModel.drinksState.collectAsStateWithLifecycle()
     val progress by viewModel.progressState.collectAsStateWithLifecycle()
     val progressText by viewModel.progressTextState.collectAsStateWithLifecycle()
@@ -68,7 +69,7 @@ fun DailyReportScreen(viewModel: DailyReportViewModel) {
             .background(PageBackground)
             .padding(horizontal = 24.dp, vertical = 20.dp)
     ) {
-        TopBar()
+        TopBar(selectedDateLabel = selectedDateLabel)
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -133,8 +134,9 @@ fun DailyReportScreen(viewModel: DailyReportViewModel) {
             ) {
                 CreateDrinkScreen(
                     drinkName = drinkName,
-                    onAddDrink = { name, amount, _ ->
-                        viewModel.addDrink(name, amount)
+                    onBackClick = viewModel::backToDrinkListFromCreate,
+                    onAddDrink = { name, amount, time ->
+                        viewModel.addDrink(name, amount, time)
                     }
                 )
             }
@@ -169,13 +171,15 @@ fun DailyReportScreen(viewModel: DailyReportViewModel) {
 }
 
 @Composable
-private fun TopBar() {
+private fun TopBar(
+    selectedDateLabel: String = ""
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = stringResource(R.string.daily_date),
+            text = selectedDateLabel.ifBlank { stringResource(R.string.daily_date) },
             color = TextDark,
             style = TextStyles.titleMedium,
             modifier = Modifier.fillMaxWidth(),

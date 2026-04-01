@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.dialysis.app.config.AppGoals
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.TextStyles
 
@@ -56,7 +57,6 @@ fun WeightScreen(showBottomNav: Boolean = true) {
             item { ChartTabBar() }
             item { MonthChartCard() }
             item { PromoCards() }
-            item { TryButton() }
         }
 
         if (showBottomNav) {
@@ -71,7 +71,7 @@ private fun GoalHeader() {
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.Center) {
             Text(text = "Goal: ", style = TextStyles.title, color = TextMuted)
             Spacer(modifier = Modifier.size(6.dp))
-            Text(text = "61 kg", style = TextStyles.titleMedium, color = AccentBlue)
+            Text(text = "${AppGoals.WEIGHT_GOAL_KG} kg", style = TextStyles.titleMedium, color = AccentBlue)
         }
     }
 }
@@ -268,20 +268,6 @@ private fun PromoPill(text: String, color: Color, modifier: Modifier) {
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp, vertical = 12.dp)
         )
-    }
-}
-
-@Composable
-private fun TryButton() {
-    Button(
-        onClick = {},
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(58.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
-        shape = RoundedCornerShape(24.dp)
-    ) {
-        Text("Try 3 days for free", style = TextStyles.titleMedium, color = Color.White)
     }
 }
 

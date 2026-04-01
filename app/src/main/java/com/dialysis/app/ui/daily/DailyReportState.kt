@@ -10,6 +10,7 @@ data class DailyDrinkItemState(
 )
 
 data class DailyReportState(
+    val selectedDateLabel: String = "",
     val drinks: List<DailyDrinkItemState> = emptyList(),
     val progress: Float = 0f,
     val progressText: String = "0%",

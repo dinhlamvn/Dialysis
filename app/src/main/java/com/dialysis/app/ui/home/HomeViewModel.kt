@@ -23,6 +23,7 @@ class HomeViewModel(
     val weekTotalMlState = flowOf(HomeState::weekTotalMl).collectStateUI(0)
     val monthTotalMlState = flowOf(HomeState::monthTotalMl).collectStateUI(0)
     val weekDailyMlState = flowOf(HomeState::weekDailyMl).collectStateUI(listOf(0, 0, 0, 0, 0, 0, 0))
+    val dailyTotalsState = flowOf(HomeState::dailyTotals).collectStateUI(emptyList())
 
     init {
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -58,6 +59,10 @@ class HomeViewModel(
         waterTrackingRepository.observeWeekDailyMl()
             .onEach { totals -> setState { copy(weekDailyMl = totals) } }
             .launchIn(viewModelScope)
+
+        waterTrackingRepository.observeAllDailyTotals()
+            .onEach { totals -> setState { copy(dailyTotals = totals) } }
+            .launchIn(viewModelScope)
     }
 
     fun openDrinkListSheet() = setState {
@@ -85,6 +90,13 @@ class HomeViewModel(
 
     fun dismissCreateDrinkSheet() = setState {
         copy(selectedDrinkName = null)
+    }
+
+    fun backToDrinkListFromCreate() = setState {
+        copy(
+            selectedDrinkName = null,
+            showDrinkListSheet = true
+        )
     }
 
     fun addDrink(name: String, amount: String, _time: String) {

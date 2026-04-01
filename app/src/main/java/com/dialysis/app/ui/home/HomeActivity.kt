@@ -59,6 +59,7 @@ class HomeActivity : BaseActivity() {
         val weekTotalMl by homeViewModel.weekTotalMlState.collectAsStateWithLifecycle()
         val monthTotalMl by homeViewModel.monthTotalMlState.collectAsStateWithLifecycle()
         val weekDailyMl by homeViewModel.weekDailyMlState.collectAsStateWithLifecycle()
+        val dailyTotals by homeViewModel.dailyTotalsState.collectAsStateWithLifecycle()
         val statusBarColor = if (pagerState.currentPage == 0) {
             Color(0xFF2D6FDD)
         } else {
@@ -79,20 +80,32 @@ class HomeActivity : BaseActivity() {
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 92.dp)
+                    .padding(bottom = 120.dp)
             ) { page ->
                 when (page) {
                     0 -> HomeScreen(
                         viewModel = homeViewModel,
                         dailyReportViewModel = dailyReportViewModel,
-                        showBottomNav = false
+                        showBottomNav = false,
+                        onStatisticsMoreClick = {
+                            scope.launch {
+                                pagerState.animateScrollToPage(2)
+                            }
+                        },
+                        onWeightProgressClick = {
+                            scope.launch {
+                                pagerState.animateScrollToPage(1)
+                            }
+                        }
                     )
                     1 -> WeightScreen(showBottomNav = false)
                     2 -> StatisticsScreen(
                         todayTotalMl = todayTotalMl,
                         weekTotalMl = weekTotalMl,
                         monthTotalMl = monthTotalMl,
-                        weekDailyMl = weekDailyMl
+                        weekDailyMl = weekDailyMl,
+                        dailyTotals = dailyTotals,
+                        dailyReportViewModel = dailyReportViewModel
                     )
                     3 -> SettingsScreen()
                 }

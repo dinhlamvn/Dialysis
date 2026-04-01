@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dialysis.app.R
 import com.dialysis.app.ui.components.PrimaryButton
+import com.dialysis.app.ui.components.SecondaryButton
 import com.dialysis.app.ui.components.TextStyles
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -62,6 +63,7 @@ private val CardBorder = Color(0xFFCED2DA)
 fun CreateDrinkScreen(
     drinkName: String = "",
     viewModel: CreateDrinkViewModel = viewModel(),
+    onBackClick: () -> Unit = {},
     onAddDrink: (drinkName: String, amount: String, time: String) -> Unit = { _, _, _ -> }
 ) {
     val context = LocalContext.current
@@ -190,15 +192,26 @@ fun CreateDrinkScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        PrimaryButton(
-            text = stringResource(R.string.create_drink_add),
-            onClick = {
-                onAddDrink(displayDrinkName, selectedAmountText, displayTimeText)
-            },
+        Row(
             modifier = Modifier
+                .fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .navigationBarsPadding()
-        )
+        ) {
+            SecondaryButton(
+                text = "Trở Lại",
+                onClick = onBackClick,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            PrimaryButton(
+                text = stringResource(R.string.create_drink_add),
+                onClick = {
+                    onAddDrink(displayDrinkName, selectedAmountText, displayTimeText)
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
     }

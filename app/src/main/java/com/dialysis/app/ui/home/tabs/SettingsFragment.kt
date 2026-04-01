@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dialysis.app.base.BaseFragment
+import com.dialysis.app.config.AppGoals
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.theme.AppTheme
 
@@ -98,7 +99,7 @@ private fun TopCardsSection() {
             SmallColorCard(
                 modifier = Modifier.weight(1f),
                 title = "Daily goal",
-                value = "1900 ml",
+                value = "${AppGoals.DAILY_WATER_GOAL_ML} ml",
                 bg = Color(0xFFE9EDF2),
                 valueColor = Color(0xFF17A9DC)
             )

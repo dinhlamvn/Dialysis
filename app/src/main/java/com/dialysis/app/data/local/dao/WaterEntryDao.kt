@@ -37,6 +37,17 @@ interface WaterEntryDao {
 
     @Query(
         """
+        SELECT date(created_at / 1000, 'unixepoch', 'localtime') AS day,
+               COALESCE(SUM(amount_ml), 0) AS total_ml
+        FROM water_entries
+        GROUP BY day
+        ORDER BY day DESC
+        """
+    )
+    fun observeAllDailyTotals(): Flow<List<DailyTotal>>
+
+    @Query(
+        """
         SELECT *
         FROM water_entries
         WHERE created_at BETWEEN :startMillis AND :endMillis

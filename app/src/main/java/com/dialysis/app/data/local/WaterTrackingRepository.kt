@@ -24,6 +24,10 @@ class WaterTrackingRepository(
         return waterEntryDao.observeEntries(startOfDay(now), endOfDay(now))
     }
 
+    fun observeEntriesForDate(dateMillis: Long): Flow<List<WaterEntryEntity>> {
+        return waterEntryDao.observeEntries(startOfDay(dateMillis), endOfDay(dateMillis))
+    }
+
     fun observeWeekTotalMl(): Flow<Int> {
         val now = System.currentTimeMillis()
         return waterEntryDao.observeTotalMl(startOfWeek(now), endOfWeek(now))
@@ -34,12 +38,20 @@ class WaterTrackingRepository(
         return waterEntryDao.observeTotalMl(startOfMonth(now), endOfMonth(now))
     }
 
+    fun observeTotalMlForDate(dateMillis: Long): Flow<Int> {
+        return waterEntryDao.observeTotalMl(startOfDay(dateMillis), endOfDay(dateMillis))
+    }
+
     fun observeWeekDailyMl(): Flow<List<Int>> {
         val now = System.currentTimeMillis()
         val weekStart = startOfWeek(now)
         val weekEnd = endOfWeek(now)
         return waterEntryDao.observeDailyTotals(weekStart, weekEnd)
             .map { totals -> toWeekBuckets(totals, weekStart) }
+    }
+
+    fun observeAllDailyTotals(): Flow<List<DailyTotal>> {
+        return waterEntryDao.observeAllDailyTotals()
     }
 
     suspend fun addEntry(drinkName: String, amountMl: Int, createdAt: Long = System.currentTimeMillis()) {

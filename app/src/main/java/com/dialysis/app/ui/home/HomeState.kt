@@ -1,6 +1,7 @@
 package com.dialysis.app.ui.home
 
 import com.dialysis.app.base.BaseState
+import com.dialysis.app.data.local.model.DailyTotal
 
 data class HomeDrinkItemState(
     val amount: String,
@@ -17,4 +18,5 @@ data class HomeState(
     val weekTotalMl: Int = 0,
     val monthTotalMl: Int = 0,
     val weekDailyMl: List<Int> = listOf(0, 0, 0, 0, 0, 0, 0),
+    val dailyTotals: List<DailyTotal> = emptyList(),
 ) : BaseState
