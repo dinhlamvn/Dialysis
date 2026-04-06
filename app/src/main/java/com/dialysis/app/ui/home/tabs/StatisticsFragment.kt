@@ -127,7 +127,12 @@ fun StatisticsScreen(
                 StatsTab.MAIN -> MainStatSection(
                     todayTotalMl = todayTotalMl,
                     weekTotalMl = weekTotalMl,
-                    weekDailyMl = weekDailyMl
+                    weekDailyMl = weekDailyMl,
+                    dailyTotals = dailyTotals,
+                    onWeekDayClick = { dateMillis ->
+                        dailyReportViewModel?.showDateReport(dateMillis)
+                        selectedReportDateMillis = dateMillis
+                    }
                 )
                 StatsTab.BY_DAY -> ByDayReportSection(
                     dailyTotals = dailyTotals,
@@ -160,7 +165,13 @@ fun StatisticsScreen(
                     .fillMaxWidth()
                     .fillMaxHeight(0.88f)
             ) {
-                DailyReportScreen(viewModel = dailyReportViewModel)
+                DailyReportScreen(
+                    viewModel = dailyReportViewModel,
+                    onBackClick = {
+                        selectedReportDateMillis = null
+                        dailyReportViewModel.showTodayReport()
+                    }
+                )
             }
         }
     }
@@ -170,7 +181,9 @@ fun StatisticsScreen(
 private fun MainStatSection(
     todayTotalMl: Int,
     weekTotalMl: Int,
-    weekDailyMl: List<Int>
+    weekDailyMl: List<Int>,
+    dailyTotals: List<DailyTotal>,
+    onWeekDayClick: (Long) -> Unit
 ) {
     val currentDateLabel = remember { formatDayMonth(Calendar.getInstance()) }
     val safeWeekValues = if (weekDailyMl.size == 7) weekDailyMl else List(7) { 0 }
@@ -273,7 +286,13 @@ private fun MainStatSection(
         WeeklyStatCard(
             weekDailyMl = safeWeekValues,
             weekTotalMl = weekTotalMl,
-            averagePercentage = weekAveragePercent
+            averagePercentage = weekAveragePercent,
+            onDayClick = onWeekDayClick
+        )
+
+        MonthlyTrackerSection(
+            dailyTotals = dailyTotals,
+            onDayClick = onWeekDayClick
         )
     }
 }
@@ -282,17 +301,27 @@ private fun MainStatSection(
 private fun WeeklyStatCard(
     weekDailyMl: List<Int>,
     weekTotalMl: Int,
-    averagePercentage: Int
+    averagePercentage: Int,
+    onDayClick: (Long) -> Unit
 ) {
     val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
     val todayIndex = ((Calendar.getInstance().get(Calendar.DAY_OF_WEEK) + 5) % 7)
+    val weekStartCalendar = remember {
+        Calendar.getInstance().apply {
+            firstDayOfWeek = Calendar.MONDAY
+            set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+    }
 
     Card(shape = RoundedCornerShape(28.dp), modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFFEDEFF3))
-                .padding(bottom = 16.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -303,7 +332,15 @@ private fun WeeklyStatCard(
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     days.forEachIndexed { index, day ->
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        val dateMillis = remember(weekStartCalendar.timeInMillis, index) {
+                            (weekStartCalendar.clone() as Calendar).apply {
+                                add(Calendar.DAY_OF_MONTH, index)
+                            }.timeInMillis
+                        }
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.clickable { onDayClick(dateMillis) }
+                        ) {
                             Box(
                                 modifier = Modifier
                                     .size(52.dp)
@@ -338,21 +375,152 @@ private fun WeeklyStatCard(
                     }
                 }
             }
+        }
+    }
+}
 
+@Composable
+private fun MonthlyTrackerSection(
+    dailyTotals: List<DailyTotal>,
+    onDayClick: (Long) -> Unit
+) {
+    val monthCalendar = remember {
+        Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+    }
+    val currentYear = monthCalendar.get(Calendar.YEAR)
+    val currentMonth = monthCalendar.get(Calendar.MONTH)
+    val todayCalendar = remember { Calendar.getInstance() }
+    val daysInMonth = monthCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+    val firstDayOffset = ((monthCalendar.get(Calendar.DAY_OF_WEEK) + 5) % 7)
+    val todayDayOfMonth = if (
+        todayCalendar.get(Calendar.YEAR) == currentYear &&
+        todayCalendar.get(Calendar.MONTH) == currentMonth
+    ) {
+        todayCalendar.get(Calendar.DAY_OF_MONTH)
+    } else {
+        -1
+    }
+    val monthLabel = remember(currentYear, currentMonth) {
+        val monthName = monthCalendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).orEmpty()
+        "$monthName $currentYear"
+    }
+    val trackedDays = remember(dailyTotals, currentYear, currentMonth) {
+        dailyTotals.mapNotNull { total ->
+            parseDayToCalendar(total.day)?.takeIf {
+                it.get(Calendar.YEAR) == currentYear && it.get(Calendar.MONTH) == currentMonth
+            }?.get(Calendar.DAY_OF_MONTH)
+        }.toSet()
+    }
+    val weekdays = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val totalSlots = ((firstDayOffset + daysInMonth + 6) / 7) * 7
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Monthly statistics",
+                style = TextStyles.titleMedium,
+                color = Color(0xFF1F2633)
+            )
+            Text(
+                text = "More",
+                style = TextStyles.title,
+                color = Color(0xFF1877F2)
+            )
+        }
+
+        Card(
+            shape = RoundedCornerShape(28.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .background(Color.White)
+                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(width = 34.dp, height = 52.dp)
-                        .background(Color(0xFF1AAAF4), RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
+                Text(
+                    text = monthLabel.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+                    style = TextStyles.titleMedium,
+                    color = Color(0xFF1F2633),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "200 ml", color = Color(0xFF1877F2), style = TextStyles.title)
-                Text(text = "Water", color = Color(0xFF7A8498), style = TextStyles.titleMedium)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    weekdays.forEach { day ->
+                        Text(
+                            text = day,
+                            style = TextStyles.title,
+                            color = Color(0xFF7A8498),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.width(40.dp)
+                        )
+                    }
+                }
+
+                repeat(totalSlots / 7) { week ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        repeat(7) { dayIndex ->
+                            val slotIndex = week * 7 + dayIndex
+                            val dayNumber = slotIndex - firstDayOffset + 1
+                            if (dayNumber !in 1..daysInMonth) {
+                                Spacer(modifier = Modifier.size(40.dp))
+                            } else {
+                                val isTracked = dayNumber in trackedDays
+                                val isPastOrToday = dayNumber <= todayDayOfMonth
+                                val dateMillis = remember(dayNumber) {
+                                    (monthCalendar.clone() as Calendar).apply {
+                                        set(Calendar.DAY_OF_MONTH, dayNumber)
+                                    }.timeInMillis
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .background(
+                                            color = when {
+                                                isTracked -> Color(0xFFEAF3FF)
+                                                isPastOrToday -> Color(0xFFF2F5F8)
+                                                else -> Color(0xFFF9FAFC)
+                                            },
+                                            shape = CircleShape
+                                        )
+                                        .clickable(enabled = isPastOrToday) { onDayClick(dateMillis) },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = dayNumber.toString(),
+                                        style = TextStyles.title,
+                                        color = when {
+                                            isTracked -> Color(0xFF1877F2)
+                                            isPastOrToday -> Color(0xFF7A8498)
+                                            else -> Color(0xFFB8CEF8)
+                                        },
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

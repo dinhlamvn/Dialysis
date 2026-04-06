@@ -1,16 +1,21 @@
 package com.dialysis.app.ui.register
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,14 +35,13 @@ import com.dialysis.app.ui.components.Loading
 import com.dialysis.app.ui.components.PrimaryButton
 import com.dialysis.app.ui.components.TextStyles
 
-private val PageBackground = Color(0xFFFFFFFF)
 private val TitleColor = Color(0xFF111111)
 private val InputCardBackground = Color(0xFFFFFFFF)
 private val InputShape = RoundedCornerShape(32.dp)
 private val InputTextStyle: TextStyle = TextStyles.body
 
 @Composable
-fun RegisterScreen(viewModel: RegisterViewModel = viewModel()) {
+fun RegisterScreen(viewModel: RegisterViewModel = viewModel(), onBackClick: () -> Unit) {
     val emailOrPhone by viewModel.emailOrPhoneState.collectAsStateWithLifecycle()
     val name by viewModel.nameState.collectAsStateWithLifecycle()
     val password by viewModel.passwordState.collectAsStateWithLifecycle()
@@ -45,15 +49,30 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel()) {
     val registerError by viewModel.registerErrorState.collectAsStateWithLifecycle()
     val isRegistering by viewModel.isRegisterLoadingState.collectAsStateWithLifecycle()
 
-
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .background(PageBackground)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .navigationBarsPadding()
                 .padding(horizontal = 24.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.Top
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Image(
+                    painter = androidx.compose.ui.res.painterResource(R.drawable.ic_back),
+                    contentDescription = "Back",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable(onClick = onBackClick)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Text(
                 text = stringResource(R.string.register_auth_title),
                 color = TitleColor,
@@ -125,13 +144,15 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel()) {
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(32.dp))
 
             PrimaryButton(
                 text = stringResource(R.string.register_create_account),
                 onClick = viewModel::register,
                 modifier = Modifier.fillMaxWidth()
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
         if (isRegistering) {

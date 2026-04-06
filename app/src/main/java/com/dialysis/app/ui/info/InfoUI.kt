@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -155,6 +156,7 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel()) {
                 if (currentStep < TotalSteps - 1) {
                     viewModel.nextStep()
                 } else {
+                    viewModel.saveProfile()
                     context.startActivity(Router.home(context))
                     (view.context as? Activity)?.finish()
                 }
@@ -176,11 +178,11 @@ private fun TopProgressRow(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "<",
-            color = TitleColor,
-            style = TextStyles.titleMedium,
+        Image(
+            painter = painterResource(R.drawable.ic_back),
+            contentDescription = "Back",
             modifier = Modifier
+                .size(24.dp)
                 .padding(end = 12.dp)
                 .clickable { onBack() }
         )

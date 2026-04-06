@@ -3,6 +3,7 @@ package com.dialysis.app.ui.login
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.NetworkManager.asResult
 import com.dialysis.app.data.network.request.LoginRequest
 import com.dialysis.app.sharepref.AccountSharePref
 import kotlinx.coroutines.Dispatchers
@@ -14,12 +15,17 @@ class LoginViewModel(
 
     val identifierState = flowOf(LoginState::identifier).collectStateUI("")
     val passwordState = flowOf(LoginState::password).collectStateUI("")
+    val isPasswordVisibleState = flowOf(LoginState::isPasswordVisible).collectStateUI(false)
     val isLoginLoadingState = flowOf(LoginState::isLoginLoading).collectStateUI(false)
     val loginErrorState = flowOf(LoginState::loginError).collectStateUI(null)
 
     fun updateIdentifier(value: String) = setState { copy(identifier = value) }
 
     fun updatePassword(value: String) = setState { copy(password = value) }
+
+    fun togglePasswordVisibility() = setState {
+        copy(isPasswordVisible = !isPasswordVisible)
+    }
 
     fun login() {
         getState { state ->
@@ -44,9 +50,7 @@ class LoginViewModel(
                     password = state.password
                 )
 
-                val result = NetworkManager.resolve {
-                    NetworkManager.appPublicServices.login(request)
-                }
+                val result = NetworkManager.appPublicServices.login(request).asResult()
 
                 if (result.isSuccess) {
                     val data = result.getOrNull() ?: return@launch

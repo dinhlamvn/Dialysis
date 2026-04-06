@@ -30,6 +30,7 @@ fun InputCardField(
     shape: RoundedCornerShape = RoundedCornerShape(32.dp),
     elevation: androidx.compose.material3.CardElevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
     containerColor: Color = Color.White,
+    trailingContent: (@Composable () -> Unit)? = null,
 ) {
     Card(
         shape = shape,
@@ -46,6 +47,7 @@ fun InputCardField(
                     style = labelTextStyle
                 )
             },
+            trailingIcon = trailingContent,
             singleLine = singleLine,
             keyboardOptions = keyboardOptions,
             visualTransformation = visualTransformation,

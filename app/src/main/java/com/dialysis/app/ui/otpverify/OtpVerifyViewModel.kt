@@ -3,6 +3,7 @@ package com.dialysis.app.ui.otpverify
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.NetworkManager.asResult
 import com.dialysis.app.data.network.request.VerifyOtpRequest
 import com.dialysis.app.sharepref.AccountSharePref
 import kotlinx.coroutines.Dispatchers
@@ -58,9 +59,7 @@ class OtpVerifyViewModel(
                     otpCode = state.otpCode,
                 )
 
-                val result = NetworkManager.resolve {
-                    NetworkManager.appPublicServices.verifyOtp(request)
-                }
+                val result = NetworkManager.appPublicServices.verifyOtp(request).asResult()
 
                 if (result.isSuccess) {
                     val data = result.getOrNull() ?: return@launch

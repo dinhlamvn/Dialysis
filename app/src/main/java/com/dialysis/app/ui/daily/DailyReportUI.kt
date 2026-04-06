@@ -2,6 +2,7 @@ package com.dialysis.app.ui.daily
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,12 +32,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dialysis.app.R
 import com.dialysis.app.ui.components.PrimaryButton
 import com.dialysis.app.ui.components.TextStyles
+import com.dialysis.app.ui.drink.DrinkCatalog
 import com.dialysis.app.ui.drink.create.CreateDrinkScreen
 import com.dialysis.app.ui.drink.list.DrinkListScreen
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -47,11 +50,13 @@ private val AccentBlue = Color(0xFF1877F2)
 private val TextDark = Color(0xFF111111)
 private val TextMuted = Color(0xFF8E8E93)
 private val CardSurface = Color(0xFFF8F8FB)
-private val IconTint = Color(0xFFF2B04A)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DailyReportScreen(viewModel: DailyReportViewModel) {
+fun DailyReportScreen(
+    viewModel: DailyReportViewModel,
+    onBackClick: (() -> Unit)? = null
+) {
     val selectedDateLabel by viewModel.selectedDateLabelState.collectAsStateWithLifecycle()
     val drinks by viewModel.drinksState.collectAsStateWithLifecycle()
     val progress by viewModel.progressState.collectAsStateWithLifecycle()
@@ -69,7 +74,10 @@ fun DailyReportScreen(viewModel: DailyReportViewModel) {
             .background(PageBackground)
             .padding(horizontal = 24.dp, vertical = 20.dp)
     ) {
-        TopBar(selectedDateLabel = selectedDateLabel)
+        TopBar(
+            selectedDateLabel = selectedDateLabel,
+            onBackClick = onBackClick
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -80,17 +88,23 @@ fun DailyReportScreen(viewModel: DailyReportViewModel) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.weight(1f)
-        ) {
-            items(items = drinks, key = { it.id }) { drink ->
-                DrinkItem(
-                    title = drink.title,
-                    subtitle = drink.subtitle,
-                    time = drink.time,
-                    onDeleteClick = { viewModel.requestDelete(drink) }
-                )
+        if (drinks.isEmpty()) {
+            EmptyState(
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                items(items = drinks, key = { it.id }) { drink ->
+                    DrinkItem(
+                        title = drink.title,
+                        subtitle = drink.subtitle,
+                        time = drink.time,
+                        onDeleteClick = { viewModel.requestDelete(drink) }
+                    )
+                }
             }
         }
 
@@ -171,20 +185,60 @@ fun DailyReportScreen(viewModel: DailyReportViewModel) {
 }
 
 @Composable
+private fun EmptyState(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = stringResource(R.string.daily_empty_title),
+                color = TextDark,
+                style = TextStyles.titleMedium,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.daily_empty_subtitle),
+                color = TextMuted,
+                style = TextStyles.body,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
 private fun TopBar(
-    selectedDateLabel: String = ""
+    selectedDateLabel: String = "",
+    onBackClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (onBackClick != null) {
+            Image(
+                painter = painterResource(R.drawable.ic_back),
+                contentDescription = "Back",
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable(onClick = onBackClick)
+                    .padding(end = 12.dp)
+            )
+        }
         Text(
             text = selectedDateLabel.ifBlank { stringResource(R.string.daily_date) },
             color = TextDark,
             style = TextStyles.titleMedium,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center
         )
+        if (onBackClick != null) {
+            Spacer(modifier = Modifier.width(24.dp))
+        }
     }
 }
 
@@ -230,6 +284,7 @@ private fun DrinkItem(
     time: String,
     onDeleteClick: () -> Unit
 ) {
+    val visual = DrinkCatalog.resolve(title)
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -247,14 +302,19 @@ private fun DrinkItem(
                 modifier = Modifier
                     .size(46.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFE9F1FF)),
+                    .background(visual.iconFrameColor),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
                         .size(22.dp)
                         .clip(CircleShape)
-                        .background(IconTint)
+                        .background(visual.tileGradient)
+                )
+                Text(
+                    text = visual.icon,
+                    style = TextStyles.caption,
+                    color = visual.iconTextColor
                 )
             }
 

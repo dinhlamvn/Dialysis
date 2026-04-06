@@ -1,8 +1,11 @@
 package com.dialysis.app.ui.info
 
 import com.dialysis.app.base.BaseViewModel
+import com.dialysis.app.sharepref.UserProfileSharePref
 
-class InfoViewModel : BaseViewModel<InfoState>(InfoState()) {
+class InfoViewModel(
+    private val userProfileSharePref: UserProfileSharePref
+) : BaseViewModel<InfoState>(InfoState()) {
 
     val currentStepState = flowOf(InfoState::currentStep).collectStateUI(0)
     val genderState = flowOf(InfoState::gender).collectStateUI(0)
@@ -33,4 +36,10 @@ class InfoViewModel : BaseViewModel<InfoState>(InfoState()) {
     fun updateDialysisFreqWeek(freq: Int) = setState { copy(dialysisFreqWeek = freq) }
 
     fun updateDailyUrineMl(ml: Int) = setState { copy(dailyUrineMl = ml) }
+
+    fun saveProfile() {
+        getState { state ->
+            userProfileSharePref.saveProfile(state)
+        }
+    }
 }

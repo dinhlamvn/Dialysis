@@ -1,7 +1,6 @@
 package com.dialysis.app.ui.drink.list
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
@@ -27,53 +27,65 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dialysis.app.R
+import com.dialysis.app.ui.drink.DrinkCatalog
 import com.dialysis.app.ui.components.TextStyles
 
 private val PageBackground = Color(0xFFFFFFFF)
 private val CardBackground = Color(0xFFE9E9EE)
 private val TextDark = Color(0xFF111111)
-private val IconGray = Color(0xFFB9BCC4)
+private val HandleColor = Color(0xFF4E4E59)
+private val IconFrame = Color(0xFFF8F8FB)
 
 @Composable
 fun DrinkListScreen(
     onDrinkClick: (String) -> Unit = {}
 ) {
+    val items = listOf(
+        stringResource(R.string.drink_water),
+        "Nước lọc",
+        "Nước trà / chè",
+        stringResource(R.string.drink_coffee),
+        stringResource(R.string.drink_soda),
+        stringResource(R.string.drink_fruit_water),
+        stringResource(R.string.drink_smoothie),
+        "Bia / rượu",
+        stringResource(R.string.drink_milk),
+        stringResource(R.string.drink_yogurt),
+        "Cháo",
+        "Súp / canh",
+        stringResource(R.string.drink_other)
+    ).map { name ->
+        DrinkItemData(
+            title = name,
+            onClick = { onDrinkClick(name) }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(PageBackground)
-            .padding(horizontal = 24.dp, vertical = 20.dp)
+            .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .size(width = 62.dp, height = 6.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(HandleColor)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         HeaderBar()
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        val drinkNames = listOf(
-            stringResource(R.string.drink_water),
-            stringResource(R.string.drink_coffee),
-            stringResource(R.string.drink_tea),
-            stringResource(R.string.drink_soda),
-            stringResource(R.string.drink_fruit_water),
-            stringResource(R.string.drink_milk),
-            stringResource(R.string.drink_yogurt),
-            stringResource(R.string.drink_smoothie),
-            stringResource(R.string.drink_beer),
-            stringResource(R.string.drink_coconut),
-            stringResource(R.string.drink_soup),
-            stringResource(R.string.drink_other),
-        )
-        val items = drinkNames.map { name ->
-            DrinkItemData(
-                title = name,
-                onClick = { onDrinkClick(name) }
-            )
-        }
+        Spacer(modifier = Modifier.height(18.dp))
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(bottom = 20.dp)
+            contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             items(items) { item ->
                 DrinkCard(item)
@@ -85,6 +97,21 @@ fun DrinkListScreen(
 @Composable
 private fun HeaderBar() {
     Box(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFF0F1F5)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "⚙",
+                color = Color(0xFF7A7F89),
+                style = TextStyles.body
+            )
+        }
+
         Text(
             text = stringResource(R.string.drink_list_title),
             color = TextDark,
@@ -101,34 +128,42 @@ private fun HeaderBar() {
 private fun DrinkCard(item: DrinkItemData) {
     Card(
         modifier = Modifier
-            .height(120.dp)
+            .height(128.dp)
             .fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         onClick = item.onClick
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(CardBackground)
-                .padding(12.dp),
+                .padding(horizontal = 10.dp, vertical = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White),
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(IconFrame),
                 contentAlignment = Alignment.Center
             ) {
+                val visual = DrinkCatalog.resolve(item.title)
                 Box(
                     modifier = Modifier
-                        .size(24.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(IconGray)
-                )
+                        .size(34.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(visual.tileGradient),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = visual.icon,
+                        color = visual.iconTextColor,
+                        style = TextStyles.bodyMedium
+                    )
+                }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = item.title,
                 color = TextDark,

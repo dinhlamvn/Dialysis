@@ -3,6 +3,7 @@ package com.dialysis.app.ui.register
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.NetworkManager.asResult
 import com.dialysis.app.data.network.request.RegisterRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -48,9 +49,7 @@ class RegisterViewModel : BaseViewModel<RegisterState>(RegisterState()) {
                     name = state.name.trim(),
                 )
 
-                val result = NetworkManager.resolve {
-                    NetworkManager.appPublicServices.register(request)
-                }
+                val result = NetworkManager.appPublicServices.register(request).asResult()
                 if (result.isSuccess) {
                     setState {
                         copy(

@@ -15,7 +15,9 @@ class LoginActivity : BaseActivity() {
 
     @Composable
     override fun ContentView() {
-        LoginScreen(viewModel = viewModel)
+        LoginScreen(viewModel = viewModel) {
+            onBackPressedDispatcher.onBackPressed()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -20,7 +20,7 @@ object NetworkManager {
         .addNetworkInterceptor(DefaultHeadersInterceptor)
         .build()
 
-    private val appGson: Gson = GsonBuilder()
+    val appGson: Gson = GsonBuilder()
         .create()
 
     private val retrofitBuilder =
@@ -37,6 +37,20 @@ object NetworkManager {
             .buildWithClient(okHttpClient)
             .create(AppServices::class.java)
     }
+
+    fun <T> ApiResponse<T>.asResult(): Result<T> {
+        return try {
+            if (this.success) {
+                Result.success(this.data!!)
+            } else {
+                Result.failure(UnknownError())
+            }
+        } catch (e: Exception) {
+            val networkError = e.parseNetworkErrorResponse()
+            Result.failure(Exception(networkError.message))
+        }
+    }
+
 
     suspend fun <T> resolve(block: suspend () -> ApiResponse<T>): Result<T> {
         return try {

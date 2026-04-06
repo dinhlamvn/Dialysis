@@ -198,7 +198,10 @@ fun IntroScreen() {
             Text(
                 text = stringResource(R.string.intro_text_skip),
                 color = BodyGray,
-                style = TextStyles.body
+                style = TextStyles.body,
+                modifier = Modifier.clickable {
+                    context.startActivity(Router.info(context))
+                }
             )
         }
     }

@@ -5,18 +5,22 @@ import com.dialysis.app.data.local.AppDatabase
 import com.dialysis.app.data.local.WaterTrackingRepository
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.sharepref.AccountSharePref
+import com.dialysis.app.sharepref.UserProfileSharePref
 import com.dialysis.app.ui.daily.DailyReportViewModel
 import com.dialysis.app.ui.drink.create.CreateDrinkViewModel
 import com.dialysis.app.ui.home.HomeViewModel
+import com.dialysis.app.ui.info.InfoViewModel
 import com.dialysis.app.ui.login.LoginViewModel
 import com.dialysis.app.ui.otpverify.OtpVerifyViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
+
 val appModule = module {
     single { NetworkManager.appPublicServices }
     single { NetworkManager.appServices }
     single { AccountSharePref(get()) }
+    single { UserProfileSharePref(get()) }
     single {
         Room.databaseBuilder(
             get(),
@@ -46,4 +50,8 @@ val HomeModule = module {
 
 val DailyReportModule = module {
     viewModel { DailyReportViewModel(get()) }
+}
+
+val InfoModule = module {
+    viewModel { InfoViewModel(get()) }
 }

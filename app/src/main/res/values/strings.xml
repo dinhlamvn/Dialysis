@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Dialysis</string>
-    <string name="intro_title">Ứng dụng của chúng tôi sẽ giúp\nbạn uống nhiều nước hơn và có\nmột lối sống lành mạnh mỗi ngày!</string>
-    <string name="intro_card_water_title">Nước của tôi</string>
+    <string name="intro_title">Ứng dụng của chúng tôi sẽ giúp\nBạn kiểm soát tốt lượng dịch\nnhập mỗi ngày qua ăn uống!</string>
+    <string name="intro_card_water_title">Disalysis Intake</string>
     <string name="intro_card_water_desc">Với ứng dụng của chúng tôi, việc khỏe mạnh và thon gọn thật dễ dàng!</string>
     <string name="intro_card_rewards_title">Giải thưởng</string>
     <string name="intro_card_rewards_desc">Kiếm thành tích và theo dõi tiến trình của bạn!</string>
@@ -14,6 +14,8 @@
     <string name="intro_button_signup">Đăng ký</string>
     <string name="intro_text_login">Đăng nhập</string>
     <string name="intro_text_skip">Bỏ qua đăng ký</string>
+    <string name="login_no_account">Chưa có tài khoản?</string>
+    <string name="login_register_action">Đăng ký</string>
     <string name="register_auth_title">Đăng ký tài khoản</string>
     <string name="register_field_email_or_phone">Email / Số điện thoại</string>
     <string name="register_field_password">Mật khẩu</string>
@@ -68,6 +70,8 @@
     <string name="daily_coffee_title">Cà phê - 50 ml</string>
     <string name="daily_coffee_subtitle">50 ml của cà phê còn lại</string>
     <string name="daily_time">09:57</string>
+    <string name="daily_empty_title">Chưa có đồ uống nào được ghi nhận</string>
+    <string name="daily_empty_subtitle">Nhấn Thêm đồ uống để ghi nhận ly đầu tiên.</string>
     <string name="daily_add_drink">Thêm đồ uống</string>
     <string name="drink_list_title">Thêm đồ uống</string>
     <string name="drink_water">Nước</string>

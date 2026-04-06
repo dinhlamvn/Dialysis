@@ -15,7 +15,9 @@ class RegisterActivity : BaseActivity() {
 
     @Composable
     override fun ContentView() {
-        RegisterScreen(viewModel)
+        RegisterScreen(viewModel) {
+            onBackPressedDispatcher.onBackPressed()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

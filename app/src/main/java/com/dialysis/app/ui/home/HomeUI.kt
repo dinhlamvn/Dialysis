@@ -51,6 +51,7 @@ import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.daily.DailyReportScreen
 import com.dialysis.app.ui.daily.DailyReportViewModel
+import com.dialysis.app.ui.drink.DrinkCatalog
 import com.dialysis.app.ui.drink.create.CreateDrinkScreen
 import com.dialysis.app.ui.drink.list.DrinkListScreen
 import kotlin.math.ceil
@@ -146,7 +147,10 @@ fun HomeScreen(
                     .fillMaxWidth()
                     .fillMaxHeight(0.8f)
             ) {
-                DailyReportScreen(viewModel = dailyReportViewModel)
+                DailyReportScreen(
+                    viewModel = dailyReportViewModel,
+                    onBackClick = viewModel::closeDailyReportSheet
+                )
             }
         }
     }
@@ -436,6 +440,7 @@ private fun SmallDrinkCard(
 
 @Composable
 private fun DrinkCard(amount: String, name: String, time: String) {
+    val visual = DrinkCatalog.resolve(name)
     Card(
         modifier = Modifier
             .size(width = 130.dp, height = 130.dp),
@@ -453,8 +458,23 @@ private fun DrinkCard(amount: String, name: String, time: String) {
                 modifier = Modifier
                     .size(36.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(CardGray)
-            )
+                    .background(Color(0xFFF8F8FB)),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(visual.tileGradient),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = visual.icon,
+                        color = visual.iconTextColor,
+                        style = TextStyles.caption
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = amount,
