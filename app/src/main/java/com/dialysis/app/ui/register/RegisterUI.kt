@@ -16,15 +16,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,6 +50,8 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel(), onBackClick: () -
     val name by viewModel.nameState.collectAsStateWithLifecycle()
     val password by viewModel.passwordState.collectAsStateWithLifecycle()
     val confirmPassword by viewModel.confirmPasswordState.collectAsStateWithLifecycle()
+    val isPasswordVisible by viewModel.isPasswordVisibleState.collectAsStateWithLifecycle()
+    val isConfirmPasswordVisible by viewModel.isConfirmPasswordVisibleState.collectAsStateWithLifecycle()
     val registerError by viewModel.registerErrorState.collectAsStateWithLifecycle()
     val isRegistering by viewModel.isRegisterLoadingState.collectAsStateWithLifecycle()
 
@@ -113,11 +119,30 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel(), onBackClick: () -
                 onValueChange = viewModel::updatePassword,
                 label = stringResource(R.string.register_field_password),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                visualTransformation = PasswordVisualTransformation(),
+                visualTransformation = if (isPasswordVisible) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
                 textStyle = InputTextStyle,
                 labelTextStyle = TextStyles.body,
                 shape = InputShape,
-                containerColor = InputCardBackground
+                containerColor = InputCardBackground,
+                trailingContent = {
+                    IconButton(onClick = viewModel::togglePasswordVisibility) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (isPasswordVisible) R.drawable.ic_eye_off else R.drawable.ic_eye
+                            ),
+                            contentDescription = if (isPasswordVisible) {
+                                "Hide password"
+                            } else {
+                                "Show password"
+                            },
+                            tint = Color.Unspecified
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -127,11 +152,30 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel(), onBackClick: () -
                 onValueChange = viewModel::updateConfirmPassword,
                 label = stringResource(R.string.register_field_confirm_password),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                visualTransformation = PasswordVisualTransformation(),
+                visualTransformation = if (isConfirmPasswordVisible) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
                 textStyle = InputTextStyle,
                 labelTextStyle = TextStyles.body,
                 shape = InputShape,
-                containerColor = InputCardBackground
+                containerColor = InputCardBackground,
+                trailingContent = {
+                    IconButton(onClick = viewModel::toggleConfirmPasswordVisibility) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (isConfirmPasswordVisible) R.drawable.ic_eye_off else R.drawable.ic_eye
+                            ),
+                            contentDescription = if (isConfirmPasswordVisible) {
+                                "Hide confirm password"
+                            } else {
+                                "Show confirm password"
+                            },
+                            tint = Color.Unspecified
+                        )
+                    }
+                }
             )
 
             if (!registerError.isNullOrBlank()) {

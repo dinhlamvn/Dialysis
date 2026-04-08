@@ -10,6 +10,8 @@ class InfoActivity : BaseActivity() {
 
     @Composable
     override fun ContentView() {
-        InfoScreen(viewModel)
+        InfoScreen(viewModel)  {
+            onBackPressedDispatcher.onBackPressed()
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.dialysis.app.ui.intro
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -71,7 +73,8 @@ fun IntroScreen() {
             title = stringResource(R.string.intro_card_water_title),
             description = stringResource(R.string.intro_card_water_desc),
             accent = AccentBlue,
-            accentLight = AccentBlueLight
+            accentLight = Color.White,
+            iconRes = R.drawable.ic_intro_launcher
         ),
         IntroCardData(
             title = stringResource(R.string.intro_card_rewards_title),
@@ -240,12 +243,22 @@ private fun IntroCard(
                     .background(data.accentLight),
                 contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(data.accent)
-                )
+                if (data.iconRes != null) {
+                    Image(
+                        painter = painterResource(id = data.iconRes),
+                        contentDescription = data.title,
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(data.accent)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -299,5 +312,6 @@ private data class IntroCardData(
     val title: String,
     val description: String,
     val accent: Color,
-    val accentLight: Color
+    val accentLight: Color,
+    val iconRes: Int? = null
 )

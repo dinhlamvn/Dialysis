@@ -7,6 +7,8 @@ data class RegisterState(
     val name: String = "",
     val password: String = "",
     val confirmPassword: String = "",
+    val isPasswordVisible: Boolean = false,
+    val isConfirmPasswordVisible: Boolean = false,
     val isRegisterLoading: Boolean = false,
     val registerError: String? = null,
     val isRegisterSuccess: Boolean = false,

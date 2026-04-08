@@ -14,6 +14,9 @@ class RegisterViewModel : BaseViewModel<RegisterState>(RegisterState()) {
     val nameState = flowOf(RegisterState::name).collectStateUI("")
     val passwordState = flowOf(RegisterState::password).collectStateUI("")
     val confirmPasswordState = flowOf(RegisterState::confirmPassword).collectStateUI("")
+    val isPasswordVisibleState = flowOf(RegisterState::isPasswordVisible).collectStateUI(false)
+    val isConfirmPasswordVisibleState =
+        flowOf(RegisterState::isConfirmPasswordVisible).collectStateUI(false)
     val isRegisterLoadingState = flowOf(RegisterState::isRegisterLoading).collectStateUI(false)
     val registerErrorState = flowOf(RegisterState::registerError).collectStateUI(null)
 
@@ -24,6 +27,14 @@ class RegisterViewModel : BaseViewModel<RegisterState>(RegisterState()) {
     fun updatePassword(value: String) = setState { copy(password = value) }
 
     fun updateConfirmPassword(value: String) = setState { copy(confirmPassword = value) }
+
+    fun togglePasswordVisibility() = setState {
+        copy(isPasswordVisible = !isPasswordVisible)
+    }
+
+    fun toggleConfirmPasswordVisibility() = setState {
+        copy(isConfirmPasswordVisible = !isConfirmPasswordVisible)
+    }
 
     fun register() {
         getState { state ->

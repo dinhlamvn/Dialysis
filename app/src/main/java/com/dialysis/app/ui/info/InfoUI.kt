@@ -29,16 +29,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -68,7 +65,7 @@ private val IndicatorRed = Color(0xFFEA4D3D)
 private const val TotalSteps = 8
 
 @Composable
-fun InfoScreen(viewModel: InfoViewModel = viewModel()) {
+fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) {
     val currentStep by viewModel.currentStepState.collectAsStateWithLifecycle()
     val selectedGender by viewModel.genderState.collectAsStateWithLifecycle()
     val name by viewModel.nameState.collectAsStateWithLifecycle()
@@ -82,7 +79,7 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel()) {
 
     val weightValues = remember { (30..150).toList() }
     val ageValues = remember { (18..80).toList() }
-    val urineValues = remember { (200..1000 step 25).toList() }
+    val urineValues = remember { (0..1500 step 25).toList() }
     val currentYear = Year.now().value
     val dialysisYearValues = remember { (1970..currentYear).toList() }
 
@@ -95,7 +92,7 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel()) {
         TopProgressRow(
             currentStep = currentStep,
             totalSteps = TotalSteps,
-            onBack = { if (currentStep > 0) viewModel.prevStep() }
+            onBack = { if (currentStep > 0) viewModel.prevStep() else onBackClick.invoke() }
         )
 
         Spacer(modifier = Modifier.height(80.dp))
@@ -132,8 +129,9 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel()) {
                     viewModel.updateDialysisFreqWeek(sanitized.toIntOrNull() ?: 0)
                 }
             )
+
             6 -> UrineStep(
-                value = if (urinePerDay == 0) 285 else urinePerDay,
+                value = if (urinePerDay == 0) urineValues.first() else urinePerDay,
                 values = urineValues,
                 onValueChange = viewModel::updateDailyUrineMl
             )
@@ -349,7 +347,6 @@ private fun SelectionScale(
     unit: String,
     values: List<Int>,
     onValueChange: (Int) -> Unit,
-    itemSpacing: androidx.compose.ui.unit.Dp = 18.dp
 ) {
     TitleBlock(title = title)
 
@@ -363,7 +360,6 @@ private fun SelectionScale(
         values = values,
         selectedValue = value,
         onValueChange = onValueChange,
-        itemSpacing = itemSpacing
     )
 }
 
@@ -381,7 +377,7 @@ private fun YearCircleScrollPicker(
     val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
     val horizontalPadding = (screenWidth - itemSize) / 2f
 
-    LaunchedEffect(listState) {
+    LaunchedEffect(listState, selectedYear) {
         snapshotFlow { listState.layoutInfo }
             .map { layoutInfo ->
                 val center = (screenWidth / 2f).value.toInt()
@@ -477,19 +473,16 @@ private fun ScrollSelector(
     values: List<Int>,
     selectedValue: Int,
     onValueChange: (Int) -> Unit,
-    itemSpacing: androidx.compose.ui.unit.Dp
 ) {
     val itemWidth = 72.dp
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val density = LocalDensity.current
-    val horizontalPadding = (screenWidth - itemWidth) / 2f
+    val horizontalPadding = (screenWidth - itemWidth - 48.dp) / 2f
     val selectedIndex = values.indexOf(selectedValue).coerceAtLeast(0)
     val listState = rememberLazyListState(
-        initialFirstVisibleItemIndex = selectedIndex,
-        initialFirstVisibleItemScrollOffset = 100
+        initialFirstVisibleItemIndex = selectedIndex
     )
     val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
-    LaunchedEffect(listState) {
+    LaunchedEffect(listState, selectedValue) {
         snapshotFlow { listState.layoutInfo }
             .map { layoutInfo ->
                 val center = (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
@@ -525,7 +518,6 @@ private fun ScrollSelector(
             state = listState,
             flingBehavior = snapFlingBehavior,
             contentPadding = PaddingValues(horizontal = horizontalPadding),
-            horizontalArrangement = Arrangement.spacedBy(itemSpacing)
         ) {
             items(values.size) { index ->
                 val value = values[index]

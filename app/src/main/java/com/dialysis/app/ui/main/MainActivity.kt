@@ -14,13 +14,12 @@ class MainActivity : BaseActivity() {
     private val userProfileSharePref: UserProfileSharePref by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         if (accountSharePref.getToken().isNotBlank() || userProfileSharePref.getProfile() != null) {
             startActivity(Router.home(this))
             finish()
             return
         }
-
-        super.onCreate(savedInstanceState)
     }
 
     @Composable

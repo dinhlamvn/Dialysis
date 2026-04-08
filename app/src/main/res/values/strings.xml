@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Dialysis</string>
+    <string name="app_name">Dialysis Intake</string>
     <string name="intro_title">Ứng dụng của chúng tôi sẽ giúp\nBạn kiểm soát tốt lượng dịch\nnhập mỗi ngày qua ăn uống!</string>
     <string name="intro_card_water_title">Disalysis Intake</string>
     <string name="intro_card_water_desc">Với ứng dụng của chúng tôi, việc khỏe mạnh và thon gọn thật dễ dàng!</string>
