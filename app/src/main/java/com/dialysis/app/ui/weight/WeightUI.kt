@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,28 +21,61 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Slider
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dialysis.app.config.AppGoals
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.TextStyles
+import java.util.Locale
+import kotlin.math.abs
 
 private val AccentBlue = Color(0xFF1877F2)
 private val LightCard = Color(0xFFF1F3F6)
 private val TextDark = Color(0xFF2A2D34)
 private val TextMuted = Color(0xFF8890A1)
-private val Green = Color(0xFF10BA6C)
+private val ChartGrid = Color(0xFFD0D6DF)
+private val ChartLine = Color(0xFF0E66E5)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WeightScreen(showBottomNav: Boolean = true) {
+fun WeightScreen(
+    viewModel: WeightViewModel,
+    showBottomNav: Boolean = true
+) {
+    val initialWeightKg by viewModel.initialWeightKgState.collectAsStateWithLifecycle()
+    val currentWeightKg by viewModel.currentWeightKgState.collectAsStateWithLifecycle()
+    val selectedTab by viewModel.selectedTabState.collectAsStateWithLifecycle()
+    val periodTitle by viewModel.periodTitleState.collectAsStateWithLifecycle()
+    val chartData by viewModel.chartDataState.collectAsStateWithLifecycle()
+    val xAxisLabels by viewModel.xAxisLabelsState.collectAsStateWithLifecycle()
+    val yMin by viewModel.yMinState.collectAsStateWithLifecycle()
+    val yMax by viewModel.yMaxState.collectAsStateWithLifecycle()
+    val showAddWeightSheet by viewModel.showAddWeightSheetState.collectAsStateWithLifecycle()
+    val draftWeightKg by viewModel.draftWeightKgState.collectAsStateWithLifecycle()
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val progressKg = currentWeightKg - initialWeightKg
+    val progressText = buildProgressText(progressKg)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,32 +86,80 @@ fun WeightScreen(showBottomNav: Boolean = true) {
             contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            item { GoalHeader() }
-            item { WeightInfoCards() }
-            item { ChartTabBar() }
-            item { MonthChartCard() }
-            item { PromoCards() }
+            item {
+                GoalHeader(goalWeightKg = AppGoals.WEIGHT_GOAL_KG)
+            }
+            item {
+                WeightInfoCards(
+                    initialWeightKg = initialWeightKg,
+                    currentWeightKg = currentWeightKg,
+                    progressText = progressText,
+                    onAddCurrentWeightClick = viewModel::openAddWeightSheet
+                )
+            }
+            item {
+                ReportTabBar(
+                    selectedTab = selectedTab,
+                    onMonthClick = { viewModel.selectTab(WeightReportTab.MONTH) },
+                    onYearClick = { viewModel.selectTab(WeightReportTab.YEAR) }
+                )
+            }
+            item {
+                PeriodNavigator(
+                    title = periodTitle,
+                    onPrev = viewModel::prevPeriod,
+                    onNext = viewModel::nextPeriod
+                )
+            }
+            item {
+                ChartCard(
+                    xAxisLabels = xAxisLabels,
+                    chartData = chartData,
+                    yMin = yMin,
+                    yMax = yMax
+                )
+            }
         }
 
         if (showBottomNav) {
             WeightBottomNav()
         }
     }
-}
 
-@Composable
-private fun GoalHeader() {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.Center) {
-            Text(text = "Goal: ", style = TextStyles.title, color = TextMuted)
-            Spacer(modifier = Modifier.size(6.dp))
-            Text(text = "${AppGoals.WEIGHT_GOAL_KG} kg", style = TextStyles.titleMedium, color = AccentBlue)
+    if (showAddWeightSheet) {
+        ModalBottomSheet(
+            sheetState = bottomSheetState,
+            onDismissRequest = viewModel::closeAddWeightSheet
+        ) {
+            AddCurrentWeightSheet(
+                draftWeightKg = draftWeightKg,
+                onCancel = viewModel::closeAddWeightSheet,
+                onSave = viewModel::saveDraftWeight,
+                onWeightChange = viewModel::updateDraftWeight
+            )
         }
     }
 }
 
 @Composable
-private fun WeightInfoCards() {
+private fun GoalHeader(goalWeightKg: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = "Goal: ", style = TextStyles.title, color = TextMuted)
+        Text(text = "$goalWeightKg kg", style = TextStyles.titleMedium, color = AccentBlue)
+    }
+}
+
+@Composable
+private fun WeightInfoCards(
+    initialWeightKg: Float,
+    currentWeightKg: Float,
+    progressText: String,
+    onAddCurrentWeightClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -86,8 +168,13 @@ private fun WeightInfoCards() {
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            SmallInfoCard(title = "Initial weight", value = "63 kg", highlight = false)
-            SmallInfoCard(title = "Current weight", value = "63 kg", highlight = true)
+            SmallInfoCard(title = "Initial weight", value = "${formatWeightValue(initialWeightKg)} kg", highlight = false)
+            SmallInfoCard(
+                title = "Current weight",
+                value = "${formatWeightValue(currentWeightKg)} kg",
+                highlight = true,
+                onClick = onAddCurrentWeightClick
+            )
         }
         Card(
             modifier = Modifier
@@ -100,10 +187,11 @@ private fun WeightInfoCards() {
                     .fillMaxSize()
                     .background(LightCard)
                     .padding(16.dp)
+                    .clickable(onClick = onAddCurrentWeightClick)
             ) {
                 Text(text = "Weight progress  >", style = TextStyles.title, color = TextMuted)
                 Spacer(modifier = Modifier.height(6.dp))
-                Text(text = "0 kg", style = TextStyles.titleMedium, color = TextDark)
+                Text(text = progressText, style = TextStyles.titleMedium, color = TextDark)
                 Spacer(modifier = Modifier.weight(1f))
                 Box(
                     modifier = Modifier
@@ -117,11 +205,17 @@ private fun WeightInfoCards() {
 }
 
 @Composable
-private fun SmallInfoCard(title: String, value: String, highlight: Boolean) {
+private fun SmallInfoCard(
+    title: String,
+    value: String,
+    highlight: Boolean,
+    onClick: (() -> Unit)? = null
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp),
+            .height(100.dp)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         shape = RoundedCornerShape(18.dp)
     ) {
         Column(
@@ -142,7 +236,11 @@ private fun SmallInfoCard(title: String, value: String, highlight: Boolean) {
 }
 
 @Composable
-private fun ChartTabBar() {
+private fun ReportTabBar(
+    selectedTab: WeightReportTab,
+    onMonthClick: () -> Unit,
+    onYearClick: () -> Unit
+) {
     Card(shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -153,7 +251,11 @@ private fun ChartTabBar() {
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .background(Color.White, RoundedCornerShape(14.dp))
+                    .background(
+                        if (selectedTab == WeightReportTab.MONTH) Color.White else Color.Transparent,
+                        RoundedCornerShape(14.dp)
+                    )
+                    .clickable(onClick = onMonthClick)
                     .padding(vertical = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -162,6 +264,11 @@ private fun ChartTabBar() {
             Box(
                 modifier = Modifier
                     .weight(1f)
+                    .background(
+                        if (selectedTab == WeightReportTab.YEAR) Color.White else Color.Transparent,
+                        RoundedCornerShape(14.dp)
+                    )
+                    .clickable(onClick = onYearClick)
                     .padding(vertical = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -172,7 +279,45 @@ private fun ChartTabBar() {
 }
 
 @Composable
-private fun MonthChartCard() {
+private fun PeriodNavigator(
+    title: String,
+    onPrev: () -> Unit,
+    onNext: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "<",
+            style = TextStyles.titleMedium,
+            color = TextDark,
+            modifier = Modifier.clickable(onClick = onPrev)
+        )
+        Text(
+            text = title,
+            style = TextStyles.titleMedium,
+            color = TextDark
+        )
+        Text(
+            text = ">",
+            style = TextStyles.titleMedium,
+            color = TextDark,
+            modifier = Modifier.clickable(onClick = onNext)
+        )
+    }
+}
+
+@Composable
+private fun ChartCard(
+    xAxisLabels: List<WeightAxisLabel>,
+    chartData: List<WeightChartPoint>,
+    yMin: Float,
+    yMax: Float
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -185,88 +330,144 @@ private fun MonthChartCard() {
                 .background(Color(0xFFF7F8FA))
                 .padding(16.dp)
         ) {
-            Text(
-                text = "March",
-                color = TextMuted,
-                style = TextStyles.title,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(8.dp))
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(340.dp)
+                    .height(360.dp)
             ) {
-                val gridColor = Color(0xFFB9C0CC)
-                val blueLine = Color(0xFF0E66E5)
-                val targetLine = Color(0xFF11A668)
-
                 val top = 24f
-                val bottom = size.height - 20f
-                val left = 20f
-                val right = size.width - 10f
+                val bottom = size.height - 28f
+                val left = 22f
+                val right = size.width - 22f
 
-                val levels = 6
-                for (i in 0..levels) {
-                    val y = top + (bottom - top) * (i / levels.toFloat())
+                val lines = 6
+                for (i in 0..lines) {
+                    val y = top + (bottom - top) * (i / lines.toFloat())
                     drawLine(
-                        color = gridColor,
+                        color = ChartGrid,
                         start = Offset(left, y),
                         end = Offset(right, y),
                         strokeWidth = 2f,
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(24f, 14f), 0f)
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(16f, 10f), 0f)
                     )
                 }
 
-                drawLine(
-                    color = blueLine,
-                    start = Offset(left, top + 80f),
-                    end = Offset(right - 120f, bottom - 60f),
-                    strokeWidth = 8f
-                )
-                drawLine(
-                    color = targetLine,
-                    start = Offset(left, bottom - 24f),
-                    end = Offset(right, bottom - 24f),
-                    strokeWidth = 5f
-                )
+                xAxisLabels.forEach { label ->
+                    val x = left + (right - left) * label.xRatio
+                    drawContext.canvas.nativeCanvas.drawText(
+                        label.label,
+                        x,
+                        top - 8f,
+                        android.graphics.Paint().apply {
+                            color = android.graphics.Color.parseColor("#9AA0AB")
+                            textSize = 32f
+                            textAlign = android.graphics.Paint.Align.CENTER
+                            isAntiAlias = true
+                        }
+                    )
+                }
+
+                if (chartData.size >= 2 && yMax > yMin) {
+                    val path = Path()
+                    chartData.forEachIndexed { index, point ->
+                        val x = left + (right - left) * point.xRatio
+                        val yRatio = ((point.value - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
+                        val y = bottom - (bottom - top) * yRatio
+                        if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                    }
+                    drawPath(
+                        path = path,
+                        color = ChartLine,
+                        style = Stroke(width = 6f)
+                    )
+                } else if (chartData.size == 1 && yMax > yMin) {
+                    val point = chartData.first()
+                    val x = left + (right - left) * point.xRatio
+                    val yRatio = ((point.value - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
+                    val y = bottom - (bottom - top) * yRatio
+                    drawCircle(color = ChartLine, radius = 8f, center = Offset(x, y))
+                }
             }
         }
     }
 }
 
 @Composable
-private fun PromoCards() {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Card(shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
+private fun AddCurrentWeightSheet(
+    draftWeightKg: Float,
+    onCancel: () -> Unit,
+    onSave: () -> Unit,
+    onWeightChange: (Float) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+            .navigationBarsPadding()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SheetActionButton(text = "Hủy", onClick = onCancel, primary = false)
+            SheetActionButton(text = "Lưu", onClick = onSave, primary = true)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = "Thêm cân nặng hiện tại",
+            style = TextStyles.titleMedium,
+            color = TextDark,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.Bottom
+        ) {
             Text(
-                text = "Track your weight dynamics and enhance your\nwell-being with My Water",
+                text = formatWeightValue(draftWeightKg).replace('.', ','),
+                style = androidx.compose.ui.text.TextStyle(fontSize = 64.sp),
+                color = AccentBlue
+            )
+            Text(
+                text = " kg",
                 style = TextStyles.titleMedium,
-                color = TextDark,
-                modifier = Modifier.padding(18.dp),
-                textAlign = TextAlign.Center
+                color = TextMuted,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            PromoPill("Weight tracking", AccentBlue, Modifier.weight(1f))
-            PromoPill("Well-being", Green, Modifier.weight(1f))
-        }
-        PromoPill("Healthy body", Color(0xFFF1A92A), Modifier.fillMaxWidth(0.5f).align(Alignment.CenterHorizontally))
+        Spacer(modifier = Modifier.height(16.dp))
+        Slider(
+            value = draftWeightKg,
+            onValueChange = { onWeightChange((it * 10f).toInt() / 10f) },
+            valueRange = 25f..200f
+        )
+        Spacer(modifier = Modifier.height(220.dp))
     }
 }
 
 @Composable
-private fun PromoPill(text: String, color: Color, modifier: Modifier) {
-    Card(shape = RoundedCornerShape(30.dp), modifier = modifier) {
+private fun SheetActionButton(
+    text: String,
+    onClick: () -> Unit,
+    primary: Boolean
+) {
+    TextButton(
+        onClick = onClick,
+        shape = RoundedCornerShape(18.dp),
+        colors = ButtonDefaults.textButtonColors(
+            containerColor = Color(0xFFF4F5F7),
+            contentColor = if (primary) AccentBlue else TextDark
+        )
+    ) {
         Text(
             text = text,
-            color = color,
             style = TextStyles.titleMedium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp)
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }
 }
@@ -275,26 +476,28 @@ private fun PromoPill(text: String, color: Color, modifier: Modifier) {
 private fun WeightBottomNav() {
     val context = LocalContext.current
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding(),
         shape = RoundedCornerShape(0.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.White)
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             BottomItem(
-                label = "My Water",
+                label = "Nước của tôi",
                 active = false,
                 onClick = { context.startActivity(Router.home(context)) }
             )
-            BottomItem(label = "Weight", active = true, onClick = {})
+            BottomItem(label = "Cân nặng", active = true, onClick = {})
             FloatingAddButton()
-            BottomItem(label = "Statistics", active = false, onClick = {})
-            BottomItem(label = "Settings", active = false, onClick = {})
+            BottomItem(label = "Thống kê", active = false, onClick = {})
+            BottomItem(label = "Cài đặt", active = false, onClick = {})
         }
     }
 }
@@ -333,5 +536,23 @@ private fun FloatingAddButton() {
             color = Color.White,
             style = TextStyles.titleMedium
         )
+    }
+}
+
+private fun formatWeightValue(weight: Float): String {
+    return if (abs(weight - weight.toInt()) < 0.05f) {
+        weight.toInt().toString()
+    } else {
+        String.format(Locale.US, "%.1f", weight)
+    }
+}
+
+private fun buildProgressText(progressKg: Float): String {
+    val rounded = ((progressKg * 10).toInt()) / 10f
+    val body = formatWeightValue(abs(rounded))
+    return when {
+        rounded > 0f -> "+$body kg"
+        rounded < 0f -> "-$body kg"
+        else -> "0 kg"
     }
 }

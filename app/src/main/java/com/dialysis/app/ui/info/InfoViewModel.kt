@@ -1,10 +1,15 @@
 package com.dialysis.app.ui.info
 
 import com.dialysis.app.base.BaseViewModel
+import com.dialysis.app.data.local.WeightTrackingRepository
 import com.dialysis.app.sharepref.UserProfileSharePref
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class InfoViewModel(
-    private val userProfileSharePref: UserProfileSharePref
+    private val userProfileSharePref: UserProfileSharePref,
+    private val weightTrackingRepository: WeightTrackingRepository
 ) : BaseViewModel<InfoState>(InfoState()) {
 
     val currentStepState = flowOf(InfoState::currentStep).collectStateUI(0)
@@ -40,6 +45,9 @@ class InfoViewModel(
     fun saveProfile() {
         getState { state ->
             userProfileSharePref.saveProfile(state)
+            viewModelScope.launch(Dispatchers.IO) {
+                weightTrackingRepository.saveDailyWeight(weightKg = state.weight.toFloat())
+            }
         }
     }
 }

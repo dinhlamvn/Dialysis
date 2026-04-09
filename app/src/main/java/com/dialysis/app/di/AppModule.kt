@@ -2,6 +2,7 @@ package com.dialysis.app.di
 
 import androidx.room.Room
 import com.dialysis.app.data.local.AppDatabase
+import com.dialysis.app.data.local.WeightTrackingRepository
 import com.dialysis.app.data.local.WaterTrackingRepository
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.sharepref.AccountSharePref
@@ -12,6 +13,7 @@ import com.dialysis.app.ui.home.HomeViewModel
 import com.dialysis.app.ui.info.InfoViewModel
 import com.dialysis.app.ui.login.LoginViewModel
 import com.dialysis.app.ui.otpverify.OtpVerifyViewModel
+import com.dialysis.app.ui.weight.WeightViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
@@ -29,7 +31,9 @@ val appModule = module {
         ).fallbackToDestructiveMigration().build()
     }
     single { get<AppDatabase>().waterEntryDao() }
+    single { get<AppDatabase>().weightEntryDao() }
     single { WaterTrackingRepository(get()) }
+    single { WeightTrackingRepository(get()) }
 }
 
 val RegisterModule = module {
@@ -53,5 +57,9 @@ val DailyReportModule = module {
 }
 
 val InfoModule = module {
-    viewModel { InfoViewModel(get()) }
+    viewModel { InfoViewModel(get(), get()) }
+}
+
+val WeightModule = module {
+    viewModel { WeightViewModel(get(), get()) }
 }

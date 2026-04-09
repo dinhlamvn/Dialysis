@@ -41,6 +41,7 @@ import com.dialysis.app.ui.daily.DailyReportViewModel
 import com.dialysis.app.ui.home.tabs.SettingsScreen
 import com.dialysis.app.ui.home.tabs.StatisticsScreen
 import com.dialysis.app.ui.weight.WeightScreen
+import com.dialysis.app.ui.weight.WeightViewModel
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
@@ -49,6 +50,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class HomeActivity : BaseActivity() {
     private val homeViewModel: HomeViewModel by viewModel()
     private val dailyReportViewModel: DailyReportViewModel by viewModel()
+    private val weightViewModel: WeightViewModel by viewModel()
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
@@ -98,7 +100,10 @@ class HomeActivity : BaseActivity() {
                             }
                         }
                     )
-                    1 -> WeightScreen(showBottomNav = false)
+                    1 -> WeightScreen(
+                        viewModel = weightViewModel,
+                        showBottomNav = false
+                    )
                     2 -> StatisticsScreen(
                         todayTotalMl = todayTotalMl,
                         weekTotalMl = weekTotalMl,
