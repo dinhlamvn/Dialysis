@@ -3,6 +3,7 @@ package com.dialysis.app.ui.info
 data class UserProfile(
     val gender: Int,
     val weight: Int,
+    val height: Int,
     val age: Int,
     val name: String,
     val phone: String,
@@ -15,6 +16,7 @@ fun InfoState.toUserProfile(): UserProfile {
     return UserProfile(
         gender = gender,
         weight = weight,
+        height = height,
         age = age,
         name = name,
         phone = phone,

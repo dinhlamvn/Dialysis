@@ -6,6 +6,7 @@ data class InfoState(
     val currentStep: Int = 0,
     val gender: Int = 1,
     val weight: Int = 50,
+    val height: Int = 170,
     val age: Int = 30,
     val name: String = "",
     val phone: String = "",

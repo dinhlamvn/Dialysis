@@ -31,6 +31,7 @@
     <string name="register_next">Tiếp theo</string>
     <string name="register_finish">Hoàn tất</string>
     <string name="register_weight_title">Chọn cân nặng của bạn</string>
+    <string name="register_height_title">Chọn chiều cao của bạn</string>
     <string name="register_age_title">Chọn tuổi của bạn</string>
     <string name="register_name_title">Tên của bạn</string>
     <string name="register_dialysis_year_title">Chọn Thời gian đã chạy thận nhân tạo (năm)</string>
@@ -39,6 +40,7 @@
     <string name="register_done_title">Hoàn tất đăng ký</string>
     <string name="register_done_desc">Thông tin của bạn đã sẵn sàng để bắt đầu.</string>
     <string name="register_unit_kg">kg</string>
+    <string name="register_unit_cm">cm</string>
     <string name="register_unit_ml">ml</string>
     <string name="register_unit_age">tuổi</string>
     <string name="register_unit_year">năm</string>

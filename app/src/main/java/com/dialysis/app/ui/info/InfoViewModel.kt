@@ -15,6 +15,7 @@ class InfoViewModel(
     val currentStepState = collectStateUI(InfoState::currentStep)
     val genderState = collectStateUI(InfoState::gender)
     val weightState = collectStateUI(InfoState::weight)
+    val heightState = collectStateUI(InfoState::height)
     val ageState = collectStateUI(InfoState::age)
     val nameState = collectStateUI(InfoState::name)
     val phoneState = collectStateUI(InfoState::phone)
@@ -29,6 +30,8 @@ class InfoViewModel(
     fun updateGender(gender: Int) = setState { copy(gender = gender) }
 
     fun updateWeight(weight: Int) = setState { copy(weight = weight) }
+
+    fun updateHeight(height: Int) = setState { copy(height = height) }
 
     fun updateAge(age: Int) = setState { copy(age = age) }
 

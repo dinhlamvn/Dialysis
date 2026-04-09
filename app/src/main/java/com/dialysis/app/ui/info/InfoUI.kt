@@ -71,6 +71,7 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) 
     val name by viewModel.nameState.collectAsStateWithLifecycle()
     val sessionsPerWeek by viewModel.dialysisFreqWeekState.collectAsStateWithLifecycle()
     val weightState by viewModel.weightState.collectAsStateWithLifecycle()
+    val heightState by viewModel.heightState.collectAsStateWithLifecycle()
     val age by viewModel.ageState.collectAsStateWithLifecycle()
     val dialysisYear by viewModel.dialysisStartYearState.collectAsStateWithLifecycle()
     val urinePerDay by viewModel.dailyUrineMlState.collectAsStateWithLifecycle()
@@ -78,6 +79,7 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) 
     val view = LocalView.current
 
     val weightValues = remember { (30..150).toList() }
+    val heightValues = remember { (100..250).toList() }
     val ageValues = remember { (18..80).toList() }
     val urineValues = remember { (0..1500 step 25).toList() }
     val currentYear = Year.now().value
@@ -109,20 +111,26 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) 
                 onWeightChange = viewModel::updateWeight
             )
 
-            2 -> AgeStep(
+            2 -> HeightStep(
+                height = heightState,
+                values = heightValues,
+                onHeightChange = viewModel::updateHeight
+            )
+
+            3 -> AgeStep(
                 age = age,
                 values = ageValues,
                 onAgeChange = viewModel::updateAge
             )
 
-            3 -> NameStep(name = name, onNameChange = viewModel::updateName)
-            4 -> DialysisYearStep(
+            4 -> NameStep(name = name, onNameChange = viewModel::updateName)
+            5 -> DialysisYearStep(
                 year = if (dialysisYear == 0) currentYear else dialysisYear,
                 values = dialysisYearValues,
                 onYearChange = viewModel::updateDialysisStartYear
             )
 
-            5 -> SessionsStep(
+            6 -> SessionsStep(
                 value = if (sessionsPerWeek == 0) "" else sessionsPerWeek.toString(),
                 onValueChange = { input ->
                     val sanitized = input.filter { it.isDigit() }
@@ -130,15 +138,16 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) 
                 }
             )
 
-            6 -> UrineStep(
+            7 -> UrineStep(
                 value = if (urinePerDay == 0) urineValues.first() else urinePerDay,
                 values = urineValues,
                 onValueChange = viewModel::updateDailyUrineMl
             )
 
-            else -> SummaryStep(
-                title = stringResource(R.string.register_done_title),
-                description = stringResource(R.string.register_done_desc)
+            else -> UrineStep(
+                value = if (urinePerDay == 0) urineValues.first() else urinePerDay,
+                values = urineValues,
+                onValueChange = viewModel::updateDailyUrineMl
             )
         }
 
@@ -146,7 +155,7 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) 
 
         PrimaryButton(
             text = if (currentStep == TotalSteps - 1) {
-                stringResource(R.string.register_finish)
+                "Done"
             } else {
                 stringResource(R.string.register_next)
             },
@@ -249,6 +258,21 @@ private fun WeightStep(
         unit = stringResource(R.string.register_unit_kg),
         values = values,
         onValueChange = onWeightChange
+    )
+}
+
+@Composable
+private fun HeightStep(
+    height: Int,
+    values: List<Int>,
+    onHeightChange: (Int) -> Unit
+) {
+    SelectionScale(
+        title = stringResource(R.string.register_height_title),
+        value = height,
+        unit = stringResource(R.string.register_unit_cm),
+        values = values,
+        onValueChange = onHeightChange
     )
 }
 
