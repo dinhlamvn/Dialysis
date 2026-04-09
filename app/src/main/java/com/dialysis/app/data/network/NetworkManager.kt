@@ -38,20 +38,6 @@ object NetworkManager {
             .create(AppServices::class.java)
     }
 
-    fun <T> ApiResponse<T>.asResult(): Result<T> {
-        return try {
-            if (this.success) {
-                Result.success(this.data!!)
-            } else {
-                Result.failure(UnknownError())
-            }
-        } catch (e: Exception) {
-            val networkError = e.parseNetworkErrorResponse()
-            Result.failure(Exception(networkError.message))
-        }
-    }
-
-
     suspend fun <T> resolve(block: suspend () -> ApiResponse<T>): Result<T> {
         return try {
             val response = block()

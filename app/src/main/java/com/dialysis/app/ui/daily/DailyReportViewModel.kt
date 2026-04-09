@@ -25,14 +25,14 @@ class DailyReportViewModel(
 
     private val selectedDateMillis = MutableStateFlow(System.currentTimeMillis())
 
-    val selectedDateLabelState = flowOf(DailyReportState::selectedDateLabel).collectStateUI("")
-    val drinksState = flowOf(DailyReportState::drinks).collectStateUI(emptyList())
-    val progressState = flowOf(DailyReportState::progress).collectStateUI(0f)
-    val progressTextState = flowOf(DailyReportState::progressText).collectStateUI("0%")
-    val showDrinkListSheetState = flowOf(DailyReportState::showDrinkListSheet).collectStateUI(false)
-    val selectedDrinkNameState = flowOf(DailyReportState::selectedDrinkName).collectStateUI(null)
-    val showDeleteDialogState = flowOf(DailyReportState::showDeleteDialog).collectStateUI(false)
-    val deletingDrinkTitleState = flowOf(DailyReportState::deletingDrinkTitle).collectStateUI("")
+    val selectedDateLabelState = collectStateUI(DailyReportState::selectedDateLabel)
+    val drinksState = collectStateUI(DailyReportState::drinks)
+    val progressState = collectStateUI(DailyReportState::progress)
+    val progressTextState = collectStateUI(DailyReportState::progressText)
+    val showDrinkListSheetState = collectStateUI(DailyReportState::showDrinkListSheet)
+    val selectedDrinkNameState = collectStateUI(DailyReportState::selectedDrinkName)
+    val showDeleteDialogState = collectStateUI(DailyReportState::showDeleteDialog)
+    val deletingDrinkTitleState = collectStateUI(DailyReportState::deletingDrinkTitle)
 
     init {
         val goalMl = AppGoals.DAILY_WATER_GOAL_ML.toFloat()

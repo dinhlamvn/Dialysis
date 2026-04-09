@@ -3,7 +3,6 @@ package com.dialysis.app.ui.login
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.network.NetworkManager
-import com.dialysis.app.data.network.NetworkManager.asResult
 import com.dialysis.app.data.network.request.LoginRequest
 import com.dialysis.app.sharepref.AccountSharePref
 import kotlinx.coroutines.Dispatchers
@@ -13,11 +12,11 @@ class LoginViewModel(
     private val accountSharePref: AccountSharePref
 ) : BaseViewModel<LoginState>(LoginState()) {
 
-    val identifierState = flowOf(LoginState::identifier).collectStateUI("")
-    val passwordState = flowOf(LoginState::password).collectStateUI("")
-    val isPasswordVisibleState = flowOf(LoginState::isPasswordVisible).collectStateUI(false)
-    val isLoginLoadingState = flowOf(LoginState::isLoginLoading).collectStateUI(false)
-    val loginErrorState = flowOf(LoginState::loginError).collectStateUI(null)
+    val identifierState = collectStateUI(LoginState::identifier)
+    val passwordState = collectStateUI(LoginState::password)
+    val isPasswordVisibleState = collectStateUI(LoginState::isPasswordVisible)
+    val isLoginLoadingState = collectStateUI(LoginState::isLoginLoading)
+    val loginErrorState = collectStateUI(LoginState::loginError)
 
     fun updateIdentifier(value: String) = setState { copy(identifier = value) }
 
@@ -50,7 +49,9 @@ class LoginViewModel(
                     password = state.password
                 )
 
-                val result = NetworkManager.appPublicServices.login(request).asResult()
+                val result = NetworkManager.resolve {
+                    NetworkManager.appPublicServices.login(request)
+                }
 
                 if (result.isSuccess) {
                     val data = result.getOrNull() ?: return@launch

@@ -3,7 +3,6 @@ package com.dialysis.app.ui.otpverify
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.network.NetworkManager
-import com.dialysis.app.data.network.NetworkManager.asResult
 import com.dialysis.app.data.network.request.VerifyOtpRequest
 import com.dialysis.app.sharepref.AccountSharePref
 import kotlinx.coroutines.Dispatchers
@@ -13,11 +12,11 @@ class OtpVerifyViewModel(
     private val accountSharePref: AccountSharePref
 ) : BaseViewModel<OtpVerifyState>(OtpVerifyState()) {
 
-    val identifierTypeState = flowOf(OtpVerifyState::identifierType).collectStateUI("")
-    val identifierState = flowOf(OtpVerifyState::identifier).collectStateUI("")
-    val otpCodeState = flowOf(OtpVerifyState::otpCode).collectStateUI("")
-    val isVerifyingState = flowOf(OtpVerifyState::isVerifying).collectStateUI(false)
-    val verifyErrorState = flowOf(OtpVerifyState::verifyError).collectStateUI(null)
+    val identifierTypeState = collectStateUI(OtpVerifyState::identifierType)
+    val identifierState = collectStateUI(OtpVerifyState::identifier)
+    val otpCodeState = collectStateUI(OtpVerifyState::otpCode)
+    val isVerifyingState = collectStateUI(OtpVerifyState::isVerifying)
+    val verifyErrorState = collectStateUI(OtpVerifyState::verifyError)
 
     fun setIdentifierData(identifierType: String, identifier: String) = setState {
         copy(identifierType = identifierType, identifier = identifier)
@@ -59,7 +58,9 @@ class OtpVerifyViewModel(
                     otpCode = state.otpCode,
                 )
 
-                val result = NetworkManager.appPublicServices.verifyOtp(request).asResult()
+                val result = NetworkManager.resolve {
+                    NetworkManager.appPublicServices.verifyOtp(request)
+                }
 
                 if (result.isSuccess) {
                     val data = result.getOrNull() ?: return@launch

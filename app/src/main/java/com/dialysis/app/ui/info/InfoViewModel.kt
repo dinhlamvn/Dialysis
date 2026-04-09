@@ -12,15 +12,15 @@ class InfoViewModel(
     private val weightTrackingRepository: WeightTrackingRepository
 ) : BaseViewModel<InfoState>(InfoState()) {
 
-    val currentStepState = flowOf(InfoState::currentStep).collectStateUI(0)
-    val genderState = flowOf(InfoState::gender).collectStateUI(0)
-    val weightState = flowOf(InfoState::weight).collectStateUI(50)
-    val ageState = flowOf(InfoState::age).collectStateUI(30)
-    val nameState = flowOf(InfoState::name).collectStateUI("")
-    val phoneState = flowOf(InfoState::phone).collectStateUI("")
-    val dialysisStartYearState = flowOf(InfoState::dialysisStartYear).collectStateUI(0)
-    val dialysisFreqWeekState = flowOf(InfoState::dialysisFreqWeek).collectStateUI(0)
-    val dailyUrineMlState = flowOf(InfoState::dailyUrineMl).collectStateUI(0)
+    val currentStepState = collectStateUI(InfoState::currentStep)
+    val genderState = collectStateUI(InfoState::gender)
+    val weightState = collectStateUI(InfoState::weight)
+    val ageState = collectStateUI(InfoState::age)
+    val nameState = collectStateUI(InfoState::name)
+    val phoneState = collectStateUI(InfoState::phone)
+    val dialysisStartYearState = collectStateUI(InfoState::dialysisStartYear)
+    val dialysisFreqWeekState = collectStateUI(InfoState::dialysisFreqWeek)
+    val dailyUrineMlState = collectStateUI(InfoState::dailyUrineMl)
 
     fun nextStep() = setState { copy(currentStep = currentStep + 1) }
 

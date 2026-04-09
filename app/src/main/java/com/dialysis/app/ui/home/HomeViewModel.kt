@@ -15,15 +15,15 @@ class HomeViewModel(
     private val waterTrackingRepository: WaterTrackingRepository
 ) : BaseViewModel<HomeState>(HomeState()) {
 
-    val drinksState = flowOf(HomeState::drinks).collectStateUI(emptyList())
-    val showDrinkListSheetState = flowOf(HomeState::showDrinkListSheet).collectStateUI(false)
-    val showDailyReportSheetState = flowOf(HomeState::showDailyReportSheet).collectStateUI(false)
-    val selectedDrinkNameState = flowOf(HomeState::selectedDrinkName).collectStateUI(null)
-    val todayTotalMlState = flowOf(HomeState::todayTotalMl).collectStateUI(0)
-    val weekTotalMlState = flowOf(HomeState::weekTotalMl).collectStateUI(0)
-    val monthTotalMlState = flowOf(HomeState::monthTotalMl).collectStateUI(0)
-    val weekDailyMlState = flowOf(HomeState::weekDailyMl).collectStateUI(listOf(0, 0, 0, 0, 0, 0, 0))
-    val dailyTotalsState = flowOf(HomeState::dailyTotals).collectStateUI(emptyList())
+    val drinksState = collectStateUI(HomeState::drinks)
+    val showDrinkListSheetState = collectStateUI(HomeState::showDrinkListSheet)
+    val showDailyReportSheetState = collectStateUI(HomeState::showDailyReportSheet)
+    val selectedDrinkNameState = collectStateUI(HomeState::selectedDrinkName)
+    val todayTotalMlState = collectStateUI(HomeState::todayTotalMl)
+    val weekTotalMlState = collectStateUI(HomeState::weekTotalMl)
+    val monthTotalMlState = collectStateUI(HomeState::monthTotalMl)
+    val weekDailyMlState = collectStateUI(HomeState::weekDailyMl)
+    val dailyTotalsState = collectStateUI(HomeState::dailyTotals)
 
     init {
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())

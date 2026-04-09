@@ -3,22 +3,21 @@ package com.dialysis.app.ui.register
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.network.NetworkManager
-import com.dialysis.app.data.network.NetworkManager.asResult
 import com.dialysis.app.data.network.request.RegisterRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class RegisterViewModel : BaseViewModel<RegisterState>(RegisterState()) {
 
-    val emailOrPhoneState = flowOf(RegisterState::emailOrPhone).collectStateUI("")
-    val nameState = flowOf(RegisterState::name).collectStateUI("")
-    val passwordState = flowOf(RegisterState::password).collectStateUI("")
-    val confirmPasswordState = flowOf(RegisterState::confirmPassword).collectStateUI("")
-    val isPasswordVisibleState = flowOf(RegisterState::isPasswordVisible).collectStateUI(false)
+    val emailOrPhoneState = collectStateUI(RegisterState::emailOrPhone)
+    val nameState = collectStateUI(RegisterState::name)
+    val passwordState = collectStateUI(RegisterState::password)
+    val confirmPasswordState = collectStateUI(RegisterState::confirmPassword)
+    val isPasswordVisibleState = collectStateUI(RegisterState::isPasswordVisible)
     val isConfirmPasswordVisibleState =
-        flowOf(RegisterState::isConfirmPasswordVisible).collectStateUI(false)
-    val isRegisterLoadingState = flowOf(RegisterState::isRegisterLoading).collectStateUI(false)
-    val registerErrorState = flowOf(RegisterState::registerError).collectStateUI(null)
+        collectStateUI(RegisterState::isConfirmPasswordVisible)
+    val isRegisterLoadingState = collectStateUI(RegisterState::isRegisterLoading)
+    val registerErrorState = collectStateUI(RegisterState::registerError)
 
     fun updateEmailOrPhone(value: String) = setState { copy(emailOrPhone = value) }
 
@@ -52,7 +51,7 @@ class RegisterViewModel : BaseViewModel<RegisterState>(RegisterState()) {
                 val emailOrPhone = state.emailOrPhone.trim()
                 val isEmail = emailOrPhone.contains("@")
                 val request = RegisterRequest(
-                    username = emailOrPhone,
+                    username = emailOrPhone.replaceAfter("@", "").replace("@", ""),
                     email = if (isEmail) emailOrPhone else "",
                     phone = if (isEmail) "" else emailOrPhone,
                     password = state.password,
@@ -60,7 +59,9 @@ class RegisterViewModel : BaseViewModel<RegisterState>(RegisterState()) {
                     name = state.name.trim(),
                 )
 
-                val result = NetworkManager.appPublicServices.register(request).asResult()
+                val result = NetworkManager.resolve {
+                    NetworkManager.appPublicServices.register(request)
+                }
                 if (result.isSuccess) {
                     setState {
                         copy(

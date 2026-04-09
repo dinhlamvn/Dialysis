@@ -4,13 +4,13 @@ import com.dialysis.app.base.BaseViewModel
 
 class CreateDrinkViewModel : BaseViewModel<CreateDrinkState>(CreateDrinkState()) {
 
-    val drinkNameState = flowOf(CreateDrinkState::drinkName).collectStateUI("")
-    val selectedIdState = flowOf(CreateDrinkState::selectedId).collectStateUI("200_ml")
+    val drinkNameState = collectStateUI(CreateDrinkState::drinkName)
+    val selectedIdState = collectStateUI(CreateDrinkState::selectedId)
     val showCustomInputSheetState =
-        flowOf(CreateDrinkState::showCustomInputSheet).collectStateUI(false)
-    val customInputState = flowOf(CreateDrinkState::customInput).collectStateUI("")
-    val customMlState = flowOf(CreateDrinkState::customMl).collectStateUI(null)
-    val selectedTimeTextState = flowOf(CreateDrinkState::selectedTimeText).collectStateUI("")
+        collectStateUI(CreateDrinkState::showCustomInputSheet)
+    val customInputState = collectStateUI(CreateDrinkState::customInput)
+    val customMlState = collectStateUI(CreateDrinkState::customMl)
+    val selectedTimeTextState = collectStateUI(CreateDrinkState::selectedTimeText)
 
     fun updateDrinkName(value: String) = setState {
         copy(drinkName = value)

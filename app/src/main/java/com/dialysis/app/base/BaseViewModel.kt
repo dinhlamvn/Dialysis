@@ -2,7 +2,6 @@ package com.dialysis.app.base
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -117,8 +116,13 @@ abstract class BaseViewModel<S : BaseState>(
         )
     }.distinctUntilChanged()
 
-    protected fun <T> Flow<T>.collectStateUI(initValue: T): StateFlow<T> = this.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(3_000), initValue
-    )
+    protected fun <T> collectStateUI(property: KProperty1<S, T>): StateFlow<T> =
+        stateManager.state.map { stateVal ->
+            val propertyValue = property.get(stateVal)
+            propertyValue
+        }.distinctUntilChanged().stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            property.get(stateManager.state.value)
+        )
 }
