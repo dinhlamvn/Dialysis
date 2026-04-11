@@ -21,4 +21,12 @@ data class HomeState(
     val weekDailyMl: List<Int> = listOf(0, 0, 0, 0, 0, 0, 0),
     val dailyTotals: List<DailyTotal> = emptyList(),
     val dailyWaterGoalMl: Int = AppGoals.DAILY_WATER_GOAL_ML,
+    val isLoggedIn: Boolean = false,
+    val showSymptomSheet: Boolean = false,
+    val symptoms: List<String> = emptyList(),
+    val selectedSymptom: String? = null,
+    val symptomNotes: String = "",
+    val isSymptomsLoading: Boolean = false,
+    val isSubmittingSymptom: Boolean = false,
+    val showSymptomSubmitSuccessToast: Boolean = false,
 ) : BaseState

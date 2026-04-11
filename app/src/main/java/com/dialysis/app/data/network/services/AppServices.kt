@@ -1,6 +1,7 @@
 package com.dialysis.app.data.network.services
 
 import com.dialysis.app.data.network.request.WaterIntakeRequest
+import com.dialysis.app.data.network.request.SymptomLogRequest
 import com.dialysis.app.data.network.response.ApiResponse
 import com.dialysis.app.data.network.response.LoginUser
 import com.dialysis.app.data.network.response.WaterIntakeResponse
@@ -23,5 +24,13 @@ interface AppServices {
     @DELETE("mobile/water/intake/{syncedId}")
     suspend fun deleteWaterIntake(
         @Path("syncedId") syncedId: Long
+    ): ApiResponse<Map<String, Any>?>
+
+    @GET("mobile/symptoms/list")
+    suspend fun getSymptoms(): ApiResponse<List<String>>
+
+    @POST("mobile/symptoms/log")
+    suspend fun logSymptom(
+        @Body request: SymptomLogRequest
     ): ApiResponse<Map<String, Any>?>
 }

@@ -3,6 +3,9 @@ package com.dialysis.app.ui.home
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WaterTrackingRepository
+import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.request.SymptomLogRequest
+import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -14,7 +17,9 @@ import java.util.Locale
 
 class HomeViewModel(
     private val waterTrackingRepository: WaterTrackingRepository,
-    private val userProfileSharePref: UserProfileSharePref
+    private val userProfileSharePref: UserProfileSharePref,
+    private val accountSharePref: AccountSharePref,
+    private val networkManager: NetworkManager
 ) : BaseViewModel<HomeState>(HomeState()) {
 
     val drinksState = collectStateUI(HomeState::drinks)
@@ -27,9 +32,22 @@ class HomeViewModel(
     val weekDailyMlState = collectStateUI(HomeState::weekDailyMl)
     val dailyTotalsState = collectStateUI(HomeState::dailyTotals)
     val dailyWaterGoalMlState = collectStateUI(HomeState::dailyWaterGoalMl)
+    val isLoggedInState = collectStateUI(HomeState::isLoggedIn)
+    val showSymptomSheetState = collectStateUI(HomeState::showSymptomSheet)
+    val symptomsState = collectStateUI(HomeState::symptoms)
+    val selectedSymptomState = collectStateUI(HomeState::selectedSymptom)
+    val symptomNotesState = collectStateUI(HomeState::symptomNotes)
+    val isSymptomsLoadingState = collectStateUI(HomeState::isSymptomsLoading)
+    val isSubmittingSymptomState = collectStateUI(HomeState::isSubmittingSymptom)
+    val showSymptomSubmitSuccessToastState = collectStateUI(HomeState::showSymptomSubmitSuccessToast)
 
     init {
-        setState { copy(dailyWaterGoalMl = userProfileSharePref.getDailyWaterGoalMl()) }
+        setState {
+            copy(
+                dailyWaterGoalMl = userProfileSharePref.getDailyWaterGoalMl(),
+                isLoggedIn = accountSharePref.getToken().isNotBlank()
+            )
+        }
 
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
 
@@ -112,6 +130,91 @@ class HomeViewModel(
                 amountMl = amount.extractMlValue()
             )
         }
+    }
+
+    fun openSymptomSheet() {
+        getState { state ->
+            if (!state.isLoggedIn) return@getState
+            setState { copy(showSymptomSheet = true) }
+            if (state.symptoms.isEmpty()) {
+                loadSymptoms()
+            }
+        }
+    }
+
+    fun closeSymptomSheet() = setState {
+        copy(
+            showSymptomSheet = false,
+            selectedSymptom = null,
+            symptomNotes = "",
+            isSubmittingSymptom = false
+        )
+    }
+
+    fun selectSymptom(symptom: String) = setState { copy(selectedSymptom = symptom) }
+
+    fun updateSymptomNotes(notes: String) = setState { copy(symptomNotes = notes) }
+
+    fun submitSymptomLog() {
+        getState { state ->
+            val symptom = state.selectedSymptom?.trim().orEmpty()
+            val notes = state.symptomNotes.trim()
+            if (symptom.isBlank() || notes.isBlank() || state.isSubmittingSymptom) return@getState
+
+            setState { copy(isSubmittingSymptom = true) }
+            viewModelScope.launch(Dispatchers.IO) {
+                val loggedAt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+                    .format(Date(System.currentTimeMillis()))
+                val result = networkManager.resolveNullable {
+                    networkManager.appServices.logSymptom(
+                        SymptomLogRequest(
+                            symptom = symptom,
+                            notes = notes,
+                            loggedAt = loggedAt
+                        )
+                    )
+                }
+                if (result.isSuccess) {
+                    setState {
+                        copy(
+                            isSubmittingSymptom = false,
+                            showSymptomSheet = false,
+                            selectedSymptom = null,
+                            symptomNotes = "",
+                            showSymptomSubmitSuccessToast = true
+                        )
+                    }
+                } else {
+                    setState { copy(isSubmittingSymptom = false) }
+                }
+            }
+        }
+    }
+
+    private fun loadSymptoms() {
+        getState { state ->
+            if (state.isSymptomsLoading) return@getState
+            setState { copy(isSymptomsLoading = true) }
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = networkManager.resolve {
+                    networkManager.appServices.getSymptoms()
+                }
+                if (result.isSuccess) {
+                    setState {
+                        copy(
+                            isSymptomsLoading = false,
+                            symptoms = result.getOrNull().orEmpty()
+                        )
+                    }
+                } else {
+                    setState { copy(isSymptomsLoading = false) }
+                }
+            }
+        }
+    }
+
+    fun clearSymptomSubmitSuccessToast() = setState {
+        copy(showSymptomSubmitSuccessToast = false)
     }
 }
 

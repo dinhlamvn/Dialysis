@@ -1,5 +1,4 @@
 package com.dialysis.app.ui.home
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -25,6 +24,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,6 +33,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -48,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dialysis.app.R
 import com.dialysis.app.data.local.model.DailyTotal
 import com.dialysis.app.router.Router
+import com.dialysis.app.ui.components.Loading
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.daily.DailyReportScreen
 import com.dialysis.app.ui.daily.DailyReportViewModel
@@ -80,6 +83,13 @@ fun HomeScreen(
     val todayTotalMl by viewModel.todayTotalMlState.collectAsStateWithLifecycle()
     val dailyTotals by viewModel.dailyTotalsState.collectAsStateWithLifecycle()
     val dailyWaterGoalMl by viewModel.dailyWaterGoalMlState.collectAsStateWithLifecycle()
+    val isLoggedIn by viewModel.isLoggedInState.collectAsStateWithLifecycle()
+    val showSymptomSheet by viewModel.showSymptomSheetState.collectAsStateWithLifecycle()
+    val symptoms by viewModel.symptomsState.collectAsStateWithLifecycle()
+    val selectedSymptom by viewModel.selectedSymptomState.collectAsStateWithLifecycle()
+    val symptomNotes by viewModel.symptomNotesState.collectAsStateWithLifecycle()
+    val isSymptomsLoading by viewModel.isSymptomsLoadingState.collectAsStateWithLifecycle()
+    val isSubmittingSymptom by viewModel.isSubmittingSymptomState.collectAsStateWithLifecycle()
     val rolling7DayStats = buildLast7DayStats(dailyTotals)
     val showDrinkListSheet by viewModel.showDrinkListSheetState.collectAsStateWithLifecycle()
     val showDailyReportSheet by viewModel.showDailyReportSheetState.collectAsStateWithLifecycle()
@@ -87,6 +97,7 @@ fun HomeScreen(
     val drinkListSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val dailyReportSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val createDrinkSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val symptomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Column(
         modifier = Modifier
@@ -120,6 +131,8 @@ fun HomeScreen(
                 StatisticsListSection(
                     weekStats = rolling7DayStats,
                     goalMl = dailyWaterGoalMl,
+                    isLoggedIn = isLoggedIn,
+                    onSymptomClick = viewModel::openSymptomSheet,
                     onMoreClick = onStatisticsMoreClick,
                     onWeightProgressClick = onWeightProgressClick,
                     onDayClick = { dateMillis ->
@@ -192,6 +205,31 @@ fun HomeScreen(
                     onAddDrink = { name, amount, time ->
                         viewModel.addDrink(name = name, amount = amount, _time = time)
                     }
+                )
+            }
+        }
+    }
+
+    if (showSymptomSheet) {
+        ModalBottomSheet(
+            sheetState = symptomSheetState,
+            onDismissRequest = viewModel::closeSymptomSheet
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.9f)
+            ) {
+                SymptomReportSheet(
+                    symptoms = symptoms,
+                    selectedSymptom = selectedSymptom,
+                    notes = symptomNotes,
+                    isSymptomsLoading = isSymptomsLoading,
+                    isSubmitting = isSubmittingSymptom,
+                    onCancel = viewModel::closeSymptomSheet,
+                    onSelectSymptom = viewModel::selectSymptom,
+                    onNotesChange = viewModel::updateSymptomNotes,
+                    onSubmit = viewModel::submitSymptomLog
                 )
             }
         }
@@ -627,6 +665,8 @@ private fun WeeklySection(
 private fun StatisticsListSection(
     weekStats: List<RollingDayStat>,
     goalMl: Int,
+    isLoggedIn: Boolean,
+    onSymptomClick: () -> Unit,
     onMoreClick: () -> Unit,
     onWeightProgressClick: () -> Unit,
     onDayClick: (Long) -> Unit
@@ -658,6 +698,9 @@ private fun StatisticsListSection(
             goalMl = goalMl,
             onDayClick = onDayClick
         )
+        if (isLoggedIn) {
+            SymptomCard(onClick = onSymptomClick)
+        }
         BannerCard(
             background = Color(0xFFFF6B39),
             title = "Weight progress  >",
@@ -667,6 +710,177 @@ private fun StatisticsListSection(
             onClick = onWeightProgressClick
         )
         TipOfDayCard()
+    }
+}
+
+@Composable
+private fun SymptomCard(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(110.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFFF4E5E))
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "⚠  Ghi nhận triệu chứng",
+                color = Color.White,
+                style = TextStyles.titleMedium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Báo cáo triệu chứng nghiêm trọng",
+                color = Color.White.copy(alpha = 0.92f),
+                style = TextStyles.body
+            )
+        }
+    }
+}
+
+@Composable
+private fun SymptomReportSheet(
+    symptoms: List<String>,
+    selectedSymptom: String?,
+    notes: String,
+    isSymptomsLoading: Boolean,
+    isSubmitting: Boolean,
+    onCancel: () -> Unit,
+    onSelectSymptom: (String) -> Unit,
+    onNotesChange: (String) -> Unit,
+    onSubmit: () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    onClick = onCancel
+                ) {
+                    Text(
+                        text = "Huỷ",
+                        style = TextStyles.bodyMedium,
+                        color = TextDark,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                    )
+                }
+                Text(
+                    text = "Ghi nhận triệu chứng",
+                    style = TextStyles.titleMedium,
+                    color = TextDark
+                )
+                Spacer(modifier = Modifier.width(56.dp))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Nếu bạn đang gặp tình trạng khẩn cấp, vui lòng liên hệ ngay với bác sĩ hoặc gọi cấp cứu",
+                color = TextMuted,
+                style = TextStyles.body
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = "Triệu chứng", color = TextDark, style = TextStyles.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (isSymptomsLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Loading()
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(280.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(symptoms.size) { index ->
+                        val symptom = symptoms[index]
+                        val isSelected = symptom == selectedSymptom
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isSelected) Color(0xFFFFF1F3) else CardLight)
+                                .clickable { onSelectSymptom(symptom) }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = { onSelectSymptom(symptom) },
+                                modifier = Modifier
+                                    .scale(0.85f)
+                                    .size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = symptom,
+                                color = TextDark,
+                                style = TextStyles.body
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = "Ghi chú thêm", color = TextDark, style = TextStyles.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = notes,
+                onValueChange = onNotesChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(110.dp),
+                placeholder = {
+                    Text(
+                        text = "Nhập chi tiết triệu chứng",
+                        color = TextMuted,
+                        style = TextStyles.body
+                    )
+                }
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+            Button(
+                onClick = onSubmit,
+                enabled = selectedSymptom != null && notes.isNotBlank() && !isSubmitting,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF4E5E)),
+                shape = RoundedCornerShape(26.dp)
+            ) {
+                Text(
+                    text = "Lưu báo cáo",
+                    color = Color.White,
+                    style = TextStyles.titleMedium
+                )
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+
+        if (isSubmitting) {
+            Loading(overlayColor = Color.Black.copy(alpha = 0.2f))
+        }
     }
 }
 

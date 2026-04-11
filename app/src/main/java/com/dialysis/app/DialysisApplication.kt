@@ -10,6 +10,7 @@ import com.dialysis.app.di.NetworkModule
 import com.dialysis.app.di.RegisterModule
 import com.dialysis.app.di.WeightModule
 import com.dialysis.app.di.appModule
+import com.dialysis.app.sync.WaterIntakeSyncScheduler
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.java.KoinJavaComponent.getKoin
@@ -20,8 +21,18 @@ class DialysisApplication : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@DialysisApplication)
-            modules(NetworkModule, appModule, RegisterModule, LoginModule, CreateDrinkModule, HomeModule, DailyReportModule, InfoModule, WeightModule)
+            modules(
+                NetworkModule,
+                appModule,
+                RegisterModule,
+                LoginModule,
+                CreateDrinkModule,
+                HomeModule,
+                DailyReportModule,
+                InfoModule,
+                WeightModule
+            )
         }
-        getKoin().get<com.dialysis.app.sync.WaterIntakeSyncScheduler>().enqueue()
+        getKoin().get<WaterIntakeSyncScheduler>().enqueue()
     }
 }

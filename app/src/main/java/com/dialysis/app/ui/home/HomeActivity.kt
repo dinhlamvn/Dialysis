@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import com.dialysis.app.base.BaseActivity
+import com.dialysis.app.extensions.toast
 import com.dialysis.app.notification.WaterReminderScheduler
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.daily.DailyReportViewModel
@@ -46,7 +47,11 @@ import com.dialysis.app.ui.home.tabs.StatisticsScreen
 import com.dialysis.app.ui.weight.WeightScreen
 import com.dialysis.app.ui.weight.WeightViewModel
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.dialysis.app.R
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -59,6 +64,19 @@ class HomeActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WaterReminderScheduler.schedule(this)
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    homeViewModel.flowOf { it.showSymptomSubmitSuccessToast }.collect { shouldShow ->
+                        if (shouldShow) {
+                            this@HomeActivity.toast(getString(R.string.symptom_submit_success))
+                            homeViewModel.clearSymptomSubmitSuccessToast()
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @OptIn(ExperimentalFoundationApi::class)

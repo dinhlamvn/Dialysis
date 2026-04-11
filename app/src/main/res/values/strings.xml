@@ -108,6 +108,7 @@
     <string name="info_calculate_goal_failed_title">Tính mục tiêu nước thất bại</string>
     <string name="info_calculate_goal_failed_retry_suffix">Bạn có muốn thử lại không?</string>
     <string name="common_retry">Thử lại</string>
+    <string name="symptom_submit_success">Thành công</string>
 
     <string-array name="notification_messages">
         <item>Chào bạn, hôm nay bạn đã uống gì nào?</item>
