@@ -33,10 +33,6 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestNotificationPermissionIfNeeded()
-
-        if (accountSharePref.getToken().isNotBlank() || userProfileSharePref.getProfile() != null) {
-            return
-        }
     }
 
     @Composable
@@ -58,7 +54,10 @@ class MainActivity : BaseActivity() {
     }
 
     private fun startHome() {
-        startActivity(Router.home(this))
-        finish()
+        if (accountSharePref.getToken().isNotBlank() || userProfileSharePref.getProfile() != null) {
+            startActivity(Router.home(this))
+            finish()
+            return
+        }
     }
 }

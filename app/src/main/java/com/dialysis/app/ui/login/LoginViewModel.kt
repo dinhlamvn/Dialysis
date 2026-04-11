@@ -9,7 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
-    private val accountSharePref: AccountSharePref
+    private val accountSharePref: AccountSharePref,
+    private val networkManager: NetworkManager
 ) : BaseViewModel<LoginState>(LoginState()) {
 
     val identifierState = collectStateUI(LoginState::identifier)
@@ -49,8 +50,8 @@ class LoginViewModel(
                     password = state.password
                 )
 
-                val result = NetworkManager.resolve {
-                    NetworkManager.appPublicServices.login(request)
+                val result = networkManager.resolve {
+                    networkManager.appPublicServices.login(request)
                 }
 
                 if (result.isSuccess) {

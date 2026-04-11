@@ -49,8 +49,6 @@ import java.util.Calendar
 import java.util.Locale
 import kotlin.math.roundToInt
 
-private const val DailyGoalMl = AppGoals.DAILY_WATER_GOAL_ML
-
 class StatisticsFragment : BaseFragment() {
     @Composable
     override fun ContentView() {
@@ -64,6 +62,7 @@ class StatisticsFragment : BaseFragment() {
 fun StatisticsScreen() {
     StatisticsScreen(
         todayTotalMl = 0,
+        dailyGoalMl = AppGoals.DAILY_WATER_GOAL_ML,
         weekTotalMl = 0,
         monthTotalMl = 0,
         weekDailyMl = listOf(0, 0, 0, 0, 0, 0, 0),
@@ -76,6 +75,7 @@ fun StatisticsScreen() {
 @Composable
 fun StatisticsScreen(
     todayTotalMl: Int,
+    dailyGoalMl: Int,
     weekTotalMl: Int,
     monthTotalMl: Int,
     weekDailyMl: List<Int>,
@@ -126,6 +126,7 @@ fun StatisticsScreen(
             when (activeTab) {
                 StatsTab.MAIN -> MainStatSection(
                     todayTotalMl = todayTotalMl,
+                    dailyGoalMl = dailyGoalMl,
                     weekTotalMl = weekTotalMl,
                     weekDailyMl = weekDailyMl,
                     dailyTotals = dailyTotals,
@@ -136,6 +137,7 @@ fun StatisticsScreen(
                 )
                 StatsTab.BY_DAY -> ByDayReportSection(
                     dailyTotals = dailyTotals,
+                    dailyGoalMl = dailyGoalMl,
                     onRowClick = { day ->
                         val dateMillis = parseDayToCalendar(day)?.timeInMillis ?: return@ByDayReportSection
                         dailyReportViewModel?.showDateReport(dateMillis)
@@ -180,6 +182,7 @@ fun StatisticsScreen(
 @Composable
 private fun MainStatSection(
     todayTotalMl: Int,
+    dailyGoalMl: Int,
     weekTotalMl: Int,
     weekDailyMl: List<Int>,
     dailyTotals: List<DailyTotal>,
@@ -189,10 +192,10 @@ private fun MainStatSection(
     val safeWeekValues = if (weekDailyMl.size == 7) weekDailyMl else List(7) { 0 }
     val weekAveragePercent = (
         safeWeekValues.sumOf { dayMl ->
-            ((dayMl / DailyGoalMl.toFloat()) * 100f).coerceAtLeast(0f).toDouble()
+            ((dayMl / dailyGoalMl.toFloat()) * 100f).coerceAtLeast(0f).toDouble()
         } / 7.0
     ).roundToInt().coerceAtLeast(0)
-    val todayPercent = ((todayTotalMl / DailyGoalMl.toFloat()) * 100).roundToInt().coerceIn(0, 100)
+    val todayPercent = ((todayTotalMl / dailyGoalMl.toFloat()) * 100).roundToInt().coerceIn(0, 100)
 
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
@@ -257,7 +260,7 @@ private fun MainStatSection(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth((todayTotalMl / DailyGoalMl.toFloat()).coerceIn(0f, 1f))
+                                    .fillMaxWidth((todayTotalMl / dailyGoalMl.toFloat()).coerceIn(0f, 1f))
                                     .height(6.dp)
                                     .background(Color(0xFF32B5F7), RoundedCornerShape(6.dp))
                             )
@@ -533,6 +536,7 @@ private fun MonthlyTrackerSection(
 @Composable
 private fun ByDayReportSection(
     dailyTotals: List<DailyTotal>,
+    dailyGoalMl: Int,
     onRowClick: (String) -> Unit
 ) {
     Column(
@@ -557,6 +561,7 @@ private fun ByDayReportSection(
                         DayReportRow(
                             title = formatGroupedDateTitle(dailyTotal.day),
                             totalMl = dailyTotal.totalMl,
+                            dailyGoalMl = dailyGoalMl,
                             onClick = { onRowClick(dailyTotal.day) }
                         )
                     }
@@ -580,9 +585,10 @@ private fun EmptyByDayState() {
 private fun DayReportRow(
     title: String,
     totalMl: Int,
+    dailyGoalMl: Int,
     onClick: () -> Unit
 ) {
-    val progress = (totalMl / DailyGoalMl.toFloat()).coerceIn(0f, 1f)
+    val progress = (totalMl / dailyGoalMl.toFloat()).coerceIn(0f, 1f)
     val percent = (progress * 100).roundToInt()
     val minIndicatorWidth = 20.dp
 

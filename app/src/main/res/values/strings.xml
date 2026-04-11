@@ -105,6 +105,9 @@
     <string name="notification_channel_name">Nhắc nhập nước</string>
     <string name="notification_channel_desc">Tự động gửi nhắc nhở mỗi 2 tiếng từ 6h đến 22h.</string>
     <string name="permission_notification_required">Vui lòng bật quyền thông báo để nhận nhắc nhở uống nước.</string>
+    <string name="info_calculate_goal_failed_title">Tính mục tiêu nước thất bại</string>
+    <string name="info_calculate_goal_failed_retry_suffix">Bạn có muốn thử lại không?</string>
+    <string name="common_retry">Thử lại</string>
 
     <string-array name="notification_messages">
         <item>Chào bạn, hôm nay bạn đã uống gì nào?</item>

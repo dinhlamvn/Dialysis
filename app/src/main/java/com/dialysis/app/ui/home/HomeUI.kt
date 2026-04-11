@@ -46,7 +46,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dialysis.app.R
-import com.dialysis.app.config.AppGoals
 import com.dialysis.app.data.local.model.DailyTotal
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.TextStyles
@@ -80,6 +79,7 @@ fun HomeScreen(
     val drinks by viewModel.drinksState.collectAsStateWithLifecycle()
     val todayTotalMl by viewModel.todayTotalMlState.collectAsStateWithLifecycle()
     val dailyTotals by viewModel.dailyTotalsState.collectAsStateWithLifecycle()
+    val dailyWaterGoalMl by viewModel.dailyWaterGoalMlState.collectAsStateWithLifecycle()
     val rolling7DayStats = buildLast7DayStats(dailyTotals)
     val showDrinkListSheet by viewModel.showDrinkListSheetState.collectAsStateWithLifecycle()
     val showDailyReportSheet by viewModel.showDailyReportSheetState.collectAsStateWithLifecycle()
@@ -99,7 +99,10 @@ fun HomeScreen(
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
             item {
-                HeaderCard(todayTotalMl = todayTotalMl)
+                HeaderCard(
+                    todayTotalMl = todayTotalMl,
+                    goalMl = dailyWaterGoalMl
+                )
             }
 
             item {
@@ -116,6 +119,7 @@ fun HomeScreen(
             item {
                 StatisticsListSection(
                     weekStats = rolling7DayStats,
+                    goalMl = dailyWaterGoalMl,
                     onMoreClick = onStatisticsMoreClick,
                     onWeightProgressClick = onWeightProgressClick,
                     onDayClick = { dateMillis ->
@@ -195,8 +199,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HeaderCard(todayTotalMl: Int) {
-    val goalMl = AppGoals.DAILY_WATER_GOAL_ML
+private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
     val progress = (todayTotalMl / goalMl.toFloat()).coerceIn(0f, 1f)
     val progressPercent = (progress * 100).toInt()
 
@@ -623,6 +626,7 @@ private fun WeeklySection(
 @Composable
 private fun StatisticsListSection(
     weekStats: List<RollingDayStat>,
+    goalMl: Int,
     onMoreClick: () -> Unit,
     onWeightProgressClick: () -> Unit,
     onDayClick: (Long) -> Unit
@@ -651,6 +655,7 @@ private fun StatisticsListSection(
 
         StatsChartCard(
             weekStats = weekStats,
+            goalMl = goalMl,
             onDayClick = onDayClick
         )
         BannerCard(
@@ -668,9 +673,9 @@ private fun StatisticsListSection(
 @Composable
 private fun StatsChartCard(
     weekStats: List<RollingDayStat>,
+    goalMl: Int,
     onDayClick: (Long) -> Unit
 ) {
-    val goalMl = AppGoals.DAILY_WATER_GOAL_ML
     val safeStats = if (weekStats.size == 7) weekStats else List(7) { RollingDayStat("", 0, 0L) }
     val weekTotalMl = safeStats.sumOf { it.totalMl }
     val averagePercent = safeStats

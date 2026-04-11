@@ -1,6 +1,8 @@
 package com.dialysis.app.ui.home.tabs
 
+import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,30 +17,42 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dialysis.app.base.BaseFragment
-import com.dialysis.app.config.AppGoals
+import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.TextStyles
+import com.dialysis.app.ui.login.LoginActivity
 import com.dialysis.app.ui.theme.AppTheme
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class SettingsFragment : BaseFragment() {
+    private val settingsViewModel: SettingsViewModel by viewModel()
+
     @Composable
     override fun ContentView() {
         AppTheme {
-            SettingsScreen()
+            SettingsScreen(viewModel = settingsViewModel)
         }
     }
 }
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(viewModel: SettingsViewModel) {
+    val isLoadingAccount = viewModel.isLoadingAccountState.collectAsStateWithLifecycle().value
+    val accountContact = viewModel.accountContactState.collectAsStateWithLifecycle().value
+    val isLoggedIn = viewModel.isLoggedInState.collectAsStateWithLifecycle().value
+    val dailyGoalMl = viewModel.dailyGoalMlState.collectAsStateWithLifecycle().value
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -56,7 +70,14 @@ fun SettingsScreen() {
             )
         }
 
-        item { TopCardsSection() }
+        item {
+            TopCardsSection(
+                accountContact = accountContact,
+                isLoadingAccount = isLoadingAccount,
+                isLoggedIn = isLoggedIn,
+                dailyGoalMl = dailyGoalMl
+            )
+        }
         item { FullVersionBanner() }
         item { SettingsGroupOne() }
         item { SettingsGroupTwo() }
@@ -66,7 +87,16 @@ fun SettingsScreen() {
 }
 
 @Composable
-private fun TopCardsSection() {
+private fun TopCardsSection(
+    accountContact: String?,
+    isLoadingAccount: Boolean,
+    isLoggedIn: Boolean,
+    dailyGoalMl: Int
+) {
+    val context = LocalContext.current
+    val accountText = accountContact ?: "Sign In or Sign Up"
+    val isGuestState = accountContact == null
+
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -82,12 +112,38 @@ private fun TopCardsSection() {
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Account", style = TextStyles.titleMedium, color = Color(0xFF2A2F39))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Sign In or Sign Up", style = TextStyles.titleMedium, color = Color(0xFF1877F2))
+                    if (isLoadingAccount) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color(0xFF1877F2),
+                            strokeWidth = 2.5.dp
+                        )
+                    } else {
+                        Text(
+                            text = accountText,
+                            style = TextStyles.titleMedium,
+                            color = if (isGuestState) Color(0xFF1877F2) else Color(0xFF2A2F39),
+                            modifier = if (isGuestState) {
+                                Modifier.clickable {
+                                    context.startActivity(Intent(context, LoginActivity::class.java))
+                                }
+                            } else {
+                                Modifier
+                            }
+                        )
+                    }
                 }
                 Box(
                     modifier = Modifier
                         .size(width = 130.dp, height = 100.dp)
-                        .background(Color(0xFFC8D7E6), RoundedCornerShape(16.dp)),
+                        .background(Color(0xFFC8D7E6), RoundedCornerShape(16.dp))
+                        .clickable {
+                            if (isLoggedIn) {
+                                context.startActivity(Router.info(context))
+                            } else {
+                                context.startActivity(Intent(context, LoginActivity::class.java))
+                            }
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Text("Profile", style = TextStyles.title, color = Color(0xFF2A2F39))
@@ -99,7 +155,7 @@ private fun TopCardsSection() {
             SmallColorCard(
                 modifier = Modifier.weight(1f),
                 title = "Daily goal",
-                value = "${AppGoals.DAILY_WATER_GOAL_ML} ml",
+                value = "$dailyGoalMl ml",
                 bg = Color(0xFFE9EDF2),
                 valueColor = Color(0xFF17A9DC)
             )

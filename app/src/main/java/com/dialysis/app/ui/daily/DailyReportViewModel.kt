@@ -2,8 +2,8 @@ package com.dialysis.app.ui.daily
 
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
-import com.dialysis.app.config.AppGoals
 import com.dialysis.app.data.local.WaterTrackingRepository
+import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +20,8 @@ import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DailyReportViewModel(
-    private val waterTrackingRepository: WaterTrackingRepository
+    private val waterTrackingRepository: WaterTrackingRepository,
+    private val userProfileSharePref: UserProfileSharePref
 ) : BaseViewModel<DailyReportState>(DailyReportState()) {
 
     private val selectedDateMillis = MutableStateFlow(System.currentTimeMillis())
@@ -35,7 +36,7 @@ class DailyReportViewModel(
     val deletingDrinkTitleState = collectStateUI(DailyReportState::deletingDrinkTitle)
 
     init {
-        val goalMl = AppGoals.DAILY_WATER_GOAL_ML.toFloat()
+        val goalMl = userProfileSharePref.getDailyWaterGoalMl().toFloat()
 
         selectedDateMillis
             .onEach { dateMillis ->

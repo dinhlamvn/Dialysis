@@ -3,6 +3,7 @@ package com.dialysis.app.ui.home
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WaterTrackingRepository
+import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -12,7 +13,8 @@ import java.util.Date
 import java.util.Locale
 
 class HomeViewModel(
-    private val waterTrackingRepository: WaterTrackingRepository
+    private val waterTrackingRepository: WaterTrackingRepository,
+    private val userProfileSharePref: UserProfileSharePref
 ) : BaseViewModel<HomeState>(HomeState()) {
 
     val drinksState = collectStateUI(HomeState::drinks)
@@ -24,8 +26,11 @@ class HomeViewModel(
     val monthTotalMlState = collectStateUI(HomeState::monthTotalMl)
     val weekDailyMlState = collectStateUI(HomeState::weekDailyMl)
     val dailyTotalsState = collectStateUI(HomeState::dailyTotals)
+    val dailyWaterGoalMlState = collectStateUI(HomeState::dailyWaterGoalMl)
 
     init {
+        setState { copy(dailyWaterGoalMl = userProfileSharePref.getDailyWaterGoalMl()) }
+
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
 
         waterTrackingRepository.observeTodayEntries()

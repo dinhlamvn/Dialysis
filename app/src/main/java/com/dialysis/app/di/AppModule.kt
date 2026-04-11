@@ -2,30 +2,49 @@ package com.dialysis.app.di
 
 import androidx.room.Room
 import com.dialysis.app.data.local.AppDatabase
-import com.dialysis.app.data.local.WeightTrackingRepository
 import com.dialysis.app.data.local.WaterTrackingRepository
+import com.dialysis.app.data.local.WeightTrackingRepository
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.interceptor.DefaultHeadersInterceptor
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import com.dialysis.app.ui.daily.DailyReportViewModel
 import com.dialysis.app.ui.drink.create.CreateDrinkViewModel
 import com.dialysis.app.ui.home.HomeViewModel
+import com.dialysis.app.ui.home.tabs.SettingsViewModel
 import com.dialysis.app.ui.info.InfoViewModel
 import com.dialysis.app.ui.login.LoginViewModel
 import com.dialysis.app.ui.otpverify.OtpVerifyViewModel
+import com.dialysis.app.ui.register.RegisterViewModel
 import com.dialysis.app.ui.weight.WeightViewModel
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import okhttp3.OkHttpClient
+import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
+val NetworkModule = module {
+    single<Gson> { GsonBuilder().create() }
+    single<OkHttpClient.Builder> {
+        OkHttpClient.Builder()
+            .addNetworkInterceptor(DefaultHeadersInterceptor)
+    }
+    single<Retrofit.Builder> {
+        Retrofit.Builder()
+            .addConverterFactory(GsonConverterFactory.create(get<Gson>()))
+    }
+    single { NetworkManager(get(), get(), get(), get()) }
+}
 
 val appModule = module {
-    single { NetworkManager.appPublicServices }
-    single { NetworkManager.appServices }
-    single { AccountSharePref(get()) }
-    single { UserProfileSharePref(get()) }
+    single { AccountSharePref(androidContext()) }
+    single { UserProfileSharePref(androidContext(), get()) }
     single {
         Room.databaseBuilder(
-            get(),
+            androidContext(),
             AppDatabase::class.java,
             "dialysis.db"
         ).fallbackToDestructiveMigration().build()
@@ -37,11 +56,12 @@ val appModule = module {
 }
 
 val RegisterModule = module {
-    viewModel { OtpVerifyViewModel(get()) }
+    viewModel { RegisterViewModel(get()) }
+    viewModel { OtpVerifyViewModel(get(), get()) }
 }
 
 val LoginModule = module {
-    viewModel { LoginViewModel(get()) }
+    viewModel { LoginViewModel(get(), get()) }
 }
 
 val CreateDrinkModule = module {
@@ -49,15 +69,16 @@ val CreateDrinkModule = module {
 }
 
 val HomeModule = module {
-    viewModel { HomeViewModel(get()) }
+    viewModel { HomeViewModel(get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get()) }
 }
 
 val DailyReportModule = module {
-    viewModel { DailyReportViewModel(get()) }
+    viewModel { DailyReportViewModel(get(), get()) }
 }
 
 val InfoModule = module {
-    viewModel { InfoViewModel(get(), get()) }
+    viewModel { InfoViewModel(get(), get(), get()) }
 }
 
 val WeightModule = module {

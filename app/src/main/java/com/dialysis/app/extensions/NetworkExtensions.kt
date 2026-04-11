@@ -1,15 +1,14 @@
 package com.dialysis.app.extensions
 
-import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.data.network.response.NetworkErrorResponse
 import com.google.gson.Gson
 import retrofit2.HttpException
 
-fun Throwable.parseNetworkErrorResponse(): NetworkErrorResponse {
+fun Throwable.parseNetworkErrorResponse(appGson: Gson): NetworkErrorResponse {
     val httpException = this.castToAsNull<HttpException>() ?: return defaultNetworkErrorResponse()
     val body =
         httpException.response()?.errorBody()?.string() ?: return defaultNetworkErrorResponse()
-    return NetworkManager.appGson.runCatching {
+    return appGson.runCatching {
         val networkErrorResponse = fromJson(body, NetworkErrorResponse::class.java)
         val errors = networkErrorResponse.errors.orEmpty()
         if (errors.isNotEmpty()) {

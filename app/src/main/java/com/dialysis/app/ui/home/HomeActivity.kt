@@ -40,6 +40,7 @@ import com.dialysis.app.base.BaseActivity
 import com.dialysis.app.notification.WaterReminderScheduler
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.daily.DailyReportViewModel
+import com.dialysis.app.ui.home.tabs.SettingsViewModel
 import com.dialysis.app.ui.home.tabs.SettingsScreen
 import com.dialysis.app.ui.home.tabs.StatisticsScreen
 import com.dialysis.app.ui.weight.WeightScreen
@@ -53,6 +54,7 @@ class HomeActivity : BaseActivity() {
     private val homeViewModel: HomeViewModel by viewModel()
     private val dailyReportViewModel: DailyReportViewModel by viewModel()
     private val weightViewModel: WeightViewModel by viewModel()
+    private val settingsViewModel: SettingsViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,6 +71,7 @@ class HomeActivity : BaseActivity() {
         val monthTotalMl by homeViewModel.monthTotalMlState.collectAsStateWithLifecycle()
         val weekDailyMl by homeViewModel.weekDailyMlState.collectAsStateWithLifecycle()
         val dailyTotals by homeViewModel.dailyTotalsState.collectAsStateWithLifecycle()
+        val dailyWaterGoalMl by homeViewModel.dailyWaterGoalMlState.collectAsStateWithLifecycle()
         val statusBarColor = if (pagerState.currentPage == 0) {
             Color(0xFF2D6FDD)
         } else {
@@ -113,13 +116,14 @@ class HomeActivity : BaseActivity() {
                     )
                     2 -> StatisticsScreen(
                         todayTotalMl = todayTotalMl,
+                        dailyGoalMl = dailyWaterGoalMl,
                         weekTotalMl = weekTotalMl,
                         monthTotalMl = monthTotalMl,
                         weekDailyMl = weekDailyMl,
                         dailyTotals = dailyTotals,
                         dailyReportViewModel = dailyReportViewModel
                     )
-                    3 -> SettingsScreen()
+                    3 -> SettingsScreen(viewModel = settingsViewModel)
                 }
             }
 

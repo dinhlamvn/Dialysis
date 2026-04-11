@@ -7,7 +7,9 @@ import com.dialysis.app.data.network.request.RegisterRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class RegisterViewModel : BaseViewModel<RegisterState>(RegisterState()) {
+class RegisterViewModel(
+    private val networkManager: NetworkManager
+) : BaseViewModel<RegisterState>(RegisterState()) {
 
     val emailOrPhoneState = collectStateUI(RegisterState::emailOrPhone)
     val nameState = collectStateUI(RegisterState::name)
@@ -59,8 +61,8 @@ class RegisterViewModel : BaseViewModel<RegisterState>(RegisterState()) {
                     name = state.name.trim(),
                 )
 
-                val result = NetworkManager.resolve {
-                    NetworkManager.appPublicServices.register(request)
+                val result = networkManager.resolve {
+                    networkManager.appPublicServices.register(request)
                 }
                 if (result.isSuccess) {
                     setState {

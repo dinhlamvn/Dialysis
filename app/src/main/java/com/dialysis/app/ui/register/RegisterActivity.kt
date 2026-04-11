@@ -1,7 +1,6 @@
 package com.dialysis.app.ui.register
 
 import android.os.Bundle
-import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -9,9 +8,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.dialysis.app.base.BaseActivity
 import com.dialysis.app.router.Router
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class RegisterActivity : BaseActivity() {
-    private val viewModel: RegisterViewModel by viewModels()
+    private val viewModel: RegisterViewModel by viewModel()
 
     @Composable
     override fun ContentView() {

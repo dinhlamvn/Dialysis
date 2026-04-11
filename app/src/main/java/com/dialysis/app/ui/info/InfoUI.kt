@@ -1,6 +1,5 @@
 package com.dialysis.app.ui.info
 
-import android.app.Activity
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,8 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -44,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dialysis.app.R
-import com.dialysis.app.router.Router
+import com.dialysis.app.ui.components.Loading
 import com.dialysis.app.ui.components.PrimaryButton
 import com.dialysis.app.ui.components.TextStyles
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -75,8 +72,7 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) 
     val age by viewModel.ageState.collectAsStateWithLifecycle()
     val dialysisYear by viewModel.dialysisStartYearState.collectAsStateWithLifecycle()
     val urinePerDay by viewModel.dailyUrineMlState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val view = LocalView.current
+    val isCalculatingGoal by viewModel.isCalculatingGoalState.collectAsStateWithLifecycle()
 
     val weightValues = remember { (30..150).toList() }
     val heightValues = remember { (100..250).toList() }
@@ -85,93 +81,101 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) 
     val currentYear = Year.now().value
     val dialysisYearValues = remember { (1970..currentYear).toList() }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(PageBackground)
-            .padding(horizontal = 24.dp, vertical = 20.dp)
     ) {
-        TopProgressRow(
-            currentStep = currentStep,
-            totalSteps = TotalSteps,
-            onBack = { if (currentStep > 0) viewModel.prevStep() else onBackClick.invoke() }
-        )
-
-        Spacer(modifier = Modifier.height(80.dp))
-
-        when (currentStep) {
-            0 -> GenderStep(
-                selectedGender = selectedGender,
-                onGenderSelect = viewModel::updateGender
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 20.dp)
+        ) {
+            TopProgressRow(
+                currentStep = currentStep,
+                totalSteps = TotalSteps,
+                onBack = { if (currentStep > 0) viewModel.prevStep() else onBackClick.invoke() }
             )
 
-            1 -> WeightStep(
-                weight = weightState,
-                values = weightValues,
-                onWeightChange = viewModel::updateWeight
+            Spacer(modifier = Modifier.height(80.dp))
+
+            when (currentStep) {
+                0 -> GenderStep(
+                    selectedGender = selectedGender,
+                    onGenderSelect = viewModel::updateGender
+                )
+
+                1 -> WeightStep(
+                    weight = weightState,
+                    values = weightValues,
+                    onWeightChange = viewModel::updateWeight
+                )
+
+                2 -> HeightStep(
+                    height = heightState,
+                    values = heightValues,
+                    onHeightChange = viewModel::updateHeight
+                )
+
+                3 -> AgeStep(
+                    age = age,
+                    values = ageValues,
+                    onAgeChange = viewModel::updateAge
+                )
+
+                4 -> NameStep(name = name, onNameChange = viewModel::updateName)
+                5 -> DialysisYearStep(
+                    year = if (dialysisYear == 0) currentYear else dialysisYear,
+                    values = dialysisYearValues,
+                    onYearChange = viewModel::updateDialysisStartYear
+                )
+
+                6 -> SessionsStep(
+                    value = if (sessionsPerWeek == 0) "" else sessionsPerWeek.toString(),
+                    onValueChange = { input ->
+                        val sanitized = input.filter { it.isDigit() }
+                        viewModel.updateDialysisFreqWeek(sanitized.toIntOrNull() ?: 0)
+                    }
+                )
+
+                7 -> UrineStep(
+                    value = if (urinePerDay == 0) urineValues.first() else urinePerDay,
+                    values = urineValues,
+                    onValueChange = viewModel::updateDailyUrineMl
+                )
+
+                else -> UrineStep(
+                    value = if (urinePerDay == 0) urineValues.first() else urinePerDay,
+                    values = urineValues,
+                    onValueChange = viewModel::updateDailyUrineMl
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            PrimaryButton(
+                text = if (currentStep == TotalSteps - 1) {
+                    "Done"
+                } else {
+                    stringResource(R.string.register_next)
+                },
+                onClick = {
+                    if (isCalculatingGoal) return@PrimaryButton
+                    if (currentStep < TotalSteps - 1) {
+                        viewModel.nextStep()
+                    } else {
+                        viewModel.saveProfile()
+                    }
+                },
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
 
-            2 -> HeightStep(
-                height = heightState,
-                values = heightValues,
-                onHeightChange = viewModel::updateHeight
-            )
-
-            3 -> AgeStep(
-                age = age,
-                values = ageValues,
-                onAgeChange = viewModel::updateAge
-            )
-
-            4 -> NameStep(name = name, onNameChange = viewModel::updateName)
-            5 -> DialysisYearStep(
-                year = if (dialysisYear == 0) currentYear else dialysisYear,
-                values = dialysisYearValues,
-                onYearChange = viewModel::updateDialysisStartYear
-            )
-
-            6 -> SessionsStep(
-                value = if (sessionsPerWeek == 0) "" else sessionsPerWeek.toString(),
-                onValueChange = { input ->
-                    val sanitized = input.filter { it.isDigit() }
-                    viewModel.updateDialysisFreqWeek(sanitized.toIntOrNull() ?: 0)
-                }
-            )
-
-            7 -> UrineStep(
-                value = if (urinePerDay == 0) urineValues.first() else urinePerDay,
-                values = urineValues,
-                onValueChange = viewModel::updateDailyUrineMl
-            )
-
-            else -> UrineStep(
-                value = if (urinePerDay == 0) urineValues.first() else urinePerDay,
-                values = urineValues,
-                onValueChange = viewModel::updateDailyUrineMl
-            )
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        PrimaryButton(
-            text = if (currentStep == TotalSteps - 1) {
-                "Done"
-            } else {
-                stringResource(R.string.register_next)
-            },
-            onClick = {
-                if (currentStep < TotalSteps - 1) {
-                    viewModel.nextStep()
-                } else {
-                    viewModel.saveProfile()
-                    context.startActivity(Router.home(context))
-                    (view.context as? Activity)?.finish()
-                }
-            },
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
+        if (isCalculatingGoal) {
+            Loading()
+        }
     }
 }
 
@@ -395,34 +399,21 @@ private fun YearCircleScrollPicker(
 ) {
     val itemSize = 74.dp
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val selectedIndex = values.indexOf(selectedYear).coerceAtLeast(0)
     val listState = rememberLazyListState(
-        initialFirstVisibleItemIndex = values.indexOf(selectedYear).coerceAtLeast(0)
+        initialFirstVisibleItemIndex = selectedIndex
     )
-    val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
     val horizontalPadding = (screenWidth - itemSize) / 2f
 
-    LaunchedEffect(listState, selectedYear) {
-        snapshotFlow { listState.layoutInfo }
-            .map { layoutInfo ->
-                val center = (screenWidth / 2f).value.toInt()
-                val closest = layoutInfo.visibleItemsInfo.minByOrNull { item ->
-                    kotlin.math.abs((item.offset + item.size / 2) - center)
-                }
-                closest?.index
-            }
-            .distinctUntilChanged()
-            .collect { index ->
-                val safeIndex = index ?: return@collect
-                if (safeIndex in values.indices) {
-                    val newYear = values[safeIndex]
-                    if (newYear != selectedYear) onYearChange(newYear)
-                }
-            }
+    LaunchedEffect(selectedYear) {
+        val index = values.indexOf(selectedYear).coerceAtLeast(0)
+        if (index >= 0) {
+            listState.animateScrollToItem(index)
+        }
     }
 
     LazyRow(
         state = listState,
-        flingBehavior = snapFlingBehavior,
         contentPadding = PaddingValues(horizontal = horizontalPadding),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier.fillMaxWidth()

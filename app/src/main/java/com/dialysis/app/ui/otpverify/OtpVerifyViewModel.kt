@@ -9,7 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class OtpVerifyViewModel(
-    private val accountSharePref: AccountSharePref
+    private val accountSharePref: AccountSharePref,
+    private val networkManager: NetworkManager
 ) : BaseViewModel<OtpVerifyState>(OtpVerifyState()) {
 
     val identifierTypeState = collectStateUI(OtpVerifyState::identifierType)
@@ -58,8 +59,8 @@ class OtpVerifyViewModel(
                     otpCode = state.otpCode,
                 )
 
-                val result = NetworkManager.resolve {
-                    NetworkManager.appPublicServices.verifyOtp(request)
+                val result = networkManager.resolve {
+                    networkManager.appPublicServices.verifyOtp(request)
                 }
 
                 if (result.isSuccess) {

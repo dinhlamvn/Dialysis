@@ -6,6 +6,7 @@ import com.dialysis.app.di.DailyReportModule
 import com.dialysis.app.di.HomeModule
 import com.dialysis.app.di.InfoModule
 import com.dialysis.app.di.LoginModule
+import com.dialysis.app.di.NetworkModule
 import com.dialysis.app.di.RegisterModule
 import com.dialysis.app.di.WeightModule
 import com.dialysis.app.di.appModule
@@ -18,7 +19,7 @@ class DialysisApplication : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@DialysisApplication)
-            modules(appModule, RegisterModule, LoginModule, CreateDrinkModule, HomeModule, DailyReportModule, InfoModule, WeightModule)
+            modules(NetworkModule, appModule, RegisterModule, LoginModule, CreateDrinkModule, HomeModule, DailyReportModule, InfoModule, WeightModule)
         }
     }
 }
