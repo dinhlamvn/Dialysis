@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".DialysisApplication"
         android:allowBackup="true"
@@ -56,6 +58,11 @@
 
         <activity
             android:name="com.dialysis.app.ui.drink.create.CreateDrinkActivity"
+            android:exported="false" />
+
+        <receiver
+            android:name="com.dialysis.app.notification.WaterReminderReceiver"
+            android:enabled="true"
             android:exported="false" />
     </application>
 

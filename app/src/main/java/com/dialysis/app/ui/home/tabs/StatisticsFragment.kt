@@ -187,7 +187,11 @@ private fun MainStatSection(
 ) {
     val currentDateLabel = remember { formatDayMonth(Calendar.getInstance()) }
     val safeWeekValues = if (weekDailyMl.size == 7) weekDailyMl else List(7) { 0 }
-    val weekAveragePercent = ((weekTotalMl / 7f) / DailyGoalMl * 100).roundToInt().coerceAtLeast(0)
+    val weekAveragePercent = (
+        safeWeekValues.sumOf { dayMl ->
+            ((dayMl / DailyGoalMl.toFloat()) * 100f).coerceAtLeast(0f).toDouble()
+        } / 7.0
+    ).roundToInt().coerceAtLeast(0)
     val todayPercent = ((todayTotalMl / DailyGoalMl.toFloat()) * 100).roundToInt().coerceIn(0, 100)
 
     Column(

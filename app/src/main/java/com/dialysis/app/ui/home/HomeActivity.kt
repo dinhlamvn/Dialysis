@@ -1,6 +1,7 @@
 package com.dialysis.app.ui.home
 
 import android.app.Activity
+import android.os.Bundle
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,6 +37,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import com.dialysis.app.base.BaseActivity
+import com.dialysis.app.notification.WaterReminderScheduler
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.daily.DailyReportViewModel
 import com.dialysis.app.ui.home.tabs.SettingsScreen
@@ -51,6 +53,11 @@ class HomeActivity : BaseActivity() {
     private val homeViewModel: HomeViewModel by viewModel()
     private val dailyReportViewModel: DailyReportViewModel by viewModel()
     private val weightViewModel: WeightViewModel by viewModel()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        WaterReminderScheduler.schedule(this)
+    }
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable

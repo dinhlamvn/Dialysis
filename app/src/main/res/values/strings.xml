@@ -101,4 +101,21 @@
     <string name="drink_unit_glass">glass</string>
     <string name="drink_unit_cup">cup</string>
     <string name="drink_unit_litre">litre</string>
+    <string name="notification_title">Nhắc ghi nhận lượng nước</string>
+    <string name="notification_channel_name">Nhắc nhập nước</string>
+    <string name="notification_channel_desc">Tự động gửi nhắc nhở mỗi 2 tiếng từ 6h đến 22h.</string>
+    <string name="permission_notification_required">Vui lòng bật quyền thông báo để nhận nhắc nhở uống nước.</string>
+
+    <string-array name="notification_messages">
+        <item>Chào bạn, hôm nay bạn đã uống gì nào?</item>
+        <item>Chào bạn, hôm nay bạn đã nhập lượng nước qua ăn uống vào app chưa?</item>
+        <item>Chào bạn, hôm nay bạn có nhớ ghi nhận lượng nước qua ăn uống chưa?</item>
+        <item>Chào bạn, bạn có nhớ lượng nước uống mỗi ngày của bạn là bao nhiêu?</item>
+        <item>Chào bạn, bạn có nhớ là phải hạn chế ăn mặn không?</item>
+        <item>Chào bạn, bạn có nhớ uống nước nhiều bạn sẽ mệt không?</item>
+        <item>Chào bạn, nếu khát quá nhớ ngậm thêm đã nha!</item>
+        <item>Chào bạn, nhớ cho tôi biết bạn đã ăn uống gì chưa?</item>
+        <item>Chào bạn, bạn đừng uống nước nhiều quá nhé!</item>
+        <item>Chào bạn, hãy nhớ tôi là người bạn đồng hành!</item>
+    </string-array>
 </resources>

@@ -673,7 +673,9 @@ private fun StatsChartCard(
     val goalMl = AppGoals.DAILY_WATER_GOAL_ML
     val safeStats = if (weekStats.size == 7) weekStats else List(7) { RollingDayStat("", 0, 0L) }
     val weekTotalMl = safeStats.sumOf { it.totalMl }
-    val averagePercent = (weekTotalMl / 7f / goalMl * 100f).coerceAtLeast(0f)
+    val averagePercent = safeStats
+        .sumOf { stat -> ((stat.totalMl / goalMl.toFloat()) * 100f).coerceAtLeast(0f).toDouble() }
+        .toFloat() / 7f
 
     Card(
         modifier = Modifier
