@@ -14,4 +14,6 @@ data class WaterEntryEntity(
     val amountMl: Int,
     @ColumnInfo(name = "created_at")
     val createdAt: Long,
+    @ColumnInfo(name = "synced_id")
+    val syncedId: Long? = null,
 )

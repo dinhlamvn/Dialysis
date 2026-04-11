@@ -1,6 +1,8 @@
 package com.dialysis.app.data.local
 
+import com.dialysis.app.data.local.dao.PendingWaterDeleteDao
 import com.dialysis.app.data.local.dao.WaterEntryDao
+import com.dialysis.app.data.local.entity.PendingWaterDeleteEntity
 import com.dialysis.app.data.local.entity.WaterEntryEntity
 import com.dialysis.app.data.local.model.DailyTotal
 import kotlinx.coroutines.flow.Flow
@@ -11,7 +13,8 @@ import java.util.Date
 import java.util.Locale
 
 class WaterTrackingRepository(
-    private val waterEntryDao: WaterEntryDao
+    private val waterEntryDao: WaterEntryDao,
+    private val pendingWaterDeleteDao: PendingWaterDeleteDao
 ) {
 
     fun observeTodayTotalMl(): Flow<Int> {
@@ -65,7 +68,32 @@ class WaterTrackingRepository(
     }
 
     suspend fun deleteEntry(entryId: Long) {
+        val currentEntry = waterEntryDao.getById(entryId)
+        val syncedId = currentEntry?.syncedId
+        if (syncedId != null) {
+            pendingWaterDeleteDao.insert(PendingWaterDeleteEntity(syncedId = syncedId))
+        }
         waterEntryDao.deleteById(entryId)
+    }
+
+    suspend fun getUnsyncedEntries(): List<WaterEntryEntity> {
+        return waterEntryDao.getUnsyncedEntries()
+    }
+
+    suspend fun markEntrySynced(localId: Long, syncedId: Long) {
+        waterEntryDao.updateSyncedId(localId, syncedId)
+    }
+
+    suspend fun getPendingDeletes(): List<PendingWaterDeleteEntity> {
+        return pendingWaterDeleteDao.getAll()
+    }
+
+    suspend fun removePendingDelete(id: Long) {
+        pendingWaterDeleteDao.deleteById(id)
+    }
+
+    suspend fun getTotalMlForDate(dateMillis: Long): Int {
+        return waterEntryDao.getTotalMl(startOfDay(dateMillis), endOfDay(dateMillis))
     }
 
     private fun toWeekBuckets(totals: List<DailyTotal>, weekStart: Long): List<Int> {

@@ -8,6 +8,7 @@ import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.data.network.interceptor.DefaultHeadersInterceptor
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
+import com.dialysis.app.sync.WaterIntakeSyncScheduler
 import com.dialysis.app.ui.daily.DailyReportViewModel
 import com.dialysis.app.ui.drink.create.CreateDrinkViewModel
 import com.dialysis.app.ui.home.HomeViewModel
@@ -28,9 +29,10 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 val NetworkModule = module {
     single<Gson> { GsonBuilder().create() }
-    single<OkHttpClient.Builder> {
+    single<OkHttpClient> {
         OkHttpClient.Builder()
             .addNetworkInterceptor(DefaultHeadersInterceptor)
+            .build()
     }
     single<Retrofit.Builder> {
         Retrofit.Builder()
@@ -51,7 +53,9 @@ val appModule = module {
     }
     single { get<AppDatabase>().waterEntryDao() }
     single { get<AppDatabase>().weightEntryDao() }
-    single { WaterTrackingRepository(get()) }
+    single { get<AppDatabase>().pendingWaterDeleteDao() }
+    single { WaterIntakeSyncScheduler(androidContext()) }
+    single { WaterTrackingRepository(get(), get()) }
     single { WeightTrackingRepository(get()) }
 }
 

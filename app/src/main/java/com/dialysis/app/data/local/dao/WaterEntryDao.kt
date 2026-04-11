@@ -25,6 +25,15 @@ interface WaterEntryDao {
 
     @Query(
         """
+        SELECT COALESCE(SUM(amount_ml), 0)
+        FROM water_entries
+        WHERE created_at BETWEEN :startMillis AND :endMillis
+        """
+    )
+    suspend fun getTotalMl(startMillis: Long, endMillis: Long): Int
+
+    @Query(
+        """
         SELECT date(created_at / 1000, 'unixepoch', 'localtime') AS day,
                COALESCE(SUM(amount_ml), 0) AS total_ml
         FROM water_entries
@@ -55,6 +64,35 @@ interface WaterEntryDao {
         """
     )
     fun observeEntries(startMillis: Long, endMillis: Long): Flow<List<WaterEntryEntity>>
+
+    @Query(
+        """
+        SELECT *
+        FROM water_entries
+        WHERE synced_id IS NULL
+        ORDER BY created_at ASC
+        """
+    )
+    suspend fun getUnsyncedEntries(): List<WaterEntryEntity>
+
+    @Query(
+        """
+        SELECT *
+        FROM water_entries
+        WHERE id = :entryId
+        LIMIT 1
+        """
+    )
+    suspend fun getById(entryId: Long): WaterEntryEntity?
+
+    @Query(
+        """
+        UPDATE water_entries
+        SET synced_id = :syncedId
+        WHERE id = :entryId
+        """
+    )
+    suspend fun updateSyncedId(entryId: Long, syncedId: Long)
 
     @Query(
         """

@@ -15,21 +15,22 @@ import java.util.concurrent.TimeUnit
 
 class NetworkManager(
     private val appGson: Gson,
-    private val okHttpClientBuilder: OkHttpClient.Builder,
+    private val okHttpClient: OkHttpClient,
     private val retrofitBuilder: Retrofit.Builder,
     private val accountSharePref: AccountSharePref,
 ) {
 
     val appPublicServices: AppPublicServices by lazy {
         retrofitBuilder.baseUrl(BuildConfig.SERVER_URL)
-            .buildWithClient(okHttpClientBuilder.build())
+            .buildWithClient(okHttpClient)
             .create(AppPublicServices::class.java)
     }
 
     val appServices: AppServices by lazy {
         retrofitBuilder.baseUrl(BuildConfig.SERVER_URL)
             .buildWithClient(
-                okHttpClientBuilder
+                okHttpClient
+                    .newBuilder()
                     .addNetworkInterceptor(AuthenticationInterceptor(accountSharePref))
                     .build()
             )
@@ -41,6 +42,20 @@ class NetworkManager(
             val response = block()
             if (response.success) {
                 Result.success(response.data!!)
+            } else {
+                Result.failure(UnknownError(response.message))
+            }
+        } catch (e: Exception) {
+            val networkError = e.parseNetworkErrorResponse(appGson)
+            Result.failure(Exception(networkError.message))
+        }
+    }
+
+    suspend fun <T> resolveNullable(block: suspend () -> ApiResponse<T>): Result<T?> {
+        return try {
+            val response = block()
+            if (response.success) {
+                Result.success(response.data)
             } else {
                 Result.failure(UnknownError(response.message))
             }

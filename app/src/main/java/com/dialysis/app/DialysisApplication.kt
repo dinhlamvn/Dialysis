@@ -12,6 +12,7 @@ import com.dialysis.app.di.WeightModule
 import com.dialysis.app.di.appModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
+import org.koin.java.KoinJavaComponent.getKoin
 
 class DialysisApplication : Application() {
 
@@ -21,5 +22,6 @@ class DialysisApplication : Application() {
             androidContext(this@DialysisApplication)
             modules(NetworkModule, appModule, RegisterModule, LoginModule, CreateDrinkModule, HomeModule, DailyReportModule, InfoModule, WeightModule)
         }
+        getKoin().get<com.dialysis.app.sync.WaterIntakeSyncScheduler>().enqueue()
     }
 }
