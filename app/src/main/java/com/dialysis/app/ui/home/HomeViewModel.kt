@@ -3,8 +3,10 @@ package com.dialysis.app.ui.home
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WaterTrackingRepository
+import com.dialysis.app.data.local.entity.WaterEntryEntity
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.data.network.request.SymptomLogRequest
+import com.dialysis.app.data.network.response.WaterIntakeResponse
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
@@ -14,6 +16,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.time.Instant
 
 class HomeViewModel(
     private val waterTrackingRepository: WaterTrackingRepository,
@@ -40,6 +43,7 @@ class HomeViewModel(
     val isSymptomsLoadingState = collectStateUI(HomeState::isSymptomsLoading)
     val isSubmittingSymptomState = collectStateUI(HomeState::isSubmittingSymptom)
     val showSymptomSubmitSuccessToastState = collectStateUI(HomeState::showSymptomSubmitSuccessToast)
+    val isHistorySyncingState = collectStateUI(HomeState::isHistorySyncing)
 
     init {
         setState {
@@ -48,6 +52,7 @@ class HomeViewModel(
                 isLoggedIn = accountSharePref.getToken().isNotBlank()
             )
         }
+        syncWaterHistoryIfNeeded()
 
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
 
@@ -215,6 +220,44 @@ class HomeViewModel(
 
     fun clearSymptomSubmitSuccessToast() = setState {
         copy(showSymptomSubmitSuccessToast = false)
+    }
+
+    private fun syncWaterHistoryIfNeeded() {
+        getState { state ->
+            if (!state.isLoggedIn || state.isHistorySyncing) return@getState
+            setState { copy(isHistorySyncing = true) }
+            viewModelScope.launch(Dispatchers.IO) {
+                runCatching {
+                    syncWaterHistory()
+                }
+                setState { copy(isHistorySyncing = false) }
+            }
+        }
+    }
+
+    private suspend fun syncWaterHistory() {
+        val result = networkManager.resolve { networkManager.appServices.getWaterHistory() }
+        val history = result.getOrNull().orEmpty()
+        if (history.isEmpty()) return
+
+        val uniqueBySyncedId = history.distinctBy { it.id }
+        val syncedIds = uniqueBySyncedId.map { it.id }
+        val existingSyncedIds = waterTrackingRepository.getExistingSyncedIds(syncedIds)
+        val missingEntries = uniqueBySyncedId
+            .filterNot { it.id in existingSyncedIds }
+            .map { it.toEntity() }
+        waterTrackingRepository.insertSyncedEntries(missingEntries)
+    }
+
+    private fun WaterIntakeResponse.toEntity(): WaterEntryEntity {
+        val createdAtMillis = runCatching { Instant.parse(loggedAt).toEpochMilli() }
+            .getOrElse { System.currentTimeMillis() }
+        return WaterEntryEntity(
+            drinkName = drinkName,
+            amountMl = rawAmount,
+            createdAt = createdAtMillis,
+            syncedId = id
+        )
     }
 }
 

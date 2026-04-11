@@ -27,6 +27,7 @@ object Router {
 
     fun home(context: Context): Intent {
         return Intent(context, HomeActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
     }
 
     fun login(context: Context): Intent {

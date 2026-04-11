@@ -14,6 +14,9 @@ interface WaterEntryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entry: WaterEntryEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(entries: List<WaterEntryEntity>)
+
     @Query(
         """
         SELECT COALESCE(SUM(amount_ml), 0)
@@ -74,6 +77,15 @@ interface WaterEntryDao {
         """
     )
     suspend fun getUnsyncedEntries(): List<WaterEntryEntity>
+
+    @Query(
+        """
+        SELECT synced_id
+        FROM water_entries
+        WHERE synced_id IN (:syncedIds)
+        """
+    )
+    suspend fun getExistingSyncedIds(syncedIds: List<Long>): List<Long>
 
     @Query(
         """

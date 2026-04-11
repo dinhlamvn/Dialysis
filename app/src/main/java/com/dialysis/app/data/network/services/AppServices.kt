@@ -21,6 +21,9 @@ interface AppServices {
         @Body request: WaterIntakeRequest
     ): ApiResponse<WaterIntakeResponse>
 
+    @GET("mobile/water/history")
+    suspend fun getWaterHistory(): ApiResponse<List<WaterIntakeResponse>>
+
     @DELETE("mobile/water/intake/{syncedId}")
     suspend fun deleteWaterIntake(
         @Path("syncedId") syncedId: Long

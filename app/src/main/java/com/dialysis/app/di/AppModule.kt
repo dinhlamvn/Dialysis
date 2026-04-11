@@ -15,6 +15,7 @@ import com.dialysis.app.ui.home.HomeViewModel
 import com.dialysis.app.ui.home.tabs.SettingsViewModel
 import com.dialysis.app.ui.info.InfoViewModel
 import com.dialysis.app.ui.login.LoginViewModel
+import com.dialysis.app.ui.main.IntroViewModel
 import com.dialysis.app.ui.otpverify.OtpVerifyViewModel
 import com.dialysis.app.ui.register.RegisterViewModel
 import com.dialysis.app.ui.weight.WeightViewModel
@@ -87,4 +88,8 @@ val InfoModule = module {
 
 val WeightModule = module {
     viewModel { WeightViewModel(get(), get()) }
+}
+
+val IntroModule = module {
+    viewModel { IntroViewModel(get(), get()) }
 }

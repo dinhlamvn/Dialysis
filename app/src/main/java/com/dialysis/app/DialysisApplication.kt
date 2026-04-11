@@ -8,6 +8,7 @@ import com.dialysis.app.di.InfoModule
 import com.dialysis.app.di.LoginModule
 import com.dialysis.app.di.NetworkModule
 import com.dialysis.app.di.RegisterModule
+import com.dialysis.app.di.IntroModule
 import com.dialysis.app.di.WeightModule
 import com.dialysis.app.di.appModule
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
@@ -30,7 +31,8 @@ class DialysisApplication : Application() {
                 HomeModule,
                 DailyReportModule,
                 InfoModule,
-                WeightModule
+                WeightModule,
+                IntroModule
             )
         }
         getKoin().get<WaterIntakeSyncScheduler>().enqueue()

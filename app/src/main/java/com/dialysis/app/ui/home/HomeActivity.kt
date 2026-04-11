@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -35,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.dialysis.app.base.BaseActivity
 import com.dialysis.app.extensions.toast
@@ -90,6 +92,7 @@ class HomeActivity : BaseActivity() {
         val weekDailyMl by homeViewModel.weekDailyMlState.collectAsStateWithLifecycle()
         val dailyTotals by homeViewModel.dailyTotalsState.collectAsStateWithLifecycle()
         val dailyWaterGoalMl by homeViewModel.dailyWaterGoalMlState.collectAsStateWithLifecycle()
+        val isHistorySyncing by homeViewModel.isHistorySyncingState.collectAsStateWithLifecycle()
         val statusBarColor = if (pagerState.currentPage == 0) {
             Color(0xFF2D6FDD)
         } else {
@@ -157,6 +160,26 @@ class HomeActivity : BaseActivity() {
                 },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
+
+            if (isHistorySyncing) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.25f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Card {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            Text(text = stringResource(id = R.string.main_syncing))
+                        }
+                    }
+                }
+            }
         }
     }
 }

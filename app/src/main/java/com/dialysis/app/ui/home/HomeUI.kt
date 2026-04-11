@@ -69,6 +69,9 @@ private val CardGray = Color(0xFFBFC3CB)
 private val TextDark = Color(0xFF111111)
 private val TextMuted = Color(0xFF8E8E93)
 private val AccentBlue = Color(0xFF1877F2)
+private val WaterYellow = Color(0xFFFFC107)
+private val WaterOrange = Color(0xFFFF9800)
+private val WaterRed = Color(0xFFF44336)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -240,6 +243,12 @@ fun HomeScreen(
 private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
     val progress = (todayTotalMl / goalMl.toFloat()).coerceIn(0f, 1f)
     val progressPercent = (progress * 100).toInt()
+    val waterLevelColor = when {
+        progressPercent > 80 -> WaterRed
+        progressPercent > 70 -> WaterOrange
+        progressPercent > 50 -> WaterYellow
+        else -> Color.White
+    }
 
     Card(
         modifier = Modifier
@@ -270,7 +279,10 @@ private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    WaterCircle(progress = progress)
+                    WaterCircle(
+                        progress = progress,
+                        waterColor = waterLevelColor
+                    )
                     Column {
                         Text(
                             text = "$progressPercent%",
@@ -290,7 +302,10 @@ private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
 }
 
 @Composable
-private fun WaterCircle(progress: Float) {
+private fun WaterCircle(
+    progress: Float,
+    waterColor: Color
+) {
     Box(
         modifier = Modifier
             .size(110.dp)
@@ -308,8 +323,8 @@ private fun WaterCircle(progress: Float) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height((88.dp * progress).coerceIn(8.dp, 88.dp))
-                    .background(Color.White)
+                    .height((88.dp * progress).coerceIn(0.dp, 88.dp))
+                    .background(waterColor)
             )
         }
     }

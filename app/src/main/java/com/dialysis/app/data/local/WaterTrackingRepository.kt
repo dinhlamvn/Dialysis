@@ -84,6 +84,16 @@ class WaterTrackingRepository(
         waterEntryDao.updateSyncedId(localId, syncedId)
     }
 
+    suspend fun getExistingSyncedIds(syncedIds: List<Long>): Set<Long> {
+        if (syncedIds.isEmpty()) return emptySet()
+        return waterEntryDao.getExistingSyncedIds(syncedIds).toSet()
+    }
+
+    suspend fun insertSyncedEntries(entries: List<WaterEntryEntity>) {
+        if (entries.isEmpty()) return
+        waterEntryDao.insertAll(entries)
+    }
+
     suspend fun getPendingDeletes(): List<PendingWaterDeleteEntity> {
         return pendingWaterDeleteDao.getAll()
     }
