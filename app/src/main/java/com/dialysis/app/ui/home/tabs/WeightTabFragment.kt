@@ -10,6 +10,11 @@ import org.koin.androidx.viewmodel.ext.android.activityViewModel
 class WeightTabFragment : BaseFragment() {
     private val viewModel: WeightViewModel by activityViewModel()
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshLocalData()
+    }
+
     @Composable
     override fun ContentView() {
         AppTheme {

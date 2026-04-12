@@ -80,6 +80,15 @@ interface WaterEntryDao {
 
     @Query(
         """
+        SELECT *
+        FROM water_entries
+        WHERE synced_id IS NOT NULL
+        """
+    )
+    suspend fun getSyncedEntries(): List<WaterEntryEntity>
+
+    @Query(
+        """
         SELECT synced_id
         FROM water_entries
         WHERE synced_id IN (:syncedIds)
@@ -113,4 +122,12 @@ interface WaterEntryDao {
         """
     )
     suspend fun deleteById(entryId: Long)
+
+    @Query(
+        """
+        DELETE FROM water_entries
+        WHERE id IN (:entryIds)
+        """
+    )
+    suspend fun deleteByIds(entryIds: List<Long>)
 }

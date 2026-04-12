@@ -4,6 +4,10 @@ import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WeightTrackingRepository
 import com.dialysis.app.data.local.entity.WeightEntryEntity
+import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.request.WeightInitialRequest
+import com.dialysis.app.data.network.request.WeightLogRequest
+import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,12 +18,16 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.util.Locale
 import kotlin.math.max
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WeightViewModel(
     private val weightTrackingRepository: WeightTrackingRepository,
-    private val userProfileSharePref: UserProfileSharePref
+    private val userProfileSharePref: UserProfileSharePref,
+    private val accountSharePref: AccountSharePref,
+    private val networkManager: NetworkManager
 ) : BaseViewModel<WeightState>(WeightState()) {
 
     private val selectedTabFlow = MutableStateFlow(WeightReportTab.MONTH)
@@ -31,6 +39,8 @@ class WeightViewModel(
     val periodTitleState = collectStateUI(WeightState::periodTitle)
     val showAddWeightSheetState = collectStateUI(WeightState::showAddWeightSheet)
     val draftWeightKgState = collectStateUI(WeightState::draftWeightKg)
+    val editingModeState = collectStateUI(WeightState::editingMode)
+    val isSavingWeightState = collectStateUI(WeightState::isSavingWeight)
     val chartDataState = collectStateUI(WeightState::chartData)
     val xAxisLabelsState = collectStateUI(WeightState::xAxisLabels)
     val yMinState = collectStateUI(WeightState::yMin)
@@ -101,9 +111,18 @@ class WeightViewModel(
         periodOffsetFlow.value = periodOffsetFlow.value - 1
     }
 
-    fun openAddWeightSheet() = setState {
+    fun openInitialWeightSheet() = setState {
         copy(
             showAddWeightSheet = true,
+            editingMode = WeightEditingMode.INITIAL,
+            draftWeightKg = if (initialWeightKg > 0f) initialWeightKg else currentWeightKg
+        )
+    }
+
+    fun openCurrentWeightSheet() = setState {
+        copy(
+            showAddWeightSheet = true,
+            editingMode = WeightEditingMode.CURRENT,
             draftWeightKg = if (currentWeightKg > 0f) currentWeightKg else initialWeightKg
         )
     }
@@ -117,19 +136,72 @@ class WeightViewModel(
     }
 
     fun saveDraftWeight() {
-        var valueToSave = 0f
-        getState { state -> valueToSave = state.draftWeightKg }
-        if (valueToSave <= 0f) return
-        viewModelScope.launch(Dispatchers.IO) {
-            weightTrackingRepository.saveDailyWeight(valueToSave)
+        getState { state ->
+            val valueToSave = state.draftWeightKg
+            val editingMode = state.editingMode
+            if (state.isSavingWeight) return@getState
+            if (valueToSave <= 0f) return@getState
+
+            setState { copy(isSavingWeight = true) }
+            viewModelScope.launch(Dispatchers.IO) {
+                when (editingMode) {
+                    WeightEditingMode.INITIAL -> {
+                        userProfileSharePref.saveInitialWeightKg(valueToSave.toInt())
+                        setState {
+                            copy(
+                                initialWeightKg = valueToSave,
+                                currentWeightKg = if (currentWeightKg <= 0f) valueToSave else currentWeightKg,
+                                showAddWeightSheet = false
+                            )
+                        }
+                        syncInitialWeightToServer(valueToSave)
+                    }
+
+                    WeightEditingMode.CURRENT -> {
+                        weightTrackingRepository.saveDailyWeight(valueToSave)
+                        setState {
+                            copy(
+                                currentWeightKg = valueToSave,
+                                showAddWeightSheet = false
+                            )
+                        }
+                        syncCurrentWeightToServer(valueToSave)
+                    }
+                }
+
+                setState { copy(isSavingWeight = false) }
+            }
         }
-        setState {
-            copy(
-                currentWeightKg = valueToSave,
-                initialWeightKg = if (initialWeightKg <= 0f) valueToSave else initialWeightKg,
-                showAddWeightSheet = false
+    }
+
+    fun refreshLocalData() {
+        val initialWeight = userProfileSharePref.getInitialWeightKg().toFloat()
+        if (initialWeight > 0f) {
+            setState { copy(initialWeightKg = initialWeight) }
+        }
+    }
+
+    private suspend fun syncInitialWeightToServer(weightKg: Float): Boolean {
+        if (accountSharePref.getToken().isBlank()) return true
+        return networkManager.resolveNullable {
+            networkManager.appServices.updateInitialWeight(
+                WeightInitialRequest(weight = weightKg.toInt())
             )
-        }
+        }.isSuccess
+    }
+
+    private suspend fun syncCurrentWeightToServer(weightKg: Float): Boolean {
+        if (accountSharePref.getToken().isBlank()) return true
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(System.currentTimeMillis())
+        return networkManager.resolveNullable {
+            networkManager.appServices.logCurrentWeight(
+                WeightLogRequest(
+                    weight = weightKg.toDouble(),
+                    date = today,
+                    note = DEFAULT_WEIGHT_NOTE
+                )
+            )
+        }.isSuccess
     }
 }
 
@@ -290,3 +362,5 @@ private fun dayOfMonth(timeMillis: Long): Int {
 private fun monthOfYear(timeMillis: Long): Int {
     return Calendar.getInstance().apply { timeInMillis = timeMillis }.get(Calendar.MONTH) + 1
 }
+
+private const val DEFAULT_WEIGHT_NOTE = "Sau khi ăn sáng"

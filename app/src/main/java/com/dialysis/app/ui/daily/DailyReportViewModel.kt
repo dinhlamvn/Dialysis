@@ -3,6 +3,7 @@ package com.dialysis.app.ui.daily
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WaterTrackingRepository
+import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,7 +22,8 @@ import java.util.Locale
 @OptIn(ExperimentalCoroutinesApi::class)
 class DailyReportViewModel(
     private val waterTrackingRepository: WaterTrackingRepository,
-    private val userProfileSharePref: UserProfileSharePref
+    private val userProfileSharePref: UserProfileSharePref,
+    private val networkManager: NetworkManager
 ) : BaseViewModel<DailyReportState>(DailyReportState()) {
 
     private val selectedDateMillis = MutableStateFlow(System.currentTimeMillis())
@@ -152,7 +154,20 @@ class DailyReportViewModel(
             val entryId = state.deletingDrinkId ?: return@getState
             dismissDeleteDialog()
             viewModelScope.launch(Dispatchers.IO) {
-                waterTrackingRepository.deleteEntry(entryId)
+                val entry = waterTrackingRepository.getEntryById(entryId)
+                val syncedId = entry?.syncedId
+                if (syncedId != null) {
+                    val remoteDeleteResult = networkManager.resolveNullable {
+                        networkManager.appServices.deleteWaterIntake(syncedId)
+                    }
+                    if (remoteDeleteResult.isSuccess) {
+                        waterTrackingRepository.deleteEntryLocalOnly(entryId)
+                    } else {
+                        waterTrackingRepository.deleteEntry(entryId)
+                    }
+                } else {
+                    waterTrackingRepository.deleteEntry(entryId)
+                }
             }
         }
     }

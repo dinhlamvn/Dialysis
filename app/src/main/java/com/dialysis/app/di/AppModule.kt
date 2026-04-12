@@ -79,7 +79,7 @@ val HomeModule = module {
 }
 
 val DailyReportModule = module {
-    viewModel { DailyReportViewModel(get(), get()) }
+    viewModel { DailyReportViewModel(get(), get(), get()) }
 }
 
 val InfoModule = module {
@@ -87,7 +87,7 @@ val InfoModule = module {
 }
 
 val WeightModule = module {
-    viewModel { WeightViewModel(get(), get()) }
+    viewModel { WeightViewModel(get(), get(), get(), get()) }
 }
 
 val IntroModule = module {

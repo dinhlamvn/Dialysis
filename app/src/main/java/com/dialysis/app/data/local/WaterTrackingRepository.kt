@@ -76,8 +76,20 @@ class WaterTrackingRepository(
         waterEntryDao.deleteById(entryId)
     }
 
+    suspend fun deleteEntryLocalOnly(entryId: Long) {
+        waterEntryDao.deleteById(entryId)
+    }
+
+    suspend fun getEntryById(entryId: Long): WaterEntryEntity? {
+        return waterEntryDao.getById(entryId)
+    }
+
     suspend fun getUnsyncedEntries(): List<WaterEntryEntity> {
         return waterEntryDao.getUnsyncedEntries()
+    }
+
+    suspend fun getSyncedEntries(): List<WaterEntryEntity> {
+        return waterEntryDao.getSyncedEntries()
     }
 
     suspend fun markEntrySynced(localId: Long, syncedId: Long) {
@@ -92,6 +104,11 @@ class WaterTrackingRepository(
     suspend fun insertSyncedEntries(entries: List<WaterEntryEntity>) {
         if (entries.isEmpty()) return
         waterEntryDao.insertAll(entries)
+    }
+
+    suspend fun deleteEntriesLocalOnly(entryIds: List<Long>) {
+        if (entryIds.isEmpty()) return
+        waterEntryDao.deleteByIds(entryIds)
     }
 
     suspend fun getPendingDeletes(): List<PendingWaterDeleteEntity> {

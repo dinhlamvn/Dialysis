@@ -236,10 +236,7 @@ class HomeViewModel(
     }
 
     private suspend fun syncWaterHistory() {
-        val result = networkManager.resolve { networkManager.appServices.getWaterHistory() }
-        val history = result.getOrNull().orEmpty()
-        if (history.isEmpty()) return
-
+        val history = fetchAllHistoryPages() ?: return
         val uniqueBySyncedId = history.distinctBy { it.id }
         val syncedIds = uniqueBySyncedId.map { it.id }
         val existingSyncedIds = waterTrackingRepository.getExistingSyncedIds(syncedIds)
@@ -247,6 +244,32 @@ class HomeViewModel(
             .filterNot { it.id in existingSyncedIds }
             .map { it.toEntity() }
         waterTrackingRepository.insertSyncedEntries(missingEntries)
+
+        val fetchedSyncedIdSet = syncedIds.toSet()
+        val localSyncedEntries = waterTrackingRepository.getSyncedEntries()
+        val staleLocalEntryIds = localSyncedEntries
+            .filter { localEntry ->
+                val syncedId = localEntry.syncedId
+                syncedId != null && syncedId !in fetchedSyncedIdSet
+            }
+            .map { it.id }
+        waterTrackingRepository.deleteEntriesLocalOnly(staleLocalEntryIds)
+    }
+
+    private suspend fun fetchAllHistoryPages(): List<WaterIntakeResponse>? {
+        val allItems = mutableListOf<WaterIntakeResponse>()
+        var page = 1
+        while (page <= MAX_HISTORY_SYNC_PAGE) {
+            val result = networkManager.resolve {
+                networkManager.appServices.getWaterHistory(page = page)
+            }
+            if (result.isFailure) return null
+            val pageItems = result.getOrNull().orEmpty()
+            if (pageItems.isEmpty()) break
+            allItems += pageItems
+            page++
+        }
+        return allItems
     }
 
     private fun WaterIntakeResponse.toEntity(): WaterEntryEntity {
@@ -265,3 +288,5 @@ private fun String.extractMlValue(): Int {
     val digits = replace("[^0-9]".toRegex(), "")
     return digits.toIntOrNull() ?: 0
 }
+
+private const val MAX_HISTORY_SYNC_PAGE = 500

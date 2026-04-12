@@ -1,5 +1,6 @@
 package com.dialysis.app.ui.weight
 
+import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,9 +42,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dialysis.app.config.AppGoals
 import com.dialysis.app.router.Router
+import com.dialysis.app.ui.components.Loading
 import com.dialysis.app.ui.components.TextStyles
 import java.util.Locale
 import kotlin.math.abs
@@ -71,6 +74,8 @@ fun WeightScreen(
     val yMax by viewModel.yMaxState.collectAsStateWithLifecycle()
     val showAddWeightSheet by viewModel.showAddWeightSheetState.collectAsStateWithLifecycle()
     val draftWeightKg by viewModel.draftWeightKgState.collectAsStateWithLifecycle()
+    val editingMode by viewModel.editingModeState.collectAsStateWithLifecycle()
+    val isSavingWeight by viewModel.isSavingWeightState.collectAsStateWithLifecycle()
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val progressKg = currentWeightKg - initialWeightKg
@@ -94,7 +99,8 @@ fun WeightScreen(
                     initialWeightKg = initialWeightKg,
                     currentWeightKg = currentWeightKg,
                     progressText = progressText,
-                    onAddCurrentWeightClick = viewModel::openAddWeightSheet
+                    onAddInitialWeightClick = viewModel::openInitialWeightSheet,
+                    onAddCurrentWeightClick = viewModel::openCurrentWeightSheet
                 )
             }
             item {
@@ -132,12 +138,17 @@ fun WeightScreen(
             onDismissRequest = viewModel::closeAddWeightSheet
         ) {
             AddCurrentWeightSheet(
+                editingMode = editingMode,
                 draftWeightKg = draftWeightKg,
                 onCancel = viewModel::closeAddWeightSheet,
                 onSave = viewModel::saveDraftWeight,
                 onWeightChange = viewModel::updateDraftWeight
             )
         }
+    }
+
+    if (isSavingWeight) {
+        Loading(overlayColor = Color.Black.copy(alpha = 0.25f))
     }
 }
 
@@ -158,6 +169,7 @@ private fun WeightInfoCards(
     initialWeightKg: Float,
     currentWeightKg: Float,
     progressText: String,
+    onAddInitialWeightClick: () -> Unit,
     onAddCurrentWeightClick: () -> Unit
 ) {
     Row(
@@ -168,7 +180,12 @@ private fun WeightInfoCards(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            SmallInfoCard(title = "Initial weight", value = "${formatWeightValue(initialWeightKg)} kg", highlight = false)
+            SmallInfoCard(
+                title = "Initial weight",
+                value = "${formatWeightValue(initialWeightKg)} kg",
+                highlight = false,
+                onClick = onAddInitialWeightClick
+            )
             SmallInfoCard(
                 title = "Current weight",
                 value = "${formatWeightValue(currentWeightKg)} kg",
@@ -358,10 +375,10 @@ private fun ChartCard(
                         label.label,
                         x,
                         top - 8f,
-                        android.graphics.Paint().apply {
-                            color = android.graphics.Color.parseColor("#9AA0AB")
+                        Paint().apply {
+                            color = "#9AA0AB".toColorInt()
                             textSize = 32f
-                            textAlign = android.graphics.Paint.Align.CENTER
+                            textAlign = Paint.Align.CENTER
                             isAntiAlias = true
                         }
                     )
@@ -394,11 +411,16 @@ private fun ChartCard(
 
 @Composable
 private fun AddCurrentWeightSheet(
+    editingMode: WeightEditingMode,
     draftWeightKg: Float,
     onCancel: () -> Unit,
     onSave: () -> Unit,
     onWeightChange: (Float) -> Unit
 ) {
+    val title = when (editingMode) {
+        WeightEditingMode.INITIAL -> "Cập nhật cân nặng ban đầu"
+        WeightEditingMode.CURRENT -> "Thêm cân nặng hiện tại"
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -416,7 +438,7 @@ private fun AddCurrentWeightSheet(
 
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "Thêm cân nặng hiện tại",
+            text = title,
             style = TextStyles.titleMedium,
             color = TextDark,
             modifier = Modifier.fillMaxWidth(),

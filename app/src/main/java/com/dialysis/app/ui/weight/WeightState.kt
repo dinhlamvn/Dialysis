@@ -10,6 +10,8 @@ data class WeightState(
     val periodTitle: String = "",
     val showAddWeightSheet: Boolean = false,
     val draftWeightKg: Float = 0f,
+    val editingMode: WeightEditingMode = WeightEditingMode.CURRENT,
+    val isSavingWeight: Boolean = false,
     val chartData: List<WeightChartPoint> = emptyList(),
     val xAxisLabels: List<WeightAxisLabel> = emptyList(),
     val yMin: Float = 0f,
@@ -19,6 +21,11 @@ data class WeightState(
 enum class WeightReportTab {
     MONTH,
     YEAR
+}
+
+enum class WeightEditingMode {
+    INITIAL,
+    CURRENT
 }
 
 data class WeightChartPoint(

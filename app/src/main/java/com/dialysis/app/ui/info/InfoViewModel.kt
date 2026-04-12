@@ -14,6 +14,7 @@ class InfoViewModel(
     private val weightTrackingRepository: WeightTrackingRepository,
     private val networkManager: NetworkManager
 ) : BaseViewModel<InfoState>(InfoState()) {
+    private var hasLoadedInitialData = false
 
     val currentStepState = collectStateUI(InfoState::currentStep)
     val genderState = collectStateUI(InfoState::gender)
@@ -27,6 +28,25 @@ class InfoViewModel(
     val dailyUrineMlState = collectStateUI(InfoState::dailyUrineMl)
     val isCalculatingGoalState = collectStateUI(InfoState::isCalculatingGoal)
     val calculateGoalStatusState = collectStateUI(InfoState::calculateGoalStatus)
+
+    fun loadInitialData() {
+        if (hasLoadedInitialData) return
+        hasLoadedInitialData = true
+        val profile = userProfileSharePref.getProfile() ?: return
+        setState {
+            copy(
+                gender = profile.gender,
+                weight = profile.weight,
+                height = profile.height,
+                age = profile.age,
+                name = profile.name,
+                phone = profile.phone,
+                dialysisStartYear = profile.dialysisStartYear,
+                dialysisFreqWeek = profile.dialysisFreqWeek,
+                dailyUrineMl = profile.dailyUrineMl
+            )
+        }
+    }
 
     fun nextStep() = setState { copy(currentStep = currentStep + 1) }
 
