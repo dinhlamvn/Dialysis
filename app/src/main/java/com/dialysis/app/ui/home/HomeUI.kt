@@ -25,7 +25,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,7 +32,6 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -718,8 +716,8 @@ private fun StatisticsListSection(
         }
         BannerCard(
             background = Color(0xFFFF6B39),
-            title = "Weight progress  >",
-            description = "Track your weight dynamics and\nenhance your well-being with My\nWater",
+            title = stringResource(R.string.home_weight_progress_title),
+            description = stringResource(R.string.home_weight_progress_desc),
             titleColor = Color.White,
             descriptionColor = Color.White.copy(alpha = 0.95f),
             onClick = onWeightProgressClick
@@ -815,7 +813,7 @@ private fun SymptomReportSheet(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp),
+                        .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     Loading()
@@ -824,35 +822,17 @@ private fun SymptomReportSheet(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(280.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(symptoms.size) { index ->
                         val symptom = symptoms[index]
                         val isSelected = symptom == selectedSymptom
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isSelected) Color(0xFFFFF1F3) else CardLight)
-                                .clickable { onSelectSymptom(symptom) }
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = isSelected,
-                                onClick = { onSelectSymptom(symptom) },
-                                modifier = Modifier
-                                    .scale(0.85f)
-                                    .size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = symptom,
-                                color = TextDark,
-                                style = TextStyles.body
-                            )
-                        }
+                        SymptomOptionItem(
+                            symptom = symptom,
+                            isSelected = isSelected,
+                            onClick = { onSelectSymptom(symptom) }
+                        )
                     }
                 }
             }
@@ -877,7 +857,7 @@ private fun SymptomReportSheet(
             Spacer(modifier = Modifier.height(14.dp))
             Button(
                 onClick = onSubmit,
-                enabled = selectedSymptom != null && notes.isNotBlank() && !isSubmitting,
+                enabled = selectedSymptom != null && !isSubmitting,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -896,6 +876,54 @@ private fun SymptomReportSheet(
         if (isSubmitting) {
             Loading(overlayColor = Color.Black.copy(alpha = 0.2f))
         }
+    }
+}
+
+@Composable
+private fun SymptomOptionItem(
+    symptom: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(if (isSelected) Color(0xFFFFF1F3) else Color(0xFFF3F5FA))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(22.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                if (isSelected) {
+                    drawCircle(color = Color(0xFFFF4E5E))
+                } else {
+                    drawCircle(
+                        color = Color(0xFFB8BEC8),
+                        style = Stroke(width = 2f)
+                    )
+                }
+            }
+            if (isSelected) {
+                Text(
+                    text = "✓",
+                    color = Color.White,
+                    style = TextStyles.caption
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = symptom,
+            color = TextDark,
+            style = TextStyles.body
+        )
     }
 }
 

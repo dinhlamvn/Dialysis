@@ -51,6 +51,8 @@ import java.util.Calendar
 import java.util.Locale
 import kotlin.math.roundToInt
 
+private val LocaleVi = Locale("vi", "VN")
+
 class StatisticsFragment : BaseFragment() {
     @Composable
     override fun ContentView() {
@@ -432,7 +434,7 @@ private fun MonthlyTrackerSection(
         -1
     }
     val monthLabel = remember(currentYear, currentMonth) {
-        val monthName = monthCalendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).orEmpty()
+        val monthName = monthCalendar.getDisplayName(Calendar.MONTH, Calendar.LONG, LocaleVi).orEmpty()
         "$monthName $currentYear"
     }
     val trackedDays = remember(dailyTotals, currentYear, currentMonth) {
@@ -757,7 +759,7 @@ private fun formatMlToLitresText(valueMl: Int): String {
 }
 
 private fun formatDayMonth(calendar: Calendar): String {
-    val month = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()).orEmpty()
+    val month = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, LocaleVi).orEmpty()
     return "${calendar.get(Calendar.DAY_OF_MONTH)} $month"
 }
 
@@ -788,7 +790,7 @@ private fun parseDayToCalendar(day: String): Calendar? {
 }
 
 private fun formatWeekday(calendar: Calendar): String {
-    return calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()).orEmpty()
+    return calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, LocaleVi).orEmpty()
 }
 
 private fun isSameDay(first: Calendar, second: Calendar): Boolean {

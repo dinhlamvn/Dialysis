@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Dialysis Intake</string>
+    <string name="app_name">Lượng dịch lọc thận</string>
     <string name="intro_title">Ứng dụng của chúng tôi sẽ giúp\nBạn kiểm soát tốt lượng dịch\nnhập mỗi ngày qua ăn uống!</string>
-    <string name="intro_card_water_title">Disalysis Intake</string>
+    <string name="intro_card_water_title">Lượng dịch lọc thận</string>
     <string name="intro_card_water_desc">Với ứng dụng của chúng tôi, việc khỏe mạnh và thon gọn thật dễ dàng!</string>
     <string name="intro_card_rewards_title">Giải thưởng</string>
     <string name="intro_card_rewards_desc">Kiếm thành tích và theo dõi tiến trình của bạn!</string>
@@ -79,7 +79,7 @@
     <string name="drink_water">Nước</string>
     <string name="drink_coffee">Cà phê</string>
     <string name="drink_tea">Trà</string>
-    <string name="drink_soda">Soda</string>
+    <string name="drink_soda">Nước ngọt</string>
     <string name="drink_fruit_water">Nước hoa quả</string>
     <string name="drink_milk">Sữa</string>
     <string name="drink_yogurt">Sữa chua</string>
@@ -97,7 +97,7 @@
     <string name="create_drink_custom_input_title">Nhập thể tích tùy chọn</string>
     <string name="create_drink_custom_input_label">Số ml</string>
     <string name="common_cancel">Hủy</string>
-    <string name="drink_unit_espresso">espresso</string>
+    <string name="drink_unit_espresso">tách espresso</string>
     <string name="drink_unit_glass">ly</string>
     <string name="drink_unit_cup">cốc</string>
     <string name="drink_unit_litre">lít</string>
@@ -182,6 +182,8 @@
     <string name="home_tip_more">Thêm mẹo  &gt;</string>
     <string name="home_tip_desc">Uống ly nước đầu tiên ngay sau khi thức dậy có thể giúp cơ thể hoạt động ổn định và cân bằng nước tốt hơn.</string>
     <string name="home_tip_share">Chia sẻ mẹo</string>
+    <string name="home_weight_progress_title">Tiến độ cân nặng  &gt;</string>
+    <string name="home_weight_progress_desc">Theo dõi biến động cân nặng và cải thiện sức khỏe cùng ứng dụng của chúng tôi.</string>
 
     <string-array name="notification_messages">
         <item>Chào bạn, hôm nay bạn đã uống gì nào?</item>

@@ -19,7 +19,7 @@ object DrinkCatalog {
         DrinkVisual("tra", "Trà", "🍵", Brush.verticalGradient(listOf(Color(0xFFFFD766), Color(0xFFF1A500)))),
         DrinkVisual("nuoc tra / che", "Nước trà / chè", "🍵", Brush.verticalGradient(listOf(Color(0xFFFFD766), Color(0xFFF1A500)))),
         DrinkVisual("ca phe", "Cà phê", "☕", Brush.verticalGradient(listOf(Color(0xFF8B5A3C), Color(0xFF5E3725)))),
-        DrinkVisual("soda", "Soda", "🥤", Brush.verticalGradient(listOf(Color(0xFFA37EFF), Color(0xFF7E57C2)))),
+        DrinkVisual("soda", "Nước ngọt", "🥤", Brush.verticalGradient(listOf(Color(0xFFA37EFF), Color(0xFF7E57C2)))),
         DrinkVisual("nuoc hoa qua", "Nước hoa quả", "🧃", Brush.verticalGradient(listOf(Color(0xFFFFA24A), Color(0xFFFF6A00)))),
         DrinkVisual("sinh to", "Sinh tố", "🍹", Brush.verticalGradient(listOf(Color(0xFFFFD15A), Color(0xFFF3A51E)))),
         DrinkVisual("bia", "Bia", "🍺", Brush.verticalGradient(listOf(Color(0xFFD98A2B), Color(0xFF9E5A16)))),
