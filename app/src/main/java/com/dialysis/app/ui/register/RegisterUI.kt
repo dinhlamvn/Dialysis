@@ -70,7 +70,7 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel(), onBackClick: () -
             ) {
                 Image(
                     painter = androidx.compose.ui.res.painterResource(R.drawable.ic_back),
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.common_back),
                     modifier = Modifier
                         .size(24.dp)
                         .clickable(onClick = onBackClick)
@@ -135,9 +135,9 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel(), onBackClick: () -
                                 id = if (isPasswordVisible) R.drawable.ic_eye_off else R.drawable.ic_eye
                             ),
                             contentDescription = if (isPasswordVisible) {
-                                "Hide password"
+                                stringResource(R.string.common_hide_password)
                             } else {
-                                "Show password"
+                                stringResource(R.string.common_show_password)
                             },
                             tint = Color.Unspecified
                         )
@@ -168,9 +168,9 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel(), onBackClick: () -
                                 id = if (isConfirmPasswordVisible) R.drawable.ic_eye_off else R.drawable.ic_eye
                             ),
                             contentDescription = if (isConfirmPasswordVisible) {
-                                "Hide confirm password"
+                                stringResource(R.string.common_hide_confirm_password)
                             } else {
-                                "Show confirm password"
+                                stringResource(R.string.common_show_confirm_password)
                             },
                             tint = Color.Unspecified
                         )

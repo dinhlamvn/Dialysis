@@ -32,7 +32,7 @@ class LoginViewModel(
             if (state.isLoginLoading) return@getState
 
             if (state.identifier.isBlank() || state.password.isBlank()) {
-                setState { copy(loginError = "Please enter identifier and password") }
+                setState { copy(loginError = "Vui lòng nhập tài khoản và mật khẩu") }
                 return@getState
             }
 

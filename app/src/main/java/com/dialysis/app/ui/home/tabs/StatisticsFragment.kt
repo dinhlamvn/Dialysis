@@ -36,8 +36,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.dialysis.app.R
 import com.dialysis.app.base.BaseFragment
 import com.dialysis.app.config.AppGoals
 import com.dialysis.app.data.local.model.DailyTotal
@@ -95,7 +97,7 @@ fun StatisticsScreen(
     ) {
         item {
             Text(
-                text = "Statistics",
+                text = stringResource(R.string.stats_title),
                 style = TextStyles.titleMedium,
                 color = Color(0xFF1F2633),
                 textAlign = TextAlign.Center,
@@ -114,7 +116,7 @@ fun StatisticsScreen(
             ) {
                 StatsTab.entries.forEach { tab ->
                     TabChip(
-                        text = tab.title,
+                        text = stringResource(tab.titleRes),
                         selected = activeTab == tab,
                         onClick = { activeTab = tab }
                     )
@@ -207,12 +209,12 @@ private fun MainStatSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Today, $currentDateLabel",
+                text = stringResource(R.string.stats_today_format, currentDateLabel),
                 style = TextStyles.titleMedium,
                 color = Color(0xFF1F2633)
             )
             Text(
-                text = "Find friends",
+                text = stringResource(R.string.stats_find_friends),
                 style = TextStyles.title,
                 color = Color(0xFF1877F2)
             )
@@ -240,10 +242,18 @@ private fun MainStatSection(
                                     .background(Color(0xFFDDE4F0), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(text = "Me", style = TextStyles.bodyMedium, color = Color(0xFF6A7387))
+                                Text(
+                                    text = stringResource(R.string.stats_me),
+                                    style = TextStyles.bodyMedium,
+                                    color = Color(0xFF6A7387)
+                                )
                             }
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text(text = "Me", style = TextStyles.titleMedium, color = Color(0xFF1F2633))
+                            Text(
+                                text = stringResource(R.string.stats_me),
+                                style = TextStyles.titleMedium,
+                                color = Color(0xFF1F2633)
+                            )
                             Spacer(modifier = Modifier.weight(1f))
                             Text(text = "$todayPercent%", style = TextStyles.title, color = Color(0xFF7A8498))
                             Spacer(modifier = Modifier.width(12.dp))
@@ -275,7 +285,7 @@ private fun MainStatSection(
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
                     Text(
-                        text = "Invite friends",
+                        text = stringResource(R.string.stats_invite_friends),
                         color = Color.White,
                         style = TextStyles.titleMedium,
                         modifier = Modifier.padding(horizontal = 28.dp, vertical = 2.dp)
@@ -285,7 +295,7 @@ private fun MainStatSection(
         }
 
         Text(
-            text = "Statistics for the week",
+            text = stringResource(R.string.stats_weekly_title),
             style = TextStyles.titleMedium,
             color = Color(0xFF1F2633)
         )
@@ -311,7 +321,7 @@ private fun WeeklyStatCard(
     averagePercentage: Int,
     onDayClick: (Long) -> Unit
 ) {
-    val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val days = listOf("Th 2", "Th 3", "Th 4", "Th 5", "Th 6", "Th 7", "CN")
     val todayIndex = ((Calendar.getInstance().get(Calendar.DAY_OF_WEEK) + 5) % 7)
     val weekStartCalendar = remember {
         Calendar.getInstance().apply {
@@ -371,12 +381,20 @@ private fun WeeklyStatCard(
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {
-                        Text(text = "Average daily percentage", color = Color.White, style = TextStyles.bodyMedium)
+                        Text(
+                            text = stringResource(R.string.stats_avg_daily_percentage),
+                            color = Color.White,
+                            style = TextStyles.bodyMedium
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = "$averagePercentage%", color = Color.White, style = TextStyles.titleMedium)
                     }
                     Column(horizontalAlignment = Alignment.End) {
-                        Text(text = "Total for the week", color = Color.White, style = TextStyles.bodyMedium)
+                        Text(
+                            text = stringResource(R.string.stats_total_week),
+                            color = Color.White,
+                            style = TextStyles.bodyMedium
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = formatMlToLitresText(weekTotalMl), color = Color.White, style = TextStyles.titleMedium)
                     }
@@ -424,7 +442,7 @@ private fun MonthlyTrackerSection(
             }?.get(Calendar.DAY_OF_MONTH)
         }.toSet()
     }
-    val weekdays = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val weekdays = listOf("Th 2", "Th 3", "Th 4", "Th 5", "Th 6", "Th 7", "CN")
     val totalSlots = ((firstDayOffset + daysInMonth + 6) / 7) * 7
 
     Column(
@@ -436,12 +454,12 @@ private fun MonthlyTrackerSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Monthly statistics",
+                text = stringResource(R.string.stats_monthly_title),
                 style = TextStyles.titleMedium,
                 color = Color(0xFF1F2633)
             )
             Text(
-                text = "More",
+                text = stringResource(R.string.home_more),
                 style = TextStyles.title,
                 color = Color(0xFF1877F2)
             )
@@ -574,7 +592,7 @@ private fun ByDayReportSection(
 @Composable
 private fun EmptyByDayState() {
     Text(
-        text = "No daily records yet",
+        text = stringResource(R.string.stats_empty_daily_records),
         style = TextStyles.bodyMedium,
         color = Color(0xFF7A8498),
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp)
@@ -666,7 +684,7 @@ private fun LockedStatsSection() {
         )
         Spacer(modifier = Modifier.height(32.dp))
         Text(
-            text = "Details statistics are available in the full\napplication version only",
+            text = stringResource(R.string.stats_locked_desc),
             color = Color(0xFF44505E),
             style = TextStyles.titleMedium,
             textAlign = TextAlign.Center
@@ -678,7 +696,7 @@ private fun LockedStatsSection() {
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1FB4EA))
         ) {
             Text(
-                text = "More",
+                text = stringResource(R.string.home_more),
                 color = Color.White,
                 style = TextStyles.titleMedium,
                 modifier = Modifier.padding(horizontal = 34.dp, vertical = 4.dp)
@@ -717,11 +735,11 @@ private fun TabChip(
     }
 }
 
-private enum class StatsTab(val title: String) {
-    MAIN("Main stat"),
-    BY_DAY("By day"),
-    BEVERAGES("Beverages"),
-    MONTHLY("Monthly")
+private enum class StatsTab(val titleRes: Int) {
+    MAIN(R.string.stats_tab_main),
+    BY_DAY(R.string.stats_tab_by_day),
+    BEVERAGES(R.string.stats_tab_beverages),
+    MONTHLY(R.string.stats_tab_monthly)
 }
 
 private fun formatMlText(valueMl: Int): String {
@@ -746,11 +764,11 @@ private fun formatDayMonth(calendar: Calendar): String {
 private fun formatGroupedDateTitle(day: String): String {
     val calendar = parseDayToCalendar(day) ?: return day
     val prefix = when {
-        isSameDay(calendar, Calendar.getInstance()) -> "Today"
+        isSameDay(calendar, Calendar.getInstance()) -> "Hôm nay"
         isSameDay(
             calendar,
             Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, -1) }
-        ) -> "Yesterday"
+        ) -> "Hôm qua"
         else -> formatWeekday(calendar)
     }
     return "$prefix, ${formatDayMonth(calendar)}"

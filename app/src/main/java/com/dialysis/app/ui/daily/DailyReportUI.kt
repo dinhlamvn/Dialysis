@@ -172,7 +172,7 @@ fun DailyReportScreen(
             },
             confirmButton = {
                 TextButton(onClick = viewModel::confirmDeleteDrink) {
-                    Text(text = "OK", style = TextStyles.bodyMedium, color = AccentBlue)
+                    Text(text = stringResource(R.string.common_ok), style = TextStyles.bodyMedium, color = AccentBlue)
                 }
             },
             dismissButton = {
@@ -222,7 +222,7 @@ private fun TopBar(
         if (onBackClick != null) {
             Image(
                 painter = painterResource(R.drawable.ic_back),
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.common_back),
                 modifier = Modifier
                     .size(24.dp)
                     .clickable(onClick = onBackClick)

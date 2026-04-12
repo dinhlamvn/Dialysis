@@ -39,11 +39,13 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dialysis.app.R
 import com.dialysis.app.config.AppGoals
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.Loading
@@ -159,7 +161,7 @@ private fun GoalHeader(goalWeightKg: Int) {
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = "Goal: ", style = TextStyles.title, color = TextMuted)
+        Text(text = stringResource(R.string.weight_goal_prefix), style = TextStyles.title, color = TextMuted)
         Text(text = "$goalWeightKg kg", style = TextStyles.titleMedium, color = AccentBlue)
     }
 }
@@ -181,13 +183,13 @@ private fun WeightInfoCards(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             SmallInfoCard(
-                title = "Initial weight",
+                title = stringResource(R.string.weight_initial),
                 value = "${formatWeightValue(initialWeightKg)} kg",
                 highlight = false,
                 onClick = onAddInitialWeightClick
             )
             SmallInfoCard(
-                title = "Current weight",
+                title = stringResource(R.string.weight_current),
                 value = "${formatWeightValue(currentWeightKg)} kg",
                 highlight = true,
                 onClick = onAddCurrentWeightClick
@@ -206,7 +208,7 @@ private fun WeightInfoCards(
                     .padding(16.dp)
                     .clickable(onClick = onAddCurrentWeightClick)
             ) {
-                Text(text = "Weight progress  >", style = TextStyles.title, color = TextMuted)
+                Text(text = stringResource(R.string.weight_progress), style = TextStyles.title, color = TextMuted)
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(text = progressText, style = TextStyles.titleMedium, color = TextDark)
                 Spacer(modifier = Modifier.weight(1f))
@@ -276,7 +278,7 @@ private fun ReportTabBar(
                     .padding(vertical = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Month", style = TextStyles.titleMedium, color = TextDark)
+                Text(stringResource(R.string.weight_tab_month), style = TextStyles.titleMedium, color = TextDark)
             }
             Box(
                 modifier = Modifier
@@ -289,7 +291,7 @@ private fun ReportTabBar(
                     .padding(vertical = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Year", style = TextStyles.titleMedium, color = TextDark)
+                Text(stringResource(R.string.weight_tab_year), style = TextStyles.titleMedium, color = TextDark)
             }
         }
     }

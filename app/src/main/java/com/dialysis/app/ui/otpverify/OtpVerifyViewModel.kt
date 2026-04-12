@@ -35,12 +35,12 @@ class OtpVerifyViewModel(
             if (state.isVerifying) return@getState
 
             if (state.identifierType.isBlank() || state.identifier.isBlank()) {
-                setState { copy(verifyError = "Missing identifier data") }
+                setState { copy(verifyError = "Thiếu thông tin định danh") }
                 return@getState
             }
 
             if (state.otpCode.length != 6) {
-                setState { copy(verifyError = "OTP must be 6 digits") }
+                setState { copy(verifyError = "Mã OTP phải gồm 6 chữ số") }
                 return@getState
             }
 

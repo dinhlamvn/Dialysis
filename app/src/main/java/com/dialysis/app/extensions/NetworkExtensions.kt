@@ -25,7 +25,7 @@ fun Throwable.parseNetworkErrorResponse(appGson: Gson): NetworkErrorResponse {
 private fun Throwable.defaultNetworkErrorResponse(): NetworkErrorResponse {
     return NetworkErrorResponse(
         "Code: 0",
-        this.message ?: "Unknown Error",
+        this.message ?: "Lỗi không xác định",
         emptyMap()
     )
 }

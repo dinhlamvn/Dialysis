@@ -155,7 +155,7 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) 
 
             PrimaryButton(
                 text = if (currentStep == TotalSteps - 1) {
-                    "Done"
+                    stringResource(R.string.info_done)
                 } else {
                     stringResource(R.string.register_next)
                 },
@@ -191,7 +191,7 @@ private fun TopProgressRow(
     ) {
         Image(
             painter = painterResource(R.drawable.ic_back),
-            contentDescription = "Back",
+            contentDescription = stringResource(R.string.common_back),
             modifier = Modifier
                 .size(24.dp)
                 .padding(end = 12.dp)
@@ -619,7 +619,7 @@ private fun GenderCard(
             Image(
                 painter = painterResource(avatar),
                 modifier = Modifier.fillMaxSize(),
-                contentDescription = "avatar"
+                contentDescription = stringResource(R.string.common_avatar)
             )
         }
 

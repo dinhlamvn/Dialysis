@@ -26,9 +26,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dialysis.app.base.BaseFragment
+import com.dialysis.app.R
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.login.LoginActivity
@@ -62,7 +64,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     ) {
         item {
             Text(
-                text = "Settings",
+                text = stringResource(R.string.settings_title),
                 style = TextStyles.titleMedium,
                 color = Color(0xFF1F2633),
                 textAlign = TextAlign.Center,
@@ -94,7 +96,7 @@ private fun TopCardsSection(
     dailyGoalMl: Int
 ) {
     val context = LocalContext.current
-    val accountText = accountContact ?: "Sign In or Sign Up"
+    val accountText = accountContact ?: stringResource(R.string.settings_sign_in_up)
     val isGuestState = accountContact == null
 
     Column(
@@ -110,7 +112,11 @@ private fun TopCardsSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Account", style = TextStyles.titleMedium, color = Color(0xFF2A2F39))
+                    Text(
+                        stringResource(R.string.settings_account),
+                        style = TextStyles.titleMedium,
+                        color = Color(0xFF2A2F39)
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     if (isLoadingAccount) {
                         CircularProgressIndicator(
@@ -146,7 +152,11 @@ private fun TopCardsSection(
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Profile", style = TextStyles.title, color = Color(0xFF2A2F39))
+                    Text(
+                        stringResource(R.string.settings_profile),
+                        style = TextStyles.title,
+                        color = Color(0xFF2A2F39)
+                    )
                 }
             }
         }
@@ -154,15 +164,15 @@ private fun TopCardsSection(
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
             SmallColorCard(
                 modifier = Modifier.weight(1f),
-                title = "Daily goal",
+                title = stringResource(R.string.settings_daily_goal),
                 value = "$dailyGoalMl ml",
                 bg = Color(0xFFE9EDF2),
                 valueColor = Color(0xFF17A9DC)
             )
             SmallColorCard(
                 modifier = Modifier.weight(1f),
-                title = "Notifications",
-                value = "Off",
+                title = stringResource(R.string.settings_notifications),
+                value = stringResource(R.string.settings_off),
                 bg = Color(0xFFFF4D57),
                 valueColor = Color.White,
                 titleColor = Color.White
@@ -172,15 +182,15 @@ private fun TopCardsSection(
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
             SmallColorCard(
                 modifier = Modifier.weight(1f),
-                title = "Friends",
-                value = "Add",
+                title = stringResource(R.string.settings_friends),
+                value = stringResource(R.string.settings_add),
                 bg = Color(0xFF9C53DF),
                 valueColor = Color.White,
                 titleColor = Color.White
             )
             SmallColorCard(
                 modifier = Modifier.weight(1f),
-                title = "Achievements",
+                title = stringResource(R.string.settings_achievements),
                 value = "0 / 13",
                 bg = Color(0xFFE8ECF1),
                 valueColor = Color(0xFFFF9800)
@@ -231,10 +241,14 @@ private fun FullVersionBanner() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Full version ›", style = TextStyles.titleMedium, color = Color.White)
+                Text(
+                    stringResource(R.string.settings_full_version),
+                    style = TextStyles.titleMedium,
+                    color = Color.White
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    "Drink more water and use\nthe app effectively",
+                    stringResource(R.string.settings_full_version_desc),
                     style = TextStyles.title,
                     color = Color.White.copy(alpha = 0.9f)
                 )
@@ -252,13 +266,13 @@ private fun FullVersionBanner() {
 private fun SettingsGroupOne() {
     SettingsGroupCard(
         rows = listOf(
-            Triple("Beverages", "", true),
-            Triple("Default volumes", "", true),
-            Triple("App style", "", true),
-            Triple("Home screen character", "", true),
-            Triple("Language", "English", true),
-            Triple("Integrations", "", true),
-            Triple("Units of measure", "Metric", true)
+            Triple(stringResource(R.string.settings_beverages), "", true),
+            Triple(stringResource(R.string.settings_default_volumes), "", true),
+            Triple(stringResource(R.string.settings_app_style), "", true),
+            Triple(stringResource(R.string.settings_home_character), "", true),
+            Triple(stringResource(R.string.settings_language), stringResource(R.string.settings_language_value), true),
+            Triple(stringResource(R.string.settings_integrations), "", true),
+            Triple(stringResource(R.string.settings_units), stringResource(R.string.settings_units_metric), true)
         )
     )
 }
@@ -267,10 +281,10 @@ private fun SettingsGroupOne() {
 private fun SettingsGroupTwo() {
     SettingsGroupCard(
         rows = listOf(
-            Triple("Rate the app", "", true),
-            Triple("Suggest feature", "", true),
-            Triple("Contact us", "", true),
-            Triple("Share app", "", true)
+            Triple(stringResource(R.string.settings_rate_app), "", true),
+            Triple(stringResource(R.string.settings_suggest_feature), "", true),
+            Triple(stringResource(R.string.settings_contact_us), "", true),
+            Triple(stringResource(R.string.settings_share_app), "", true)
         )
     )
 }
@@ -323,7 +337,11 @@ private fun SocialSection() {
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Join our community", style = TextStyles.title, color = Color(0xFFA7AEBB))
+        Text(
+            stringResource(R.string.settings_join_community),
+            style = TextStyles.title,
+            color = Color(0xFFA7AEBB)
+        )
         Spacer(modifier = Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(22.dp), verticalAlignment = Alignment.CenterVertically) {
             SocialCircle("f", Color(0xFF1877F2))

@@ -73,7 +73,7 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), onBackClick: () -> Unit
             ) {
                 Image(
                     painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.common_back),
                     modifier = Modifier
                         .size(24.dp)
                         .clickable(onClick = onBackClick)
@@ -130,9 +130,9 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), onBackClick: () -> Unit
                                 }
                             ),
                             contentDescription = if (isPasswordVisible) {
-                                "Hide password"
+                                stringResource(R.string.common_hide_password)
                             } else {
-                                "Show password"
+                                stringResource(R.string.common_show_password)
                             },
                             tint = Color.Unspecified
                         )

@@ -1138,19 +1138,19 @@ private fun TipOfDayCard() {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Tip of the day", color = Color.White, style = TextStyles.titleMedium)
-                Text(text = "more tips  >", color = Color.White, style = TextStyles.bodyMedium)
+                Text(text = stringResource(R.string.home_tip_title), color = Color.White, style = TextStyles.titleMedium)
+                Text(text = stringResource(R.string.home_tip_more), color = Color.White, style = TextStyles.bodyMedium)
             }
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "Having your first glass of water as\nsoon as you wake up can normalize\nyour bodily functions and top up your\nwater balance.",
+                text = stringResource(R.string.home_tip_desc),
                 color = Color.White,
                 style = TextStyles.body
             )
             Spacer(modifier = Modifier.weight(1f))
             Card(shape = RoundedCornerShape(30.dp)) {
                 Text(
-                    text = "Share advice",
+                    text = stringResource(R.string.home_tip_share),
                     color = Color(0xFFF6B900),
                     style = TextStyles.bodyMedium,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
