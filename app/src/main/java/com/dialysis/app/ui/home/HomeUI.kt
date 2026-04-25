@@ -1,4 +1,6 @@
 package com.dialysis.app.ui.home
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -45,8 +47,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.content.FileProvider
 import com.dialysis.app.R
 import com.dialysis.app.data.local.model.DailyTotal
+import com.dialysis.app.extensions.toast
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.Loading
 import com.dialysis.app.ui.components.TextStyles
@@ -59,6 +63,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.io.File
 
 private val BlueTop = Color(0xFF2D6FDD)
 private val BlueBottom = Color(0xFF1A50C9)
@@ -714,15 +719,39 @@ private fun StatisticsListSection(
         if (isLoggedIn) {
             SymptomCard(onClick = onSymptomClick)
         }
+        ActionCardsRow(
+            onWeightProgressClick = onWeightProgressClick
+        )
+    }
+}
+
+@Composable
+private fun ActionCardsRow(
+    onWeightProgressClick: () -> Unit
+) {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         BannerCard(
-            background = Color(0xFFFF6B39),
+            modifier = Modifier.weight(1f),
+            background = Color(0xFF3AC37A),
             title = stringResource(R.string.home_weight_progress_title),
             description = stringResource(R.string.home_weight_progress_desc),
             titleColor = Color.White,
             descriptionColor = Color.White.copy(alpha = 0.95f),
             onClick = onWeightProgressClick
         )
-        TipOfDayCard()
+        BannerCard(
+            modifier = Modifier.weight(1f),
+            background = Color(0xFF9A6AD9),
+            title = stringResource(R.string.home_guide_title),
+            description = stringResource(R.string.home_guide_desc),
+            titleColor = Color.White,
+            descriptionColor = Color.White.copy(alpha = 0.95f),
+            onClick = { openGuidePdf(context) }
+        )
     }
 }
 
@@ -1114,6 +1143,7 @@ private data class RollingDayStat(
 
 @Composable
 private fun BannerCard(
+    modifier: Modifier = Modifier,
     background: Color,
     title: String,
     description: String,
@@ -1122,8 +1152,7 @@ private fun BannerCard(
     onClick: (() -> Unit)? = null
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .height(170.dp)
             .then(
                 if (onClick != null) {
@@ -1147,44 +1176,31 @@ private fun BannerCard(
     }
 }
 
-@Composable
-private fun TipOfDayCard() {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(260.dp),
-        shape = RoundedCornerShape(24.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF6B900))
-                .padding(20.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = stringResource(R.string.home_tip_title), color = Color.White, style = TextStyles.titleMedium)
-                Text(text = stringResource(R.string.home_tip_more), color = Color.White, style = TextStyles.bodyMedium)
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = stringResource(R.string.home_tip_desc),
-                color = Color.White,
-                style = TextStyles.body
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Card(shape = RoundedCornerShape(30.dp)) {
-                Text(
-                    text = stringResource(R.string.home_tip_share),
-                    color = Color(0xFFF6B900),
-                    style = TextStyles.bodyMedium,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
-                )
+private fun openGuidePdf(context: android.content.Context) {
+    val outFile = File(context.cacheDir, "huong_dan.pdf")
+    if (!outFile.exists()) {
+        context.resources.openRawResource(R.raw.huong_dan).use { input ->
+            outFile.outputStream().use { output ->
+                input.copyTo(output)
             }
         }
+    }
+
+    val uri = FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        outFile
+    )
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, "application/pdf")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    try {
+        context.startActivity(intent)
+    } catch (_: ActivityNotFoundException) {
+        context.toast(context.getString(R.string.home_guide_open_error))
     }
 }
 

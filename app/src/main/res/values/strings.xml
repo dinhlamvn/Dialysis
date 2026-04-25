@@ -184,6 +184,9 @@
     <string name="home_tip_share">Chia sẻ mẹo</string>
     <string name="home_weight_progress_title">Tiến độ cân nặng  &gt;</string>
     <string name="home_weight_progress_desc">Theo dõi biến động cân nặng và cải thiện sức khỏe cùng ứng dụng của chúng tôi.</string>
+    <string name="home_guide_title">Hướng dẫn</string>
+    <string name="home_guide_desc">Xem hướng dẫn</string>
+    <string name="home_guide_open_error">Không tìm thấy ứng dụng để mở tệp PDF</string>
 
     <string-array name="notification_messages">
         <item>Chào bạn, hôm nay bạn đã uống gì nào?</item>
