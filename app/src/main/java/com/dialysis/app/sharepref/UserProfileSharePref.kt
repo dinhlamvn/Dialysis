@@ -15,6 +15,7 @@ class UserProfileSharePref(
     companion object {
         private const val KEY_PROFILE_JSON = "profile_json"
         private const val KEY_INITIAL_WEIGHT_KG = "initial_weight_kg"
+        private const val KEY_WEIGHT_GOAL_KG = "weight_goal_kg"
         private const val KEY_DAILY_WATER_GOAL_ML = "daily_water_goal_ml"
     }
 
@@ -43,6 +44,16 @@ class UserProfileSharePref(
         val stored = get(KEY_INITIAL_WEIGHT_KG, 0)
         if (stored > 0) return stored
         return getProfile()?.weight ?: 0
+    }
+
+    fun saveWeightGoalKg(weightKg: Float) {
+        if (weightKg > 0f) {
+            put(KEY_WEIGHT_GOAL_KG, weightKg)
+        }
+    }
+
+    fun getWeightGoalKg(defaultWeightKg: Float): Float {
+        return get(KEY_WEIGHT_GOAL_KG, defaultWeightKg)
     }
 
     fun saveDailyWaterGoalMl(goalMl: Int) {

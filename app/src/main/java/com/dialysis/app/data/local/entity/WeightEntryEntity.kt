@@ -12,10 +12,14 @@ import androidx.room.PrimaryKey
 data class WeightEntryEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    @ColumnInfo(name = "server_id")
+    val serverId: Long? = null,
     @ColumnInfo(name = "weight_kg")
     val weightKg: Float,
     @ColumnInfo(name = "day_start_millis")
     val dayStartMillis: Long,
+    @ColumnInfo(name = "note")
+    val note: String = "",
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long,
 )
