@@ -21,6 +21,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -114,7 +115,7 @@ class HomeActivity : BaseActivity() {
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 72.dp)
+                    .padding(bottom = 64.dp)
             ) { page ->
                 when (page) {
                     0 -> HomeScreen(
@@ -208,7 +209,8 @@ private fun HomePagerBottomBar(
     Card(
         modifier = modifier
             .fillMaxWidth(),
-        shape = RoundedCornerShape(0.dp)
+        shape = RoundedCornerShape(0.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
     ) {
         Box(
             modifier = Modifier
