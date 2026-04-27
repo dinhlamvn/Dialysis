@@ -5,6 +5,7 @@ import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WaterTrackingRepository
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.sharepref.UserProfileSharePref
+import com.dialysis.app.sync.WaterIntakeSyncScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +24,8 @@ import java.util.Locale
 class DailyReportViewModel(
     private val waterTrackingRepository: WaterTrackingRepository,
     private val userProfileSharePref: UserProfileSharePref,
-    private val networkManager: NetworkManager
+    private val networkManager: NetworkManager,
+    private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler
 ) : BaseViewModel<DailyReportState>(DailyReportState()) {
 
     private val selectedDateMillis = MutableStateFlow(System.currentTimeMillis())
@@ -116,6 +118,7 @@ class DailyReportViewModel(
                 drinkName = name,
                 amountMl = amount.extractMlValue()
             )
+            waterIntakeSyncScheduler.enqueue()
         }
     }
 
@@ -130,6 +133,7 @@ class DailyReportViewModel(
                     timeText = timeText
                 )
             )
+            waterIntakeSyncScheduler.enqueue()
         }
     }
 
@@ -168,6 +172,7 @@ class DailyReportViewModel(
                 } else {
                     waterTrackingRepository.deleteEntry(entryId)
                 }
+                waterIntakeSyncScheduler.enqueue()
             }
         }
     }

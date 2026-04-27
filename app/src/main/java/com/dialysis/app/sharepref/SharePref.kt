@@ -9,7 +9,7 @@ abstract class SharePref(
     sharePrefName: String
 ) {
 
-    private val sharePref: SharedPreferences =
+    protected val sharePref: SharedPreferences =
         context.getSharedPreferences(sharePrefName, Context.MODE_PRIVATE)
 
     fun put(key: String, value: Any, sync: Boolean = false) {

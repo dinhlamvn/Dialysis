@@ -62,11 +62,11 @@ val appModule = module {
 
 val RegisterModule = module {
     viewModel { RegisterViewModel(get()) }
-    viewModel { OtpVerifyViewModel(get(), get()) }
+    viewModel { OtpVerifyViewModel(get(), get(), get()) }
 }
 
 val LoginModule = module {
-    viewModel { LoginViewModel(get(), get()) }
+    viewModel { LoginViewModel(get(), get(), get()) }
 }
 
 val CreateDrinkModule = module {
@@ -74,12 +74,12 @@ val CreateDrinkModule = module {
 }
 
 val HomeModule = module {
-    viewModel { HomeViewModel(get(), get(), get(), get()) }
-    viewModel { SettingsViewModel(get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get()) }
 }
 
 val DailyReportModule = module {
-    viewModel { DailyReportViewModel(get(), get(), get()) }
+    viewModel { DailyReportViewModel(get(), get(), get(), get()) }
 }
 
 val InfoModule = module {

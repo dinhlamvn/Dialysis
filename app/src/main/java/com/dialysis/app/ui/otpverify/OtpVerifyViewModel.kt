@@ -5,12 +5,14 @@ import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.data.network.request.VerifyOtpRequest
 import com.dialysis.app.sharepref.AccountSharePref
+import com.dialysis.app.sync.WaterIntakeSyncScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class OtpVerifyViewModel(
     private val accountSharePref: AccountSharePref,
-    private val networkManager: NetworkManager
+    private val networkManager: NetworkManager,
+    private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler
 ) : BaseViewModel<OtpVerifyState>(OtpVerifyState()) {
 
     val identifierTypeState = collectStateUI(OtpVerifyState::identifierType)
@@ -67,6 +69,7 @@ class OtpVerifyViewModel(
                     val data = result.getOrNull() ?: return@launch
                     accountSharePref.setToken(data.token)
                     accountSharePref.setTokenType(data.tokenType)
+                    waterIntakeSyncScheduler.enqueue()
                     setState {
                         copy(
                             isVerifying = false,
