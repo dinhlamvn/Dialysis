@@ -2,29 +2,27 @@ package com.dialysis.app.ui.home
 
 import android.app.Activity
 import android.os.Bundle
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -33,9 +31,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.dialysis.app.base.BaseActivity
@@ -113,7 +114,7 @@ class HomeActivity : BaseActivity() {
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 120.dp)
+                    .padding(bottom = 72.dp)
             ) { page ->
                 when (page) {
                     0 -> HomeScreen(
@@ -206,84 +207,148 @@ private fun HomePagerBottomBar(
 ) {
     Card(
         modifier = modifier
-            .fillMaxWidth()
-            .navigationBarsPadding(),
+            .fillMaxWidth(),
         shape = RoundedCornerShape(0.dp)
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(64.dp)
                 .background(Color.White)
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.Center
         ) {
-            PagerBottomItem(
-                label = "Nước của tôi",
-                active = selectedTab == 0,
-                onClick = { onSelectTab(0) }
-            )
-            PagerBottomItem(
-                label = "Cân nặng",
-                active = selectedTab == 1,
-                onClick = { onSelectTab(1) }
-            )
-            Button(
-                onClick = onAddClick,
-                modifier = Modifier.size(56.dp),
-                shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1877F2)),
-                contentPadding = PaddingValues(0.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "+",
-                    color = Color.White,
-                    style = TextStyles.titleMedium
+                PagerBottomItem(
+                    item = BottomTabItem.Water,
+                    active = selectedTab == BottomTabItem.Water.page,
+                    onClick = { onSelectTab(BottomTabItem.Water.page) },
+                    modifier = Modifier.weight(1f)
+                )
+                PagerBottomItem(
+                    item = BottomTabItem.Weight,
+                    active = selectedTab == BottomTabItem.Weight.page,
+                    onClick = { onSelectTab(BottomTabItem.Weight.page) },
+                    modifier = Modifier.weight(1f)
+                )
+                PagerAddButton(onClick = onAddClick)
+                PagerBottomItem(
+                    item = BottomTabItem.Statistics,
+                    active = selectedTab == BottomTabItem.Statistics.page,
+                    onClick = { onSelectTab(BottomTabItem.Statistics.page) },
+                    modifier = Modifier.weight(1f)
+                )
+                PagerBottomItem(
+                    item = BottomTabItem.Settings,
+                    active = selectedTab == BottomTabItem.Settings.page,
+                    onClick = { onSelectTab(BottomTabItem.Settings.page) },
+                    modifier = Modifier.weight(1f)
                 )
             }
-            PagerBottomItem(
-                label = "Thống kê",
-                active = selectedTab == 2,
-                onClick = { onSelectTab(2) }
-            )
-            PagerBottomItem(
-                label = "Cài đặt",
-                active = selectedTab == 3,
-                onClick = { onSelectTab(3) }
-            )
         }
     }
 }
 
 @Composable
 private fun PagerBottomItem(
-    label: String,
+    item: BottomTabItem,
     active: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val label = stringResource(item.labelRes)
+    val itemColor = if (active) TabActiveColor else TabInactiveColor
+
     Box(
-        modifier = Modifier
+        modifier = modifier
             .clickable(onClick = onClick)
             .padding(horizontal = 2.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(Color.Transparent)
-            .padding(vertical = 4.dp)
+            .padding(vertical = 4.dp),
+        contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
+            Icon(
+                painter = painterResource(item.iconRes),
+                contentDescription = label,
+                tint = itemColor,
                 modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .background(if (active) Color(0xFF1877F2) else Color(0xFFBFC3CB))
+                    .size(22.dp)
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = label,
-                color = if (active) Color(0xFF1877F2) else Color(0xFF8E8E93),
+                color = itemColor,
                 style = TextStyles.caption
             )
         }
     }
 }
+
+@Composable
+private fun PagerAddButton(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(TabAddButtonSize)
+            .shadow(
+                elevation = 8.dp,
+                shape = CircleShape,
+                ambientColor = TabActiveColor.copy(alpha = 0.28f),
+                spotColor = TabActiveColor.copy(alpha = 0.28f)
+            )
+            .clip(CircleShape)
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF6CB7FF),
+                        TabActiveColor,
+                        Color(0xFF0B4FCB)
+                    )
+                )
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "+",
+            color = Color.White,
+            style = TextStyles.titleMedium
+        )
+    }
+}
+
+private enum class BottomTabItem(
+    val page: Int,
+    val labelRes: Int,
+    val iconRes: Int
+) {
+    Water(
+        page = 0,
+        labelRes = R.string.home_nav_water,
+        iconRes = R.drawable.ic_tab_water
+    ),
+    Weight(
+        page = 1,
+        labelRes = R.string.home_nav_weight,
+        iconRes = R.drawable.ic_tab_weight
+    ),
+    Statistics(
+        page = 2,
+        labelRes = R.string.home_nav_stats,
+        iconRes = R.drawable.ic_tab_statistics
+    ),
+    Settings(
+        page = 3,
+        labelRes = R.string.home_nav_settings,
+        iconRes = R.drawable.ic_tab_settings
+    )
+}
+
+private val TabActiveColor = Color(0xFF1877F2)
+private val TabInactiveColor = Color(0xFF8E8E93)
+private val TabAddButtonSize = 44.dp
