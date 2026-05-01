@@ -62,6 +62,15 @@ interface WaterEntryDao {
         """
         SELECT *
         FROM water_entries
+        ORDER BY created_at DESC
+        """
+    )
+    fun observeAllEntries(): Flow<List<WaterEntryEntity>>
+
+    @Query(
+        """
+        SELECT *
+        FROM water_entries
         WHERE created_at BETWEEN :startMillis AND :endMillis
         ORDER BY created_at DESC
         """

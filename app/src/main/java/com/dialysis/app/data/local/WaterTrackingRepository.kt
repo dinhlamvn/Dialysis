@@ -57,6 +57,10 @@ class WaterTrackingRepository(
         return waterEntryDao.observeAllDailyTotals()
     }
 
+    fun observeAllEntries(): Flow<List<WaterEntryEntity>> {
+        return waterEntryDao.observeAllEntries()
+    }
+
     suspend fun addEntry(drinkName: String, amountMl: Int, createdAt: Long = System.currentTimeMillis()) {
         waterEntryDao.insert(
             WaterEntryEntity(
