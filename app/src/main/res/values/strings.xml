@@ -145,6 +145,15 @@
     <string name="stats_day_sun">CN</string>
 
     <string name="settings_title">Cài đặt</string>
+    <string name="settings_app_information">Thông tin ứng dụng</string>
+    <string name="settings_version">Phiên bản</string>
+    <string name="settings_notification">Thông báo</string>
+    <string name="settings_notification_title">Cài đặt thông báo</string>
+    <string name="settings_preferences">Tùy chọn</string>
+    <string name="settings_sign_in">Đăng nhập</string>
+    <string name="settings_sign_out">Đăng xuất</string>
+    <string name="settings_last_sync_at">Đã cập nhật lúc %1$s</string>
+    <string name="settings_last_sync_never">Chưa có lần đồng bộ nào</string>
     <string name="settings_sign_in_up">Đăng nhập hoặc Đăng ký</string>
     <string name="settings_account">Tài khoản</string>
     <string name="settings_profile">Hồ sơ</string>

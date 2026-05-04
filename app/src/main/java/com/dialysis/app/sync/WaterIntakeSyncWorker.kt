@@ -26,6 +26,7 @@ class WaterIntakeSyncWorker(
         if (accountSharePref.getToken().isBlank()) return Result.success()
 
         var hasFailure = false
+        var didSyncData = false
         val dailyGoalMl = userProfileSharePref.getDailyWaterGoalMl().coerceAtLeast(1)
 
         waterTrackingRepository.getUnsyncedEntries().forEach { entry ->
@@ -41,6 +42,7 @@ class WaterIntakeSyncWorker(
             if (result.isSuccess) {
                 val syncedId = result.getOrNull()?.id ?: return@forEach
                 waterTrackingRepository.markEntrySynced(entry.id, syncedId)
+                didSyncData = true
             } else {
                 hasFailure = true
             }
@@ -52,9 +54,14 @@ class WaterIntakeSyncWorker(
             }
             if (result.isSuccess) {
                 waterTrackingRepository.removePendingDelete(pending.id)
+                didSyncData = true
             } else {
                 hasFailure = true
             }
+        }
+
+        if (!hasFailure && didSyncData) {
+            accountSharePref.setLastWaterSyncAt(System.currentTimeMillis())
         }
 
         return if (hasFailure) Result.retry() else Result.success()
