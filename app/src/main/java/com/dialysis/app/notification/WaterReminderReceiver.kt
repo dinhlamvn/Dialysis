@@ -16,7 +16,6 @@ import androidx.core.content.ContextCompat
 import com.dialysis.app.R
 import com.dialysis.app.router.Router
 import java.util.Calendar
-import kotlin.random.Random
 
 class WaterReminderReceiver : BroadcastReceiver() {
 
@@ -36,7 +35,7 @@ class WaterReminderReceiver : BroadcastReceiver() {
 
     private fun isInReminderWindow(): Boolean {
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        return hour in 6..22
+        return hour == 0 || hour in 6..23
     }
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
@@ -53,7 +52,7 @@ class WaterReminderReceiver : BroadcastReceiver() {
 
         val messages = context.resources.getStringArray(R.array.notification_messages)
         if (messages.isEmpty()) return
-        val message = messages.random(Random(System.currentTimeMillis()))
+        val message = WaterReminderMessageRepository(context).nextMessage(messages)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(context.getString(R.string.notification_title))

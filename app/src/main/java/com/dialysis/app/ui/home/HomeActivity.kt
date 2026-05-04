@@ -47,7 +47,7 @@ import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.daily.DailyReportViewModel
 import com.dialysis.app.ui.home.tabs.SettingsViewModel
 import com.dialysis.app.ui.home.tabs.SettingsScreen
-import com.dialysis.app.ui.home.tabs.StatisticsScreen
+import com.dialysis.app.ui.statistics.StatisticsScreen
 import com.dialysis.app.ui.weight.WeightScreen
 import com.dialysis.app.ui.weight.WeightViewModel
 import androidx.core.view.WindowCompat
@@ -93,6 +93,7 @@ class HomeActivity : BaseActivity() {
         val monthTotalMl by homeViewModel.monthTotalMlState.collectAsStateWithLifecycle()
         val weekDailyMl by homeViewModel.weekDailyMlState.collectAsStateWithLifecycle()
         val dailyTotals by homeViewModel.dailyTotalsState.collectAsStateWithLifecycle()
+        val allWaterEntries by homeViewModel.allWaterEntriesState.collectAsStateWithLifecycle()
         val dailyWaterGoalMl by homeViewModel.dailyWaterGoalMlState.collectAsStateWithLifecycle()
         val isHistorySyncing by homeViewModel.isHistorySyncingState.collectAsStateWithLifecycle()
         val statusBarColor = if (pagerState.currentPage == 0) {
@@ -138,12 +139,8 @@ class HomeActivity : BaseActivity() {
                         showBottomNav = false
                     )
                     2 -> StatisticsScreen(
-                        todayTotalMl = todayTotalMl,
+                        waterEntries = allWaterEntries,
                         dailyGoalMl = dailyWaterGoalMl,
-                        weekTotalMl = weekTotalMl,
-                        monthTotalMl = monthTotalMl,
-                        weekDailyMl = weekDailyMl,
-                        dailyTotals = dailyTotals,
                         dailyReportViewModel = dailyReportViewModel
                     )
                     3 -> SettingsScreen(viewModel = settingsViewModel)

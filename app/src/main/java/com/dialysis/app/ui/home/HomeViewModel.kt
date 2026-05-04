@@ -36,6 +36,7 @@ class HomeViewModel(
     val monthTotalMlState = collectStateUI(HomeState::monthTotalMl)
     val weekDailyMlState = collectStateUI(HomeState::weekDailyMl)
     val dailyTotalsState = collectStateUI(HomeState::dailyTotals)
+    val allWaterEntriesState = collectStateUI(HomeState::allWaterEntries)
     val dailyWaterGoalMlState = collectStateUI(HomeState::dailyWaterGoalMl)
     val isLoggedInState = collectStateUI(HomeState::isLoggedIn)
     val showSymptomSheetState = collectStateUI(HomeState::showSymptomSheet)
@@ -93,6 +94,10 @@ class HomeViewModel(
 
         waterTrackingRepository.observeAllDailyTotals()
             .onEach { totals -> setState { copy(dailyTotals = totals) } }
+            .launchIn(viewModelScope)
+
+        waterTrackingRepository.observeAllEntries()
+            .onEach { entries -> setState { copy(allWaterEntries = entries) } }
             .launchIn(viewModelScope)
     }
 
