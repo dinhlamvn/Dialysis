@@ -17,15 +17,35 @@ class WeightTrackingRepository(
         return weightEntryDao.observeEntriesInRange(startOfDay(startMillis), endOfDay(endMillis))
     }
 
-    suspend fun saveDailyWeight(weightKg: Float, dateMillis: Long = System.currentTimeMillis()) {
+    fun observeRecentEntries(limit: Int = 30): Flow<List<WeightEntryEntity>> {
+        return weightEntryDao.observeRecentEntries(limit)
+    }
+
+    suspend fun saveDailyWeight(
+        weightKg: Float,
+        dateMillis: Long = System.currentTimeMillis(),
+        serverId: Long? = null,
+        note: String = ""
+    ) {
         val dayStart = startOfDay(dateMillis)
         weightEntryDao.upsert(
             WeightEntryEntity(
+                serverId = serverId,
                 weightKg = weightKg,
                 dayStartMillis = dayStart,
+                note = note,
                 updatedAt = System.currentTimeMillis()
             )
         )
+    }
+
+    suspend fun replaceAll(entries: List<WeightEntryEntity>) {
+        weightEntryDao.clearAll()
+        entries.forEach { weightEntryDao.upsert(it) }
+    }
+
+    suspend fun delete(entry: WeightEntryEntity) {
+        weightEntryDao.deleteById(entry.id)
     }
 
     private fun startOfDay(timeMillis: Long): Long {

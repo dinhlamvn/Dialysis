@@ -3,6 +3,7 @@ package com.dialysis.app.ui.weight
 import com.dialysis.app.base.BaseState
 
 data class WeightState(
+    val weightGoalKg: Float = 0f,
     val initialWeightKg: Float = 0f,
     val currentWeightKg: Float = 0f,
     val selectedTab: WeightReportTab = WeightReportTab.MONTH,
@@ -12,10 +13,13 @@ data class WeightState(
     val draftWeightKg: Float = 0f,
     val editingMode: WeightEditingMode = WeightEditingMode.CURRENT,
     val isSavingWeight: Boolean = false,
+    val isLoading: Boolean = false,
     val chartData: List<WeightChartPoint> = emptyList(),
     val xAxisLabels: List<WeightAxisLabel> = emptyList(),
     val yMin: Float = 0f,
     val yMax: Float = 1f,
+    val history: List<WeightHistoryRow> = emptyList(),
+    val chartStats: WeightChartStatsUi? = null,
 ) : BaseState
 
 enum class WeightReportTab {
@@ -24,6 +28,7 @@ enum class WeightReportTab {
 }
 
 enum class WeightEditingMode {
+    GOAL,
     INITIAL,
     CURRENT
 }
@@ -36,4 +41,18 @@ data class WeightChartPoint(
 data class WeightAxisLabel(
     val xRatio: Float,
     val label: String,
+)
+
+data class WeightHistoryRow(
+    val localId: Long,
+    val serverId: Long?,
+    val weightKg: Float,
+    val dateMillis: Long,
+    val note: String,
+)
+
+data class WeightChartStatsUi(
+    val min: Float?,
+    val max: Float?,
+    val avg: Float?,
 )

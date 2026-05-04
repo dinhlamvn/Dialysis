@@ -32,4 +32,20 @@ interface WeightEntryDao {
         """
     )
     fun observeEntriesInRange(startMillis: Long, endMillis: Long): Flow<List<WeightEntryEntity>>
+
+    @Query(
+        """
+        SELECT *
+        FROM weight_entries
+        ORDER BY day_start_millis DESC
+        LIMIT :limit
+        """
+    )
+    fun observeRecentEntries(limit: Int): Flow<List<WeightEntryEntity>>
+
+    @Query("DELETE FROM weight_entries WHERE id = :id")
+    suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM weight_entries")
+    suspend fun clearAll()
 }

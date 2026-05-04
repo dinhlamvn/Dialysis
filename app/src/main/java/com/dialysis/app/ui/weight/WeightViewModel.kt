@@ -2,11 +2,10 @@ package com.dialysis.app.ui.weight
 
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
+import com.dialysis.app.config.AppGoals
 import com.dialysis.app.data.local.WeightTrackingRepository
 import com.dialysis.app.data.local.entity.WeightEntryEntity
 import com.dialysis.app.data.network.NetworkManager
-import com.dialysis.app.data.network.request.WeightInitialRequest
-import com.dialysis.app.data.network.request.WeightLogRequest
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
@@ -17,10 +16,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.util.Calendar
-import java.text.SimpleDateFormat
-import java.util.Locale
-import kotlin.math.max
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WeightViewModel(
@@ -30,337 +25,226 @@ class WeightViewModel(
     private val networkManager: NetworkManager
 ) : BaseViewModel<WeightState>(WeightState()) {
 
+    private val remoteMediator = WeightRemoteMediator(accountSharePref, networkManager)
     private val selectedTabFlow = MutableStateFlow(WeightReportTab.MONTH)
     private val periodOffsetFlow = MutableStateFlow(0)
+    private var latestRange: WeightReportRange = buildWeightReportRange(WeightReportTab.MONTH, 0)
 
-    val initialWeightKgState = collectStateUI(WeightState::initialWeightKg)
-    val currentWeightKgState = collectStateUI(WeightState::currentWeightKg)
-    val selectedTabState = collectStateUI(WeightState::selectedTab)
-    val periodTitleState = collectStateUI(WeightState::periodTitle)
-    val showAddWeightSheetState = collectStateUI(WeightState::showAddWeightSheet)
-    val draftWeightKgState = collectStateUI(WeightState::draftWeightKg)
-    val editingModeState = collectStateUI(WeightState::editingMode)
-    val isSavingWeightState = collectStateUI(WeightState::isSavingWeight)
-    val chartDataState = collectStateUI(WeightState::chartData)
-    val xAxisLabelsState = collectStateUI(WeightState::xAxisLabels)
-    val yMinState = collectStateUI(WeightState::yMin)
-    val yMaxState = collectStateUI(WeightState::yMax)
+    val weightGoalKgState = collectStateUI(WeightState::weightGoalKg); val initialWeightKgState = collectStateUI(WeightState::initialWeightKg)
+    val currentWeightKgState = collectStateUI(WeightState::currentWeightKg); val selectedTabState = collectStateUI(WeightState::selectedTab)
+    val periodTitleState = collectStateUI(WeightState::periodTitle); val showAddWeightSheetState = collectStateUI(WeightState::showAddWeightSheet)
+    val draftWeightKgState = collectStateUI(WeightState::draftWeightKg); val editingModeState = collectStateUI(WeightState::editingMode)
+    val isSavingWeightState = collectStateUI(WeightState::isSavingWeight); val isLoadingState = collectStateUI(WeightState::isLoading)
+    val chartDataState = collectStateUI(WeightState::chartData); val xAxisLabelsState = collectStateUI(WeightState::xAxisLabels)
+    val yMinState = collectStateUI(WeightState::yMin); val yMaxState = collectStateUI(WeightState::yMax)
+    val historyState = collectStateUI(WeightState::history); val chartStatsState = collectStateUI(WeightState::chartStats)
 
     init {
-        val initialWeight = userProfileSharePref.getInitialWeightKg().toFloat()
-        setState { copy(initialWeightKg = initialWeight) }
-
-        var didSeedInitialWeight = false
-        weightTrackingRepository.observeLatestEntry()
-            .onEach { latest ->
-                if (latest == null && initialWeight > 0f && !didSeedInitialWeight) {
-                    didSeedInitialWeight = true
-                    viewModelScope.launch(Dispatchers.IO) {
-                        weightTrackingRepository.saveDailyWeight(initialWeight)
-                    }
-                }
-                val latestWeight = latest?.weightKg ?: initialWeight
-                setState {
-                    copy(
-                        initialWeightKg = if (initialWeightKg <= 0f && latestWeight > 0f) latestWeight else initialWeightKg,
-                        currentWeightKg = latestWeight,
-                        draftWeightKg = if (draftWeightKg <= 0f) latestWeight else draftWeightKg
-                    )
-                }
-                if (initialWeight <= 0f && latestWeight > 0f) {
-                    userProfileSharePref.saveInitialWeightKg(latestWeight.toInt())
-                }
-            }
-            .launchIn(viewModelScope)
-
-        combine(selectedTabFlow, periodOffsetFlow) { tab, offset ->
-            val range = buildRange(tab, offset)
-            Triple(tab, range, offset)
-        }.flatMapLatest { (tab, range, offset) ->
-            weightTrackingRepository.observeEntriesInRange(
-                startMillis = range.startMillis,
-                endMillis = range.endMillis
-            ).onEach { entries ->
-                val chart = buildChart(tab, entries, range)
-                setState {
-                    copy(
-                        selectedTab = tab,
-                        periodOffset = offset,
-                        periodTitle = range.title,
-                        chartData = chart.points,
-                        xAxisLabels = chart.xAxisLabels,
-                        yMin = chart.yMin,
-                        yMax = chart.yMax
-                    )
-                }
-            }
-        }.launchIn(viewModelScope)
+        initializeStoredWeights()
+        observeLatestWeight()
+        observeHistory()
+        observeChartRange()
+        refreshFromServer()
     }
 
     fun selectTab(tab: WeightReportTab) {
         if (selectedTabFlow.value == tab) return
-        selectedTabFlow.value = tab
-        periodOffsetFlow.value = 0
+        selectedTabFlow.value = tab; periodOffsetFlow.value = 0
     }
 
-    fun nextPeriod() {
-        periodOffsetFlow.value = periodOffsetFlow.value + 1
+    fun nextPeriod() { periodOffsetFlow.value = periodOffsetFlow.value + 1 }
+
+    fun prevPeriod() { periodOffsetFlow.value = periodOffsetFlow.value - 1 }
+
+    fun openGoalWeightSheet() = openWeightSheet(WeightEditingMode.GOAL) { weightGoalKg }
+
+    fun openInitialWeightSheet() = openWeightSheet(WeightEditingMode.INITIAL) {
+        if (initialWeightKg > 0f) initialWeightKg else currentWeightKg
     }
 
-    fun prevPeriod() {
-        periodOffsetFlow.value = periodOffsetFlow.value - 1
+    fun openCurrentWeightSheet() = openWeightSheet(WeightEditingMode.CURRENT) {
+        if (currentWeightKg > 0f) currentWeightKg else initialWeightKg
     }
 
-    fun openInitialWeightSheet() = setState {
-        copy(
-            showAddWeightSheet = true,
-            editingMode = WeightEditingMode.INITIAL,
-            draftWeightKg = if (initialWeightKg > 0f) initialWeightKg else currentWeightKg
-        )
-    }
+    fun closeAddWeightSheet() = setState { copy(showAddWeightSheet = false) }
 
-    fun openCurrentWeightSheet() = setState {
-        copy(
-            showAddWeightSheet = true,
-            editingMode = WeightEditingMode.CURRENT,
-            draftWeightKg = if (currentWeightKg > 0f) currentWeightKg else initialWeightKg
-        )
-    }
-
-    fun closeAddWeightSheet() = setState {
-        copy(showAddWeightSheet = false)
-    }
-
-    fun updateDraftWeight(weightKg: Float) = setState {
-        copy(draftWeightKg = weightKg.coerceIn(25f, 200f))
-    }
+    fun updateDraftWeight(weightKg: Float) = setState { copy(draftWeightKg = weightKg.coerceIn(MIN_WEIGHT_KG, MAX_WEIGHT_KG)) }
 
     fun saveDraftWeight() {
         getState { state ->
-            val valueToSave = state.draftWeightKg
-            val editingMode = state.editingMode
-            if (state.isSavingWeight) return@getState
-            if (valueToSave <= 0f) return@getState
+            if (state.isSavingWeight || state.draftWeightKg <= 0f) return@getState
 
             setState { copy(isSavingWeight = true) }
             viewModelScope.launch(Dispatchers.IO) {
-                when (editingMode) {
-                    WeightEditingMode.INITIAL -> {
-                        userProfileSharePref.saveInitialWeightKg(valueToSave.toInt())
-                        setState {
-                            copy(
-                                initialWeightKg = valueToSave,
-                                currentWeightKg = if (currentWeightKg <= 0f) valueToSave else currentWeightKg,
-                                showAddWeightSheet = false
-                            )
-                        }
-                        syncInitialWeightToServer(valueToSave)
-                    }
-
-                    WeightEditingMode.CURRENT -> {
-                        weightTrackingRepository.saveDailyWeight(valueToSave)
-                        setState {
-                            copy(
-                                currentWeightKg = valueToSave,
-                                showAddWeightSheet = false
-                            )
-                        }
-                        syncCurrentWeightToServer(valueToSave)
-                    }
-                }
-
+                saveWeightByMode(state.editingMode, state.draftWeightKg)
+                loadRemoteChart(selectedTabFlow.value, latestRange)
                 setState { copy(isSavingWeight = false) }
             }
         }
     }
 
+    fun deleteHistory(row: WeightHistoryRow) {
+        viewModelScope.launch(Dispatchers.IO) {
+            row.serverId?.let { remoteMediator.deleteWeight(it) }
+            weightTrackingRepository.delete(row.toEntity())
+            loadRemoteChart(selectedTabFlow.value, latestRange)
+        }
+    }
+
     fun refreshLocalData() {
         val initialWeight = userProfileSharePref.getInitialWeightKg().toFloat()
-        if (initialWeight > 0f) {
-            setState { copy(initialWeightKg = initialWeight) }
+        val goalWeight = userProfileSharePref.getWeightGoalKg(AppGoals.WEIGHT_GOAL_KG.toFloat())
+        setState {
+            copy(
+                weightGoalKg = goalWeight,
+                initialWeightKg = if (initialWeight > 0f) initialWeight else initialWeightKg
+            )
+        }
+        refreshFromServer()
+    }
+
+    private fun initializeStoredWeights() {
+        val initialWeight = userProfileSharePref.getInitialWeightKg().toFloat()
+        val goalWeight = userProfileSharePref.getWeightGoalKg(AppGoals.WEIGHT_GOAL_KG.toFloat())
+        setState {
+            copy(
+                weightGoalKg = goalWeight,
+                initialWeightKg = initialWeight,
+                currentWeightKg = initialWeight,
+                draftWeightKg = initialWeight
+            )
         }
     }
 
-    private suspend fun syncInitialWeightToServer(weightKg: Float): Boolean {
-        if (accountSharePref.getToken().isBlank()) return true
-        return networkManager.resolveNullable {
-            networkManager.appServices.updateInitialWeight(
-                WeightInitialRequest(weight = weightKg.toInt())
-            )
-        }.isSuccess
+    private fun observeLatestWeight() {
+        weightTrackingRepository.observeLatestEntry()
+            .onEach { latest ->
+                val latestWeight = latest?.weightKg ?: userProfileSharePref.getInitialWeightKg().toFloat()
+                setState {
+                    copy(
+                        currentWeightKg = if (latestWeight > 0f) latestWeight else currentWeightKg,
+                        draftWeightKg = if (draftWeightKg <= 0f && latestWeight > 0f) latestWeight else draftWeightKg
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
-    private suspend fun syncCurrentWeightToServer(weightKg: Float): Boolean {
-        if (accountSharePref.getToken().isBlank()) return true
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(System.currentTimeMillis())
-        return networkManager.resolveNullable {
-            networkManager.appServices.logCurrentWeight(
-                WeightLogRequest(
-                    weight = weightKg.toDouble(),
-                    date = today,
-                    note = DEFAULT_WEIGHT_NOTE
-                )
-            )
-        }.isSuccess
+    private fun observeHistory() {
+        weightTrackingRepository.observeRecentEntries()
+            .onEach { entries -> setState { copy(history = entries.map { it.toHistoryRow() }) } }
+            .launchIn(viewModelScope)
     }
-}
 
-private data class ReportRange(
-    val startMillis: Long,
-    val endMillis: Long,
-    val title: String,
-    val monthDays: Int = 0,
-)
+    private fun observeChartRange() {
+        combine(selectedTabFlow, periodOffsetFlow) { tab, offset -> tab to buildWeightReportRange(tab, offset) }
+            .flatMapLatest { (tab, range) ->
+                latestRange = range
+                weightTrackingRepository.observeEntriesInRange(range.startMillis, range.endMillis)
+                    .onEach { entries -> applyLocalChart(tab, range, entries) }
+            }
+            .launchIn(viewModelScope)
+    }
 
-private data class ChartResult(
-    val points: List<WeightChartPoint>,
-    val xAxisLabels: List<WeightAxisLabel>,
-    val yMin: Float,
-    val yMax: Float,
-)
-
-private fun buildRange(tab: WeightReportTab, offset: Int): ReportRange {
-    val calendar = Calendar.getInstance()
-    return when (tab) {
-        WeightReportTab.MONTH -> {
-            calendar.set(Calendar.DAY_OF_MONTH, 1)
-            calendar.set(Calendar.HOUR_OF_DAY, 0)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-            calendar.set(Calendar.MILLISECOND, 0)
-            calendar.add(Calendar.MONTH, offset)
-            val start = calendar.timeInMillis
-            val days = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-            val monthNumber = calendar.get(Calendar.MONTH) + 1
-            calendar.add(Calendar.MONTH, 1)
-            calendar.add(Calendar.MILLISECOND, -1)
-            ReportRange(
-                startMillis = start,
-                endMillis = calendar.timeInMillis,
-                title = "tháng $monthNumber",
-                monthDays = days
+    private suspend fun applyLocalChart(
+        tab: WeightReportTab,
+        range: WeightReportRange,
+        entries: List<WeightEntryEntity>
+    ) {
+        val chart = buildWeightChart(tab, entries, range, currentStateGoal())
+        setState {
+            copy(
+                selectedTab = tab,
+                periodTitle = range.title,
+                chartData = chart.points,
+                xAxisLabels = chart.xAxisLabels,
+                yMin = chart.yMin,
+                yMax = chart.yMax,
+                chartStats = null
             )
         }
+        loadRemoteChart(tab, range)
+    }
 
-        WeightReportTab.YEAR -> {
-            calendar.set(Calendar.MONTH, Calendar.JANUARY)
-            calendar.set(Calendar.DAY_OF_MONTH, 1)
-            calendar.set(Calendar.HOUR_OF_DAY, 0)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-            calendar.set(Calendar.MILLISECOND, 0)
-            calendar.add(Calendar.YEAR, offset)
-            val start = calendar.timeInMillis
-            val year = calendar.get(Calendar.YEAR)
-            calendar.add(Calendar.YEAR, 1)
-            calendar.add(Calendar.MILLISECOND, -1)
-            ReportRange(
-                startMillis = start,
-                endMillis = calendar.timeInMillis,
-                title = "năm $year"
+    private fun openWeightSheet(mode: WeightEditingMode, draftValue: WeightState.() -> Float) = setState {
+        copy(showAddWeightSheet = true, editingMode = mode, draftWeightKg = draftValue())
+    }
+
+    private suspend fun saveWeightByMode(mode: WeightEditingMode, weightKg: Float) {
+        when (mode) {
+            WeightEditingMode.GOAL -> saveGoalWeight(weightKg)
+            WeightEditingMode.INITIAL -> saveInitialWeight(weightKg)
+            WeightEditingMode.CURRENT -> saveCurrentWeight(weightKg)
+        }
+    }
+
+    private fun saveGoalWeight(weightKg: Float) {
+        userProfileSharePref.saveWeightGoalKg(weightKg)
+        setState { copy(weightGoalKg = weightKg, showAddWeightSheet = false) }
+    }
+
+    private suspend fun saveInitialWeight(weightKg: Float) {
+        if (!syncInitialWeightToServer(weightKg)) return
+        userProfileSharePref.saveInitialWeightKg(weightKg.toInt())
+        setState {
+            copy(
+                initialWeightKg = weightKg,
+                currentWeightKg = if (currentWeightKg <= 0f) weightKg else currentWeightKg,
+                showAddWeightSheet = false
             )
         }
     }
-}
 
-private fun buildChart(
-    tab: WeightReportTab,
-    entries: List<WeightEntryEntity>,
-    range: ReportRange
-): ChartResult {
-    val points = when (tab) {
-        WeightReportTab.MONTH -> buildMonthPoints(entries, range.monthDays)
-        WeightReportTab.YEAR -> buildYearPoints(entries)
+    private suspend fun saveCurrentWeight(weightKg: Float) {
+        val serverId = syncCurrentWeightToServer(weightKg)
+        weightTrackingRepository.saveDailyWeight(weightKg, serverId = serverId, note = DEFAULT_WEIGHT_NOTE)
+        setState { copy(currentWeightKg = weightKg, showAddWeightSheet = false) }
     }
 
-    val labels = when (tab) {
-        WeightReportTab.MONTH -> buildMonthLabels(range.monthDays)
-        WeightReportTab.YEAR -> buildYearLabels()
+    private fun refreshFromServer() {
+        viewModelScope.launch(Dispatchers.IO) {
+            setState { copy(isLoading = true) }
+            refreshRemoteHistory()
+            refreshRemoteCurrentWeight()
+            loadRemoteChart(selectedTabFlow.value, latestRange)
+            setState { copy(isLoading = false) }
+        }
     }
 
-    if (points.isEmpty()) {
-        return ChartResult(
-            points = emptyList(),
-            xAxisLabels = labels,
-            yMin = 0f,
-            yMax = 1f
-        )
+    private suspend fun refreshRemoteHistory() {
+        remoteMediator.fetchHistory(HISTORY_LIMIT)
+            ?.let { weightTrackingRepository.replaceAll(it) }
     }
 
-    val minValue = points.minOf { it.value }
-    val maxValue = points.maxOf { it.value }
-    val margin = 1f
-    return ChartResult(
-        points = points,
-        xAxisLabels = labels,
-        yMin = max(0f, minValue - margin),
-        yMax = max(minValue + margin, maxValue + margin)
-    )
-}
+    private suspend fun refreshRemoteCurrentWeight() {
+        remoteMediator.fetchCurrentWeight()?.let { current -> setState { copy(currentWeightKg = current) } }
+    }
 
-private fun buildMonthPoints(entries: List<WeightEntryEntity>, monthDays: Int): List<WeightChartPoint> {
-    if (monthDays <= 0 || entries.isEmpty()) return emptyList()
-    val latestByDay = entries.groupBy { dayOfMonth(it.dayStartMillis) }
-        .mapValues { (_, list) -> list.maxByOrNull { it.updatedAt }?.weightKg ?: 0f }
-    if (latestByDay.isEmpty()) return emptyList()
-    val denominator = max(1, monthDays - 1).toFloat()
-    return latestByDay.entries
-        .sortedBy { it.key }
-        .map { (day, value) ->
-            WeightChartPoint(
-                xRatio = ((day - 1) / denominator).coerceIn(0f, 1f),
-                value = value
+    private suspend fun syncInitialWeightToServer(weightKg: Float): Boolean = remoteMediator.syncInitialWeight(weightKg)
+
+    private suspend fun syncCurrentWeightToServer(weightKg: Float): Long? = remoteMediator.syncCurrentWeight(weightKg)
+
+    private suspend fun loadRemoteChart(tab: WeightReportTab, range: WeightReportRange) {
+        val result = remoteMediator.fetchChart(tab, range, currentStateGoal()) ?: return
+        setState {
+            copy(
+                chartData = result.chart.points,
+                xAxisLabels = result.chart.xAxisLabels,
+                yMin = result.chart.yMin,
+                yMax = result.chart.yMax,
+                chartStats = result.stats
             )
         }
-}
+    }
 
-private fun buildYearPoints(entries: List<WeightEntryEntity>): List<WeightChartPoint> {
-    if (entries.isEmpty()) return emptyList()
-    val latestByMonth = entries.groupBy { monthOfYear(it.dayStartMillis) }
-        .mapValues { (_, list) -> list.maxByOrNull { it.updatedAt }?.weightKg ?: 0f }
-    return latestByMonth.entries
-        .sortedBy { it.key }
-        .map { (month, value) ->
-            WeightChartPoint(
-                xRatio = ((month - 1) / 11f).coerceIn(0f, 1f),
-                value = value
-            )
-        }
-}
-
-private fun buildMonthLabels(days: Int): List<WeightAxisLabel> {
-    if (days <= 0) return emptyList()
-    val marks = mutableListOf(5, 10, 15, 20, 25).apply {
-        if (days !in this) add(days)
-    }.filter { it in 1..days }
-        .distinct()
-        .sorted()
-
-    val denominator = max(1, days - 1).toFloat()
-    return marks.map { day ->
-        WeightAxisLabel(
-            xRatio = ((day - 1) / denominator).coerceIn(0f, 1f),
-            label = day.toString()
-        )
+    private fun currentStateGoal(): Float {
+        var goal = AppGoals.WEIGHT_GOAL_KG.toFloat()
+        getState { goal = it.weightGoalKg.takeIf { value -> value > 0f } ?: goal }
+        return goal
     }
 }
 
-private fun buildYearLabels(): List<WeightAxisLabel> {
-    val months = listOf(1, 3, 5, 7, 9, 11)
-    return months.map { month ->
-        WeightAxisLabel(
-            xRatio = ((month - 1) / 11f).coerceIn(0f, 1f),
-            label = "T$month"
-        )
-    }
-}
-
-private fun dayOfMonth(timeMillis: Long): Int {
-    return Calendar.getInstance().apply { timeInMillis = timeMillis }.get(Calendar.DAY_OF_MONTH)
-}
-
-private fun monthOfYear(timeMillis: Long): Int {
-    return Calendar.getInstance().apply { timeInMillis = timeMillis }.get(Calendar.MONTH) + 1
-}
-
-private const val DEFAULT_WEIGHT_NOTE = "Sau khi ăn sáng"
+private const val HISTORY_LIMIT = 30
+private const val MIN_WEIGHT_KG = 25f
+private const val MAX_WEIGHT_KG = 200f
+internal const val DEFAULT_WEIGHT_NOTE = "Sau khi ăn sáng"

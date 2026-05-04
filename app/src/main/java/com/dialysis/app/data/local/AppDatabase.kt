@@ -11,7 +11,7 @@ import com.dialysis.app.data.local.entity.WaterEntryEntity
 
 @Database(
     entities = [WaterEntryEntity::class, WeightEntryEntity::class, PendingWaterDeleteEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
