@@ -38,6 +38,18 @@
             android:exported="false" />
 
         <activity
+            android:name="com.dialysis.app.ui.forgotpassword.ForgotPasswordActivity"
+            android:exported="false" />
+
+        <activity
+            android:name="com.dialysis.app.ui.changepassword.ChangePasswordActivity"
+            android:exported="false" />
+
+        <activity
+            android:name="com.dialysis.app.ui.changepassword.ResetPasswordSuccessActivity"
+            android:exported="false" />
+
+        <activity
             android:name="com.dialysis.app.ui.otpverify.OtpVerifyActivity"
             android:exported="false" />
 

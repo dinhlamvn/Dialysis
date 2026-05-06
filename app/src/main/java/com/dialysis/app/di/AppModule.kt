@@ -1,16 +1,22 @@
 package com.dialysis.app.di
 
 import androidx.room.Room
+import com.dialysis.app.data.auth.AuthRepositoryImpl
 import com.dialysis.app.data.local.AppDatabase
 import com.dialysis.app.data.local.WaterTrackingRepository
 import com.dialysis.app.data.local.WeightTrackingRepository
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.data.network.interceptor.DefaultHeadersInterceptor
+import com.dialysis.app.domain.auth.AuthRepository
+import com.dialysis.app.domain.auth.ChangePasswordUseCase
+import com.dialysis.app.domain.auth.RequestPasswordResetOtpUseCase
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
+import com.dialysis.app.ui.changepassword.ChangePasswordViewModel
 import com.dialysis.app.ui.daily.DailyReportViewModel
 import com.dialysis.app.ui.drink.create.CreateDrinkViewModel
+import com.dialysis.app.ui.forgotpassword.ForgotPasswordViewModel
 import com.dialysis.app.ui.home.HomeViewModel
 import com.dialysis.app.ui.home.tabs.SettingsViewModel
 import com.dialysis.app.ui.info.InfoViewModel
@@ -58,15 +64,20 @@ val appModule = module {
     single { WaterIntakeSyncScheduler(androidContext()) }
     single { WaterTrackingRepository(get(), get()) }
     single { WeightTrackingRepository(get()) }
+    single<AuthRepository> { AuthRepositoryImpl(get()) }
+    single { RequestPasswordResetOtpUseCase(get()) }
+    single { ChangePasswordUseCase(get()) }
 }
 
 val RegisterModule = module {
     viewModel { RegisterViewModel(get()) }
-    viewModel { OtpVerifyViewModel(get(), get(), get()) }
+    viewModel { OtpVerifyViewModel(get(), get(), get(), get()) }
 }
 
 val LoginModule = module {
     viewModel { LoginViewModel(get(), get(), get()) }
+    viewModel { ForgotPasswordViewModel(get()) }
+    viewModel { ChangePasswordViewModel(get()) }
 }
 
 val CreateDrinkModule = module {

@@ -23,7 +23,8 @@ class OtpVerifyActivity : BaseActivity() {
 
         val identifierType = intent?.getStringExtra(Router.EXTRA_OTP_IDENTIFIER_TYPE).orEmpty()
         val identifier = intent?.getStringExtra(Router.EXTRA_OTP_IDENTIFIER).orEmpty()
-        viewModel.setIdentifierData(identifierType = identifierType, identifier = identifier)
+        val mode = intent?.getStringExtra(Router.EXTRA_OTP_MODE).orEmpty()
+        viewModel.setIdentifierData(identifierType = identifierType, identifier = identifier, mode = mode)
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -31,7 +32,17 @@ class OtpVerifyActivity : BaseActivity() {
                     viewModel.flowOf(OtpVerifyState::isVerifySuccess)
                         .collect { isVerifySuccess ->
                             if (isVerifySuccess) {
-                                startActivity(Router.home(this@OtpVerifyActivity))
+                                if (mode == Router.OTP_MODE_PASSWORD_RESET) {
+                                    startActivity(
+                                        Router.changePassword(
+                                            this@OtpVerifyActivity,
+                                            identifier,
+                                            viewModel.getOtpCode()
+                                        )
+                                    )
+                                } else {
+                                    startActivity(Router.home(this@OtpVerifyActivity))
+                                }
                                 finish()
                             }
                         }
