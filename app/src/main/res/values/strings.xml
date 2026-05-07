@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Lượng dịch lọc thận</string>
+    <string name="app_name" translatable="false">Dialysis Intake</string>
     <string name="intro_title">Ứng dụng của chúng tôi sẽ giúp\nBạn kiểm soát tốt lượng dịch\nnhập mỗi ngày qua ăn uống!</string>
-    <string name="intro_card_water_title">Dialysis Intake</string>
+    <string name="intro_card_water_title" translatable="false">Dialysis Intake</string>
     <string name="intro_card_water_desc">Với ứng dụng của chúng tôi, việc khỏe mạnh và thon gọn thật dễ dàng!</string>
     <string name="intro_card_rewards_title">Giải thưởng</string>
     <string name="intro_card_rewards_desc">Kiếm thành tích và theo dõi tiến trình của bạn!</string>
