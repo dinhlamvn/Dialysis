@@ -29,15 +29,15 @@ class OtpVerifyActivity : BaseActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.flowOf(OtpVerifyState::isVerifySuccess)
-                        .collect { isVerifySuccess ->
-                            if (isVerifySuccess) {
-                                if (mode == Router.OTP_MODE_PASSWORD_RESET) {
+                    viewModel.flowOf { it }
+                        .collect { state ->
+                            if (state.isVerifySuccess) {
+                                if (state.mode == Router.OTP_MODE_PASSWORD_RESET) {
                                     startActivity(
                                         Router.changePassword(
                                             this@OtpVerifyActivity,
-                                            identifier,
-                                            viewModel.getOtpCode()
+                                            state.identifier,
+                                            state.otpCode
                                         )
                                     )
                                 } else {
