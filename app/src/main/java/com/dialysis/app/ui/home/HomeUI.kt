@@ -43,15 +43,18 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.core.content.FileProvider
 import com.dialysis.app.R
 import com.dialysis.app.data.local.model.DailyTotal
 import com.dialysis.app.extensions.toast
 import com.dialysis.app.router.Router
+import com.dialysis.app.ui.components.FigureWaterProgress
 import com.dialysis.app.ui.components.Loading
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.daily.DailyReportScreen
@@ -244,7 +247,11 @@ fun HomeScreen(
 
 @Composable
 private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
-    val progress = (todayTotalMl / goalMl.toFloat()).coerceIn(0f, 1f)
+    val progress = if (goalMl > 0) {
+        (todayTotalMl / goalMl.toFloat()).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
     val progressPercent = (progress * 100).toInt()
     val waterLevelColor = when {
         progressPercent > 80 -> WaterRed
@@ -272,17 +279,20 @@ private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
                 Text(
                     text = stringResource(R.string.home_title),
                     color = Color.White,
-                    style = TextStyles.titleMedium,
+                    style = TextStyles.titleMedium.copy(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold
+                    ),
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(20.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    WaterCircle(
+                    FigureWaterProgress(
                         progress = progress,
                         waterColor = waterLevelColor
                     )
@@ -290,45 +300,19 @@ private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
                         Text(
                             text = "$progressPercent%",
                             color = Color.White,
-                            style = TextStyles.titleMedium
+                            style = TextStyles.titleMedium.copy(
+                                fontSize = 30.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         )
                         Text(
                             text = "${todayTotalMl}ml của ${goalMl / 1000f}l",
                             color = Color.White.copy(alpha = 0.8f),
-                            style = TextStyles.body
+                            style = TextStyles.body.copy(fontSize = 15.sp)
                         )
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun WaterCircle(
-    progress: Float,
-    waterColor: Color
-) {
-    Box(
-        modifier = Modifier
-            .size(110.dp)
-            .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.2f)),
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .size(88.dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.25f)),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height((88.dp * progress).coerceIn(0.dp, 88.dp))
-                    .background(waterColor)
-            )
         }
     }
 }
