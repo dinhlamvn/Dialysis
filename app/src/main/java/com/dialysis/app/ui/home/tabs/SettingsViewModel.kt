@@ -2,14 +2,20 @@ package com.dialysis.app.ui.home.tabs
 
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
+import com.dialysis.app.data.local.WaterTrackingRepository
+import com.dialysis.app.data.local.WeightTrackingRepository
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.sharepref.AccountSharePref
+import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val accountSharePref: AccountSharePref,
+    private val userProfileSharePref: UserProfileSharePref,
+    private val waterTrackingRepository: WaterTrackingRepository,
+    private val weightTrackingRepository: WeightTrackingRepository,
     private val networkManager: NetworkManager
 ) : BaseViewModel<SettingsState>(SettingsState()) {
 
@@ -17,6 +23,7 @@ class SettingsViewModel(
     val accountContactState = collectStateUI(SettingsState::accountContact)
     val isLoggedInState = collectStateUI(SettingsState::isLoggedIn)
     val lastWaterSyncAtState = collectStateUI(SettingsState::lastWaterSyncAt)
+    val signOutEventIdState = collectStateUI(SettingsState::signOutEventId)
 
     init {
         setState {
@@ -60,14 +67,20 @@ class SettingsViewModel(
     }
 
     fun signOut() {
-        accountSharePref.clear()
-        setState {
-            copy(
-                isLoadingAccount = false,
-                accountContact = null,
-                isLoggedIn = false,
-                lastWaterSyncAt = null
-            )
+        viewModelScope.launch(Dispatchers.IO) {
+            accountSharePref.clear()
+            userProfileSharePref.clear()
+            waterTrackingRepository.clearAllLocalData()
+            weightTrackingRepository.clearAll()
+            setState {
+                copy(
+                    isLoadingAccount = false,
+                    accountContact = null,
+                    isLoggedIn = false,
+                    lastWaterSyncAt = null,
+                    signOutEventId = signOutEventId + 1
+                )
+            }
         }
     }
 

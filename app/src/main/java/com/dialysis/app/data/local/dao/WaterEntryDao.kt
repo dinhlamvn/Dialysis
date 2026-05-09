@@ -139,4 +139,7 @@ interface WaterEntryDao {
         """
     )
     suspend fun deleteByIds(entryIds: List<Long>)
+
+    @Query("DELETE FROM water_entries")
+    suspend fun clearAll()
 }

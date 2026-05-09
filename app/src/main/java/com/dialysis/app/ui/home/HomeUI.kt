@@ -1,6 +1,7 @@
 package com.dialysis.app.ui.home
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -25,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -44,6 +46,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -720,18 +723,20 @@ private fun ActionCardsRow(
     ) {
         BannerCard(
             modifier = Modifier.weight(1f),
-            background = Color(0xFF3AC37A),
+            background = Color(0xFF33A666),
             title = stringResource(R.string.home_weight_progress_title),
             description = stringResource(R.string.home_weight_progress_desc),
+            iconRes = R.drawable.ic_tab_weight,
             titleColor = Color.White,
             descriptionColor = Color.White.copy(alpha = 0.95f),
             onClick = onWeightProgressClick
         )
         BannerCard(
             modifier = Modifier.weight(1f),
-            background = Color(0xFF9A6AD9),
+            background = Color(0xFF66338C),
             title = stringResource(R.string.home_guide_title),
             description = stringResource(R.string.home_guide_desc),
+            iconRes = R.drawable.ic_home_guide_book,
             titleColor = Color.White,
             descriptionColor = Color.White.copy(alpha = 0.95f),
             onClick = { openGuidePdf(context) }
@@ -1130,13 +1135,14 @@ private fun BannerCard(
     background: Color,
     title: String,
     description: String,
+    @DrawableRes iconRes: Int,
     titleColor: Color,
     descriptionColor: Color,
     onClick: (() -> Unit)? = null
 ) {
     Card(
         modifier = modifier
-            .height(170.dp)
+            .height(172.dp)
             .then(
                 if (onClick != null) {
                     Modifier.clickable { onClick() }
@@ -1149,12 +1155,62 @@ private fun BannerCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(background)
-                .padding(20.dp)
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(background, background.copy(alpha = 0.85f)),
+                        start = Offset.Zero,
+                        end = Offset.Infinite
+                    )
+                )
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = title, color = titleColor, style = TextStyles.titleMedium)
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(text = description, color = descriptionColor, style = TextStyles.body)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = title,
+                    color = titleColor,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 22.sp,
+                    maxLines = 2
+                )
+                Text(
+                    text = description,
+                    color = descriptionColor,
+                    fontSize = 13.sp,
+                    lineHeight = 17.sp,
+                    maxLines = 2
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.95f),
+                    modifier = Modifier.size(40.dp)
+                )
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(background.copy(alpha = 0.85f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "›",
+                        color = Color.White,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        lineHeight = 28.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
         }
     }
 }

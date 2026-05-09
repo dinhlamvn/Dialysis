@@ -97,10 +97,25 @@ class WeightViewModel(
         setState {
             copy(
                 weightGoalKg = goalWeight,
-                initialWeightKg = if (initialWeight > 0f) initialWeight else initialWeightKg
+                initialWeightKg = initialWeight,
+                currentWeightKg = if (initialWeight > 0f) initialWeight else 0f,
+                draftWeightKg = if (initialWeight > 0f) initialWeight else 0f,
+                chartStats = null
             )
         }
         refreshFromServer()
+    }
+
+    fun resetAfterSignOut() {
+        selectedTabFlow.value = WeightReportTab.MONTH
+        periodOffsetFlow.value = 0
+        latestRange = buildWeightReportRange(WeightReportTab.MONTH, 0)
+        setState {
+            WeightState(
+                weightGoalKg = AppGoals.WEIGHT_GOAL_KG.toFloat(),
+                selectedTab = WeightReportTab.MONTH
+            )
+        }
     }
 
     private fun initializeStoredWeights() {
@@ -122,7 +137,7 @@ class WeightViewModel(
                 val latestWeight = latest?.weightKg ?: userProfileSharePref.getInitialWeightKg().toFloat()
                 setState {
                     copy(
-                        currentWeightKg = if (latestWeight > 0f) latestWeight else currentWeightKg,
+                        currentWeightKg = if (latestWeight > 0f) latestWeight else 0f,
                         draftWeightKg = if (draftWeightKg <= 0f && latestWeight > 0f) latestWeight else draftWeightKg
                     )
                 }
@@ -212,12 +227,15 @@ class WeightViewModel(
     }
 
     private suspend fun refreshRemoteHistory() {
-        remoteMediator.fetchHistory(HISTORY_LIMIT)
-            ?.let { weightTrackingRepository.replaceAll(it) }
+        val history = remoteMediator.fetchHistory(HISTORY_LIMIT) ?: return
+        if (!remoteMediator.hasAuthToken()) return
+        weightTrackingRepository.replaceAll(history)
     }
 
     private suspend fun refreshRemoteCurrentWeight() {
-        remoteMediator.fetchCurrentWeight()?.let { current -> setState { copy(currentWeightKg = current) } }
+        val current = remoteMediator.fetchCurrentWeight() ?: return
+        if (!remoteMediator.hasAuthToken()) return
+        setState { copy(currentWeightKg = current) }
     }
 
     private suspend fun syncInitialWeightToServer(weightKg: Float): Boolean = remoteMediator.syncInitialWeight(weightKg)
@@ -226,6 +244,7 @@ class WeightViewModel(
 
     private suspend fun loadRemoteChart(tab: WeightReportTab, range: WeightReportRange) {
         val result = remoteMediator.fetchChart(tab, range, currentStateGoal()) ?: return
+        if (!remoteMediator.hasAuthToken()) return
         setState {
             copy(
                 chartData = result.chart.points,

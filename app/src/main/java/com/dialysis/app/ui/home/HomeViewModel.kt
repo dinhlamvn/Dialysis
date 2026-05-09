@@ -231,6 +231,22 @@ class HomeViewModel(
         copy(showSymptomSubmitSuccessToast = false)
     }
 
+    fun resetAfterSignOut() {
+        setState {
+            copy(
+                dailyWaterGoalMl = userProfileSharePref.getDailyWaterGoalMl(),
+                isLoggedIn = false,
+                showSymptomSheet = false,
+                symptoms = emptyList(),
+                selectedSymptom = null,
+                symptomNotes = "",
+                isSymptomsLoading = false,
+                isSubmittingSymptom = false,
+                isHistorySyncing = false
+            )
+        }
+    }
+
     private fun syncWaterHistoryIfNeeded() {
         getState { state ->
             if (!state.isLoggedIn || state.isHistorySyncing) return@getState
@@ -246,6 +262,7 @@ class HomeViewModel(
 
     private suspend fun syncWaterHistory() {
         val history = fetchAllHistoryPages() ?: return
+        if (accountSharePref.getToken().isBlank()) return
         val uniqueBySyncedId = history.distinctBy { it.id }
         val syncedIds = uniqueBySyncedId.map { it.id }
         val existingSyncedIds = waterTrackingRepository.getExistingSyncedIds(syncedIds)
@@ -276,6 +293,7 @@ class HomeViewModel(
         val allItems = mutableListOf<WaterIntakeResponse>()
         var page = 1
         while (page <= MAX_HISTORY_SYNC_PAGE) {
+            if (accountSharePref.getToken().isBlank()) return null
             val result = networkManager.resolve {
                 networkManager.appServices.getWaterHistory(page = page)
             }

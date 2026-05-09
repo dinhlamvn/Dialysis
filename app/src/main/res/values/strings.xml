@@ -198,7 +198,7 @@
     <string name="weight_goal_prefix">Mục tiêu: </string>
     <string name="weight_initial">Cân nặng ban đầu</string>
     <string name="weight_current">Cân nặng hiện tại</string>
-    <string name="weight_progress">Tiến độ cân nặng  &gt;</string>
+    <string name="weight_progress">Tiến độ cân nặng</string>
     <string name="weight_tab_month">Tháng</string>
     <string name="weight_tab_year">Năm</string>
 
@@ -206,8 +206,8 @@
     <string name="home_tip_more">Thêm mẹo  &gt;</string>
     <string name="home_tip_desc">Uống ly nước đầu tiên ngay sau khi thức dậy có thể giúp cơ thể hoạt động ổn định và cân bằng nước tốt hơn.</string>
     <string name="home_tip_share">Chia sẻ mẹo</string>
-    <string name="home_weight_progress_title">Tiến độ cân nặng  &gt;</string>
-    <string name="home_weight_progress_desc">Theo dõi biến động cân nặng và cải thiện sức khỏe cùng ứng dụng của chúng tôi.</string>
+    <string name="home_weight_progress_title">Tiến độ cân nặng</string>
+    <string name="home_weight_progress_desc">Theo dõi biến động về cân nặng</string>
     <string name="home_guide_title">Hướng dẫn</string>
     <string name="home_guide_desc">Xem hướng dẫn</string>
     <string name="home_guide_open_error">Không tìm thấy ứng dụng để mở tệp PDF</string>

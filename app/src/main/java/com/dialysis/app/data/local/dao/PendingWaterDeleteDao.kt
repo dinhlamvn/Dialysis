@@ -28,5 +28,7 @@ interface PendingWaterDeleteDao {
         """
     )
     suspend fun deleteById(id: Long)
-}
 
+    @Query("DELETE FROM pending_water_deletes")
+    suspend fun clearAll()
+}

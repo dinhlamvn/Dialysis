@@ -86,7 +86,7 @@ val CreateDrinkModule = module {
 
 val HomeModule = module {
     viewModel { HomeViewModel(get(), get(), get(), get(), get()) }
-    viewModel { SettingsViewModel(get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get(), get()) }
 }
 
 val DailyReportModule = module {
@@ -94,7 +94,7 @@ val DailyReportModule = module {
 }
 
 val InfoModule = module {
-    viewModel { InfoViewModel(get(), get(), get()) }
+    viewModel { InfoViewModel(get(), get(), get(), get()) }
 }
 
 val WeightModule = module {
