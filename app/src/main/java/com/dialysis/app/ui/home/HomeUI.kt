@@ -43,15 +43,18 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.core.content.FileProvider
 import com.dialysis.app.R
 import com.dialysis.app.data.local.model.DailyTotal
 import com.dialysis.app.extensions.toast
 import com.dialysis.app.router.Router
+import com.dialysis.app.ui.components.FigureWaterProgress
 import com.dialysis.app.ui.components.Loading
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.daily.DailyReportScreen
@@ -244,7 +247,11 @@ fun HomeScreen(
 
 @Composable
 private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
-    val progress = (todayTotalMl / goalMl.toFloat()).coerceIn(0f, 1f)
+    val progress = if (goalMl > 0) {
+        (todayTotalMl / goalMl.toFloat()).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
     val progressPercent = (progress * 100).toInt()
     val waterLevelColor = when {
         progressPercent > 80 -> WaterRed
@@ -272,17 +279,20 @@ private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
                 Text(
                     text = stringResource(R.string.home_title),
                     color = Color.White,
-                    style = TextStyles.titleMedium,
+                    style = TextStyles.titleMedium.copy(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold
+                    ),
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(20.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    WaterCircle(
+                    FigureWaterProgress(
                         progress = progress,
                         waterColor = waterLevelColor
                     )
@@ -290,45 +300,19 @@ private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
                         Text(
                             text = "$progressPercent%",
                             color = Color.White,
-                            style = TextStyles.titleMedium
+                            style = TextStyles.titleMedium.copy(
+                                fontSize = 30.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         )
                         Text(
                             text = "${todayTotalMl}ml của ${goalMl / 1000f}l",
                             color = Color.White.copy(alpha = 0.8f),
-                            style = TextStyles.body
+                            style = TextStyles.body.copy(fontSize = 15.sp)
                         )
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun WaterCircle(
-    progress: Float,
-    waterColor: Color
-) {
-    Box(
-        modifier = Modifier
-            .size(110.dp)
-            .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.2f)),
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .size(88.dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.25f)),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height((88.dp * progress).coerceIn(0.dp, 88.dp))
-                    .background(waterColor)
-            )
         }
     }
 }
@@ -965,47 +949,57 @@ private fun StatsChartCard(
     val safeStats = if (weekStats.size == 7) weekStats else List(7) { RollingDayStat("", 0, 0L) }
     val weekTotalMl = safeStats.sumOf { it.totalMl }
     val averagePercent = safeStats
-        .sumOf { stat -> ((stat.totalMl / goalMl.toFloat()) * 100f).coerceAtLeast(0f).toDouble() }
+        .sumOf { stat ->
+            if (goalMl > 0) {
+                ((stat.totalMl / goalMl.toFloat()) * 100f).coerceAtLeast(0f).toDouble()
+            } else {
+                0.0
+            }
+        }
         .toFloat() / 7f
 
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(240.dp),
-        shape = RoundedCornerShape(24.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(Brush.linearGradient(listOf(Color(0xFF1D8EF8), Color(0xFF3C9BEA))))
-                .padding(horizontal = 14.dp, vertical = 16.dp)
+                .fillMaxWidth()
+                .background(Brush.linearGradient(listOf(Color(0xFF1877F2), Color(0xFF4DA3FF))))
+                .padding(16.dp)
         ) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     safeStats.forEach { dayStat ->
-                        val progress = (dayStat.totalMl / goalMl.toFloat()).coerceIn(0f, 1f)
+                        val progress = if (goalMl > 0) {
+                            (dayStat.totalMl / goalMl.toFloat()).coerceIn(0f, 1f)
+                        } else {
+                            0f
+                        }
                         Column(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { onDayClick(dayStat.dateMillis) },
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(46.dp)
+                                    .size(38.dp)
                                     .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.12f))
-                                    .clickable { onDayClick(dayStat.dateMillis) },
+                                    .background(Color.White.copy(alpha = 0.12f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Canvas(modifier = Modifier.fillMaxSize()) {
-                                    val strokeWidthPx = 7.5f
+                                    val strokeWidthPx = 4.dp.toPx()
                                     drawArc(
-                                        color = Color.White.copy(alpha = 0.24f),
+                                        color = Color.White.copy(alpha = 0.3f),
                                         startAngle = -90f,
                                         sweepAngle = 360f,
                                         useCenter = false,
@@ -1027,19 +1021,17 @@ private fun StatsChartCard(
                                     style = TextStyles.caption
                                 )
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = formatMlWithGrouping(dayStat.totalMl),
-                                color = Color.White.copy(alpha = 0.92f),
-                                style = TextStyles.caption,
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = 9.sp,
                                 maxLines = 1,
                                 textAlign = TextAlign.Center
                             )
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(6.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1048,43 +1040,34 @@ private fun StatsChartCard(
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
-                        Box(
-                            modifier = Modifier.height(70.dp),
-                            contentAlignment = Alignment.TopStart
-                        ) {
-                            Text(
-                                text = stringResource(R.string.home_weekly_avg),
-                                color = Color.White.copy(alpha = 0.82f),
-                                style = TextStyles.title
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = stringResource(R.string.home_weekly_avg),
+                            color = Color.White.copy(alpha = 0.85f),
+                            fontSize = 13.sp
+                        )
                         Text(
                             text = String.format(Locale.US, "%.1f%%", averagePercent),
                             color = Color.White,
-                            style = TextStyles.titleMedium
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                     Column(
                         modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.End
                     ) {
-                        Box(
-                            modifier = Modifier.height(70.dp),
-                            contentAlignment = Alignment.TopEnd
-                        ) {
-                            Text(
-                                text = stringResource(R.string.home_weekly_total),
-                                color = Color.White.copy(alpha = 0.82f),
-                                style = TextStyles.title,
-                                textAlign = TextAlign.End
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = stringResource(R.string.home_weekly_total),
+                            color = Color.White.copy(alpha = 0.85f),
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                         Text(
                             text = formatMlWithGrouping(weekTotalMl),
                             color = Color.White,
-                            style = TextStyles.titleMedium,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.End
                         )
                     }

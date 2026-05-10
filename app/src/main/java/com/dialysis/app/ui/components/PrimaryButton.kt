@@ -18,15 +18,20 @@ private val AccentBlue = Color(0xFF1877F2)
 fun PrimaryButton(
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp),
         shape = RoundedCornerShape(28.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = AccentBlue,
+            disabledContainerColor = AccentBlue.copy(alpha = 0.6f)
+        ),
         contentPadding = PaddingValues(0.dp)
     ) {
         Text(

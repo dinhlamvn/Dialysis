@@ -1,11 +1,14 @@
 package com.dialysis.app.data.network.services
 
 import com.dialysis.app.data.network.request.CalculateWaterTargetRequest
+import com.dialysis.app.data.network.request.ChangePasswordRequest
+import com.dialysis.app.data.network.request.ForgotPasswordRequest
 import com.dialysis.app.data.network.request.LoginRequest
 import com.dialysis.app.data.network.request.RegisterRequest
 import com.dialysis.app.data.network.request.VerifyOtpRequest
 import com.dialysis.app.data.network.response.ApiResponse
 import com.dialysis.app.data.network.response.CalculateWaterTargetResponse
+import com.dialysis.app.data.network.response.ForgotPasswordResponse
 import com.dialysis.app.data.network.response.LoginResponse
 import com.dialysis.app.data.network.response.RegisterResponse
 import retrofit2.http.Body
@@ -26,6 +29,16 @@ interface AppPublicServices {
     suspend fun verifyOtp(
         @Body request: VerifyOtpRequest
     ): ApiResponse<LoginResponse>
+
+    @POST("mobile/auth/forgot-password")
+    suspend fun forgotPassword(
+        @Body request: ForgotPasswordRequest
+    ): ApiResponse<ForgotPasswordResponse>
+
+    @POST("mobile/auth/change-password")
+    suspend fun changePassword(
+        @Body request: ChangePasswordRequest
+    ): ApiResponse<Map<String, Any>?>
 
     @POST("mobile/water/calculate")
     suspend fun calculateDailyWaterTarget(

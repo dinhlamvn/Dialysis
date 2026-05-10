@@ -15,12 +15,12 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.dialysis.app.R
 import com.dialysis.app.router.Router
-import java.util.Calendar
 
 class WaterReminderReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
-        if (!isInReminderWindow()) return
+        WaterReminderScheduler.scheduleNext(context)
+        if (!WaterReminderSchedule.isReminderSlot()) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val granted = ContextCompat.checkSelfPermission(
                 context,
@@ -31,11 +31,6 @@ class WaterReminderReceiver : BroadcastReceiver() {
 
         createNotificationChannel(context)
         showNotification(context)
-    }
-
-    private fun isInReminderWindow(): Boolean {
-        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        return hour == 0 || hour in 6..23
     }
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)

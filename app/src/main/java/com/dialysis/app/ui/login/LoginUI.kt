@@ -140,6 +140,20 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), onBackClick: () -> Unit
                 }
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = stringResource(R.string.login_forgot_password),
+                color = AccentBlue,
+                style = TextStyles.bodyMedium,
+                textAlign = TextAlign.End,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        context.startActivity(Router.forgotPassword(context))
+                    }
+            )
+
             if (!loginError.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
