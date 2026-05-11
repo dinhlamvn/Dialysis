@@ -11,7 +11,9 @@ class RegisterViewModel(
     private val networkManager: NetworkManager
 ) : BaseViewModel<RegisterState>(RegisterState()) {
 
-    val emailOrPhoneState = collectStateUI(RegisterState::emailOrPhone)
+    val usernameState = collectStateUI(RegisterState::username)
+    val emailState = collectStateUI(RegisterState::email)
+    val phoneState = collectStateUI(RegisterState::phone)
     val nameState = collectStateUI(RegisterState::name)
     val passwordState = collectStateUI(RegisterState::password)
     val confirmPasswordState = collectStateUI(RegisterState::confirmPassword)
@@ -21,7 +23,11 @@ class RegisterViewModel(
     val isRegisterLoadingState = collectStateUI(RegisterState::isRegisterLoading)
     val registerErrorState = collectStateUI(RegisterState::registerError)
 
-    fun updateEmailOrPhone(value: String) = setState { copy(emailOrPhone = value) }
+    fun updateUsername(value: String) = setState { copy(username = value) }
+
+    fun updateEmail(value: String) = setState { copy(email = value) }
+
+    fun updatePhone(value: String) = setState { copy(phone = value) }
 
     fun updateName(value: String) = setState { copy(name = value) }
 
@@ -50,12 +56,13 @@ class RegisterViewModel(
             }
 
             viewModelScope.launch(Dispatchers.IO) {
-                val emailOrPhone = state.emailOrPhone.trim()
-                val isEmail = emailOrPhone.contains("@")
+                val username = state.username.trim()
+                val email = state.email.trim()
+                val phone = state.phone.trim()
                 val request = RegisterRequest(
-                    username = emailOrPhone.replaceAfter("@", "").replace("@", ""),
-                    email = if (isEmail) emailOrPhone else "",
-                    phone = if (isEmail) "" else emailOrPhone,
+                    username = username,
+                    email = email,
+                    phone = phone,
                     password = state.password,
                     passwordConfirmation = state.confirmPassword,
                     name = state.name.trim(),

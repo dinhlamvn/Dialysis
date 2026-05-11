@@ -46,7 +46,9 @@ private val InputTextStyle: TextStyle = TextStyles.body
 
 @Composable
 fun RegisterScreen(viewModel: RegisterViewModel = viewModel(), onBackClick: () -> Unit) {
-    val emailOrPhone by viewModel.emailOrPhoneState.collectAsStateWithLifecycle()
+    val username by viewModel.usernameState.collectAsStateWithLifecycle()
+    val email by viewModel.emailState.collectAsStateWithLifecycle()
+    val phone by viewModel.phoneState.collectAsStateWithLifecycle()
     val name by viewModel.nameState.collectAsStateWithLifecycle()
     val password by viewModel.passwordState.collectAsStateWithLifecycle()
     val confirmPassword by viewModel.confirmPasswordState.collectAsStateWithLifecycle()
@@ -90,10 +92,35 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel(), onBackClick: () -
             Spacer(modifier = Modifier.height(24.dp))
 
             InputCardField(
-                value = emailOrPhone,
-                onValueChange = viewModel::updateEmailOrPhone,
-                label = stringResource(R.string.register_field_email_or_phone),
+                value = username,
+                onValueChange = viewModel::updateUsername,
+                label = stringResource(R.string.register_field_username),
+                textStyle = InputTextStyle,
+                labelTextStyle = TextStyles.body,
+                shape = InputShape,
+                containerColor = InputCardBackground
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            InputCardField(
+                value = email,
+                onValueChange = viewModel::updateEmail,
+                label = stringResource(R.string.register_field_email),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                textStyle = InputTextStyle,
+                labelTextStyle = TextStyles.body,
+                shape = InputShape,
+                containerColor = InputCardBackground
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            InputCardField(
+                value = phone,
+                onValueChange = viewModel::updatePhone,
+                label = stringResource(R.string.register_field_phone),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 textStyle = InputTextStyle,
                 labelTextStyle = TextStyles.body,
                 shape = InputShape,

@@ -17,8 +17,11 @@
     <string name="login_no_account">Chưa có tài khoản?</string>
     <string name="login_register_action">Đăng ký</string>
     <string name="login_forgot_password">Quên mật khẩu?</string>
-    <string name="register_auth_title">Đăng ký tài khoản</string>
+    <string name="register_auth_title">Đăng ký</string>
     <string name="register_field_email_or_phone">Email / Số điện thoại</string>
+    <string name="register_field_username">Tên đăng nhập</string>
+    <string name="register_field_email">Email</string>
+    <string name="register_field_phone">Số điện thoại</string>
     <string name="register_field_password">Mật khẩu</string>
     <string name="register_field_confirm_password">Xác nhận mật khẩu</string>
     <string name="register_create_account">Đăng ký</string>
@@ -48,7 +51,7 @@
     <string name="register_weight_title">Chọn cân nặng của bạn</string>
     <string name="register_height_title">Chọn chiều cao của bạn</string>
     <string name="register_age_title">Chọn tuổi của bạn</string>
-    <string name="register_name_title">Tên của bạn</string>
+    <string name="register_name_title">Tên</string>
     <string name="register_dialysis_year_title">Chọn Thời gian đã chạy thận nhân tạo (năm)</string>
     <string name="register_sessions_title">Nhập Số lần chạy thận/tuần</string>
     <string name="register_urine_title">Chọn Lượng nước tiểu/ngày</string>
