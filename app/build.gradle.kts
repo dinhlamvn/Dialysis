@@ -22,7 +22,7 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("keys/keys.jks")
-            storePassword = "1123123@Dialysis"
+            storePassword = "123123@Dialysis"
             keyAlias = "key0"
             keyPassword = "123123"
         }
