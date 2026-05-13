@@ -19,3 +19,58 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Retrofit
+-keep class retrofit2.** { *; }
+-keep interface retrofit2.** { *; }
+
+# Keep Retrofit interfaces
+-keep interface * {
+    @retrofit2.http.* <methods>;
+}
+
+# OkHttp
+-dontwarn okhttp3.**
+-dontwarn okio.**
+
+# Gson
+-keepattributes Signature
+-keepattributes *Annotation*
+
+# Keep model classes (adjust package)
+-keep class com.yourpackage.model.** { *; }
+
+# Keep Gson serialized names
+-keepclassmembers,allowobfuscation class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+
+# Kotlin Metadata
+-keep class kotlin.Metadata { *; }
+
+# Coroutines
+-dontwarn kotlinx.coroutines.**
+
+-keepattributes Signature
+
+-keepattributes Signature
+-keepattributes *Annotation*
+
+-keep class com.yourpackage.model.** { *; }
+
+-keep interface * {
+    @retrofit2.http.* <methods>;
+}
+
+# Koin
+-keep class org.koin.** { *; }
+-dontwarn org.koin.**
+
+# Keep Kotlin metadata
+-keep class kotlin.Metadata { *; }
+
+-keep class * extends androidx.lifecycle.ViewModel
+
+-keep class org.koin.ksp.generated.** { *; }
+
+-dontwarn org.koin.androidx.compose.**

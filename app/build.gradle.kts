@@ -19,15 +19,26 @@ android {
         versionName = "1.0"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("keys/keys.jks")
+            storePassword = "123123@Dialysis"
+            keyAlias = "key0"
+            keyPassword = "123123"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
@@ -45,7 +56,7 @@ android {
         }
 
         create("prod") {
-            buildConfigField("String", "SERVER_URL", "\"https://dialysis-intake.io.vn/\"")
+            buildConfigField("String", "SERVER_URL", "\"https://dialysis-intake-app.io.vn/\"")
         }
     }
 }
