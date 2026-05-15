@@ -123,6 +123,11 @@ class WaterTrackingRepository(
         pendingWaterDeleteDao.deleteById(id)
     }
 
+    suspend fun clearAllLocalData() {
+        pendingWaterDeleteDao.clearAll()
+        waterEntryDao.clearAll()
+    }
+
     suspend fun getTotalMlForDate(dateMillis: Long): Int {
         return waterEntryDao.getTotalMl(startOfDay(dateMillis), endOfDay(dateMillis))
     }

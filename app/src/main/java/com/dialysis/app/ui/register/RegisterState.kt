@@ -3,7 +3,9 @@ package com.dialysis.app.ui.register
 import com.dialysis.app.base.BaseState
 
 data class RegisterState(
-    val emailOrPhone: String = "",
+    val username: String = "",
+    val email: String = "",
+    val phone: String = "",
     val name: String = "",
     val password: String = "",
     val confirmPassword: String = "",

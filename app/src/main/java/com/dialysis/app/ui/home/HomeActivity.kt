@@ -26,6 +26,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
@@ -96,10 +97,18 @@ class HomeActivity : BaseActivity() {
         val allWaterEntries by homeViewModel.allWaterEntriesState.collectAsStateWithLifecycle()
         val dailyWaterGoalMl by homeViewModel.dailyWaterGoalMlState.collectAsStateWithLifecycle()
         val isHistorySyncing by homeViewModel.isHistorySyncingState.collectAsStateWithLifecycle()
+        val signOutEventId by settingsViewModel.signOutEventIdState.collectAsStateWithLifecycle()
         val statusBarColor = if (pagerState.currentPage == 0) {
             Color(0xFF2D6FDD)
         } else {
             Color(0xFFF7F8FA)
+        }
+
+        LaunchedEffect(signOutEventId) {
+            if (signOutEventId > 0) {
+                homeViewModel.resetAfterSignOut()
+                weightViewModel.resetAfterSignOut()
+            }
         }
 
         ApplyStatusBarColor(

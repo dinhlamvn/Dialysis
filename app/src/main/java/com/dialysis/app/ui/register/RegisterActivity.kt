@@ -29,8 +29,10 @@ class RegisterActivity : BaseActivity() {
                     viewModel.flowOf { it }
                         .collect { state ->
                             if (state.isRegisterSuccess) {
-                                val identifier = state.emailOrPhone.trim()
-                                val identifierType = if (identifier.contains("@")) "email" else "phone"
+                                val email = state.email.trim()
+                                val phone = state.phone.trim()
+                                val identifier = email.takeIf { it.isNotBlank() } ?: phone
+                                val identifierType = if (email.isNotBlank()) "email" else "phone"
                                 startActivity(
                                     Router.otpVerify(
                                         context = this@RegisterActivity,

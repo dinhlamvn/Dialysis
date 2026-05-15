@@ -44,6 +44,10 @@ class WeightTrackingRepository(
         entries.forEach { weightEntryDao.upsert(it) }
     }
 
+    suspend fun clearAll() {
+        weightEntryDao.clearAll()
+    }
+
     suspend fun delete(entry: WeightEntryEntity) {
         weightEntryDao.deleteById(entry.id)
     }

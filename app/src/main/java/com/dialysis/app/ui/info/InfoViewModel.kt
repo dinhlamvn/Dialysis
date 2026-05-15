@@ -5,12 +5,14 @@ import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WeightTrackingRepository
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.data.network.request.CalculateWaterTargetRequest
+import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class InfoViewModel(
     private val userProfileSharePref: UserProfileSharePref,
+    private val accountSharePref: AccountSharePref,
     private val weightTrackingRepository: WeightTrackingRepository,
     private val networkManager: NetworkManager
 ) : BaseViewModel<InfoState>(InfoState()) {
@@ -82,6 +84,18 @@ class InfoViewModel(
             }
             viewModelScope.launch(Dispatchers.IO) {
                 weightTrackingRepository.saveDailyWeight(weightKg = state.weight.toFloat())
+                if (accountSharePref.getToken().isBlank()) {
+                    userProfileSharePref.saveProfile(state)
+                    userProfileSharePref.saveDailyWaterGoalMl(calculateLocalDailyWaterGoalMl(state))
+                    setState {
+                        copy(
+                            isCalculatingGoal = false,
+                            calculateGoalStatus = CalculateGoalStatus.Success
+                        )
+                    }
+                    return@launch
+                }
+
                 val request = CalculateWaterTargetRequest(
                     weight = state.weight.toDouble(),
                     gender = if (state.gender == 1) "male" else "female",
@@ -124,5 +138,16 @@ class InfoViewModel(
 
     fun clearCalculateGoalStatus() = setState {
         copy(calculateGoalStatus = CalculateGoalStatus.None)
+    }
+
+    private fun calculateLocalDailyWaterGoalMl(state: InfoState): Int {
+        val rawGoal = LOCAL_BASE_DAILY_WATER_GOAL_ML + state.dailyUrineMl
+        return rawGoal.coerceIn(MIN_DAILY_WATER_GOAL_ML, MAX_DAILY_WATER_GOAL_ML)
+    }
+
+    private companion object {
+        private const val LOCAL_BASE_DAILY_WATER_GOAL_ML = 1000
+        private const val MIN_DAILY_WATER_GOAL_ML = 1500
+        private const val MAX_DAILY_WATER_GOAL_ML = 2000
     }
 }

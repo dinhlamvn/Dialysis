@@ -6,5 +6,6 @@ data class SettingsState(
     val isLoadingAccount: Boolean = false,
     val accountContact: String? = null,
     val isLoggedIn: Boolean = false,
-    val lastWaterSyncAt: Long? = null
+    val lastWaterSyncAt: Long? = null,
+    val signOutEventId: Int = 0
 ) : BaseState

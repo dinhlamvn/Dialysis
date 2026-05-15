@@ -66,4 +66,11 @@ class UserProfileSharePref(
         val stored = get(KEY_DAILY_WATER_GOAL_ML, 0)
         return if (stored > 0) stored else AppGoals.DAILY_WATER_GOAL_ML
     }
+
+    fun clear() {
+        remove(KEY_PROFILE_JSON)
+        remove(KEY_INITIAL_WEIGHT_KG)
+        remove(KEY_WEIGHT_GOAL_KG)
+        remove(KEY_DAILY_WATER_GOAL_ML)
+    }
 }
