@@ -72,7 +72,7 @@ class LoginViewModel(
                     setState {
                         copy(
                             isLoginLoading = false,
-                            loginError = result.exceptionOrNull()?.message,
+                            loginError = result.exceptionOrNull()?.message.toLoginErrorMessage(),
                             isLoginSuccess = false
                         )
                     }
@@ -81,3 +81,20 @@ class LoginViewModel(
         }
     }
 }
+
+private fun String?.toLoginErrorMessage(): String {
+    val message = this.orEmpty()
+    val normalized = message.lowercase()
+    return when {
+        normalized.contains("401") ||
+            normalized.contains("unauthenticated") ||
+            normalized.contains("unauthorized") -> LOGIN_INVALID_CREDENTIALS_MESSAGE
+        message.isBlank() -> LOGIN_FALLBACK_ERROR_MESSAGE
+        else -> message
+    }
+}
+
+private const val LOGIN_INVALID_CREDENTIALS_MESSAGE =
+    "Tài khoản hoặc mật khẩu không đúng. Vui lòng kiểm tra lại."
+private const val LOGIN_FALLBACK_ERROR_MESSAGE =
+    "Không thể đăng nhập. Vui lòng thử lại."

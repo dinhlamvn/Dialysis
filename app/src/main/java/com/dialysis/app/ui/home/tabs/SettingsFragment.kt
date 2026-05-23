@@ -1,6 +1,7 @@
 package com.dialysis.app.ui.home.tabs
 
 import android.content.Context
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,15 +17,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -54,10 +63,15 @@ class SettingsFragment : BaseFragment() {
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel) {
     val context = LocalContext.current
+    var showAccountDetails by rememberSaveable { mutableStateOf(false) }
     val isLoadingAccount = viewModel.isLoadingAccountState.collectAsStateWithLifecycle().value
     val accountContact = viewModel.accountContactState.collectAsStateWithLifecycle().value
     val isLoggedIn = viewModel.isLoggedInState.collectAsStateWithLifecycle().value
     val lastWaterSyncAt = viewModel.lastWaterSyncAtState.collectAsStateWithLifecycle().value
+    val showDeleteAccountConfirm = viewModel.showDeleteAccountConfirmState.collectAsStateWithLifecycle().value
+    val isDeletingAccount = viewModel.isDeletingAccountState.collectAsStateWithLifecycle().value
+    val deleteAccountError = viewModel.deleteAccountErrorState.collectAsStateWithLifecycle().value
+    val deleteAccountErrorResId = viewModel.deleteAccountErrorResIdState.collectAsStateWithLifecycle().value
 
     Box(
         modifier = Modifier
@@ -68,79 +82,23 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            item {
-                Text(
-                    text = stringResource(R.string.settings_title),
-                    style = TextStyles.titleMedium,
-                    color = TextDark,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 28.dp)
-                )
-            }
-
-            item {
-                SettingsSection(
-                    title = stringResource(R.string.settings_app_information),
-                    rows = listOf(
-                        SettingsRowData(
-                            title = stringResource(R.string.settings_version),
-                            value = normalizedVersion(BuildConfig.VERSION_NAME)
-                        )
+            if (showAccountDetails && isLoggedIn) {
+                item {
+                    AccountDetailsContent(
+                        onDeleteAccountClick = viewModel::requestDeleteAccount,
+                        onBackClick = { showAccountDetails = false }
                     )
-                )
-            }
-
-            item {
-                SettingsSection(
-                    title = stringResource(R.string.settings_notification),
-                    rows = listOf(
-                        SettingsRowData(
-                            title = stringResource(R.string.settings_notification_title),
-                            showChevron = true
-                        )
+                }
+            } else {
+                item {
+                    SettingsMainContent(
+                        isLoadingAccount = isLoadingAccount,
+                        accountContact = accountContact,
+                        isLoggedIn = isLoggedIn,
+                        onAccountClick = { showAccountDetails = true },
+                        onSignInClick = { context.startActivity(Router.login(context)) },
+                        onSignOutClick = viewModel::signOut
                     )
-                )
-            }
-
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SettingsSectionHeader(stringResource(R.string.settings_preferences))
-                    SettingsCard {
-                        if (isLoadingAccount) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                CircularProgressIndicator(
-                                    color = AccentBlue,
-                                    strokeWidth = 2.dp,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
-                        } else if (isLoggedIn) {
-                            SettingsRow(
-                                data = SettingsRowData(
-                                    title = stringResource(R.string.settings_sign_out),
-                                    value = accountContact.orEmpty(),
-                                    isDestructive = true
-                                ),
-                                onClick = viewModel::signOut
-                            )
-                        } else {
-                            SettingsRow(
-                                data = SettingsRowData(
-                                    title = stringResource(R.string.settings_sign_in),
-                                    showChevron = true
-                                ),
-                                onClick = { context.startActivity(Router.login(context)) }
-                            )
-                        }
-                    }
                 }
             }
 
@@ -158,6 +116,218 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 20.dp)
         )
+
+        if (showDeleteAccountConfirm) {
+            DeleteAccountConfirmDialog(
+                isDeleting = isDeletingAccount,
+                onDismiss = viewModel::dismissDeleteAccountConfirm,
+                onConfirm = viewModel::confirmDeleteAccount
+            )
+        }
+
+        if (deleteAccountError != null || deleteAccountErrorResId != null) {
+            DeleteAccountErrorDialog(
+                message = deleteAccountError
+                    ?: stringResource(deleteAccountErrorResId ?: R.string.settings_delete_account_failed_message),
+                onDismiss = viewModel::clearDeleteAccountError
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsMainContent(
+    isLoadingAccount: Boolean,
+    accountContact: String?,
+    isLoggedIn: Boolean,
+    onAccountClick: () -> Unit,
+    onSignInClick: () -> Unit,
+    onSignOutClick: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        SettingsTitle(title = stringResource(R.string.settings_title))
+        if (isLoggedIn) {
+            AccountEntrySection(onAccountClick = onAccountClick)
+        }
+        AppInformationSection()
+        NotificationSection()
+        PreferencesSection(
+            isLoadingAccount = isLoadingAccount,
+            accountContact = accountContact,
+            isLoggedIn = isLoggedIn,
+            onSignInClick = onSignInClick,
+            onSignOutClick = onSignOutClick
+        )
+    }
+}
+
+@Composable
+private fun AccountDetailsContent(
+    onDeleteAccountClick: () -> Unit,
+    onBackClick: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        AccountDetailsHeader(onBackClick = onBackClick)
+        AccountDeleteSection(onDeleteAccountClick = onDeleteAccountClick)
+    }
+}
+
+@Composable
+private fun SettingsTitle(title: String) {
+    Text(
+        text = title,
+        style = TextStyles.titleMedium,
+        color = TextDark,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 28.dp)
+    )
+}
+
+@Composable
+private fun AccountEntrySection(
+    onAccountClick: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SettingsSectionHeader(stringResource(R.string.settings_account))
+        SettingsCard {
+            SettingsRow(
+                data = SettingsRowData(
+                    title = stringResource(R.string.settings_account),
+                    showChevron = true
+                ),
+                onClick = onAccountClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun AccountDetailsHeader(
+    onBackClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 20.dp)
+    ) {
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 12.dp)
+        ) {
+            Image(
+                painter = painterResource(R.drawable.ic_back),
+                contentDescription = stringResource(R.string.common_back),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        Text(
+            text = stringResource(R.string.settings_account),
+            style = TextStyles.titleMedium,
+            color = TextDark,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 64.dp, vertical = 8.dp)
+        )
+    }
+}
+
+@Composable
+private fun AccountDeleteSection(
+    onDeleteAccountClick: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SettingsSectionHeader(stringResource(R.string.settings_delete_account))
+        SettingsCard {
+            SettingsRow(
+                data = SettingsRowData(
+                    title = stringResource(R.string.settings_delete_account),
+                    showChevron = true,
+                    isDestructive = true
+                ),
+                onClick = onDeleteAccountClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun AppInformationSection() {
+    SettingsSection(
+        title = stringResource(R.string.settings_app_information),
+        rows = listOf(
+            SettingsRowData(
+                title = stringResource(R.string.settings_version),
+                value = normalizedVersion(BuildConfig.VERSION_NAME)
+            )
+        )
+    )
+}
+
+@Composable
+private fun NotificationSection() {
+    SettingsSection(
+        title = stringResource(R.string.settings_notification),
+        rows = listOf(
+            SettingsRowData(
+                title = stringResource(R.string.settings_notification_title),
+                showChevron = true
+            )
+        )
+    )
+}
+
+@Composable
+private fun PreferencesSection(
+    isLoadingAccount: Boolean,
+    accountContact: String?,
+    isLoggedIn: Boolean,
+    onSignInClick: () -> Unit,
+    onSignOutClick: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SettingsSectionHeader(stringResource(R.string.settings_preferences))
+        SettingsCard {
+            when {
+                isLoadingAccount -> AccountLoadingRow()
+                isLoggedIn -> SettingsRow(
+                    data = SettingsRowData(
+                        title = stringResource(R.string.settings_sign_out),
+                        value = accountContact.orEmpty(),
+                        isDestructive = true
+                    ),
+                    onClick = onSignOutClick
+                )
+                else -> SettingsRow(
+                    data = SettingsRowData(
+                        title = stringResource(R.string.settings_sign_in),
+                        showChevron = true
+                    ),
+                    onClick = onSignInClick
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AccountLoadingRow() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CircularProgressIndicator(
+            color = AccentBlue,
+            strokeWidth = 2.dp,
+            modifier = Modifier.size(22.dp)
+        )
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
@@ -248,6 +418,98 @@ private fun SettingsDivider() {
             .fillMaxWidth()
             .height(1.dp)
             .background(DividerColor)
+    )
+}
+
+@Composable
+private fun DeleteAccountConfirmDialog(
+    isDeleting: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.settings_delete_account_confirm_title),
+                style = TextStyles.titleMedium,
+                color = TextDark
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = stringResource(R.string.settings_delete_account_confirm_message),
+                    style = TextStyles.body,
+                    color = TextMuted
+                )
+                if (isDeleting) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            color = DestructiveRed,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.settings_delete_account_deleting),
+                            style = TextStyles.body,
+                            color = TextMuted
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                enabled = !isDeleting
+            ) {
+                Text(
+                    text = stringResource(R.string.settings_delete_account_confirm_action),
+                    color = DestructiveRed
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isDeleting
+            ) {
+                Text(text = stringResource(R.string.common_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun DeleteAccountErrorDialog(
+    message: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.settings_delete_account_failed_title),
+                style = TextStyles.titleMedium,
+                color = TextDark
+            )
+        },
+        text = {
+            Text(
+                text = message,
+                style = TextStyles.body,
+                color = TextMuted
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.common_ok))
+            }
+        }
     )
 }
 

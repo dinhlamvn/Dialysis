@@ -42,7 +42,7 @@ class CreateDrinkViewModel : BaseViewModel<CreateDrinkState>(CreateDrinkState())
 
     fun resetForm(defaultTimeText: String) = setState {
         copy(
-            selectedId = "200_ml",
+            selectedId = "50_ml",
             showCustomInputSheet = false,
             customInput = "",
             customMl = null,

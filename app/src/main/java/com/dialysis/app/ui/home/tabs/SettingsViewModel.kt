@@ -1,6 +1,7 @@
 package com.dialysis.app.ui.home.tabs
 
 import androidx.lifecycle.viewModelScope
+import com.dialysis.app.R
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WaterTrackingRepository
 import com.dialysis.app.data.local.WeightTrackingRepository
@@ -10,6 +11,7 @@ import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 
 class SettingsViewModel(
     private val accountSharePref: AccountSharePref,
@@ -24,6 +26,12 @@ class SettingsViewModel(
     val isLoggedInState = collectStateUI(SettingsState::isLoggedIn)
     val lastWaterSyncAtState = collectStateUI(SettingsState::lastWaterSyncAt)
     val signOutEventIdState = collectStateUI(SettingsState::signOutEventId)
+    val showDeleteAccountConfirmState = collectStateUI(SettingsState::showDeleteAccountConfirm)
+    val isDeletingAccountState = collectStateUI(SettingsState::isDeletingAccount)
+    val deleteAccountErrorState = collectStateUI(SettingsState::deleteAccountError)
+    val deleteAccountErrorResIdState = collectStateUI(SettingsState::deleteAccountErrorResId)
+
+    private val deleteAccountRequestInFlight = AtomicBoolean(false)
 
     init {
         setState {
@@ -68,19 +76,104 @@ class SettingsViewModel(
 
     fun signOut() {
         viewModelScope.launch(Dispatchers.IO) {
-            accountSharePref.clear()
-            userProfileSharePref.clear()
-            waterTrackingRepository.clearAllLocalData()
-            weightTrackingRepository.clearAll()
+            clearLocalAccountAndNotify()
+        }
+    }
+
+    fun requestDeleteAccount() = setState {
+        copy(
+            showDeleteAccountConfirm = true,
+            deleteAccountError = null,
+            deleteAccountErrorResId = null
+        )
+    }
+
+    fun dismissDeleteAccountConfirm() = setState {
+        if (isDeletingAccount) {
+            this
+        } else {
+            copy(showDeleteAccountConfirm = false)
+        }
+    }
+
+    fun clearDeleteAccountError() = setState {
+        copy(deleteAccountError = null, deleteAccountErrorResId = null)
+    }
+
+    fun confirmDeleteAccount() {
+        getState { state ->
+            if (state.isDeletingAccount) return@getState
+            if (accountSharePref.getToken().isBlank()) {
+                setState {
+                    copy(
+                        showDeleteAccountConfirm = false,
+                        isDeletingAccount = false,
+                        deleteAccountError = null,
+                        deleteAccountErrorResId = R.string.settings_delete_account_invalid_token
+                    )
+                }
+                return@getState
+            }
+            if (!deleteAccountRequestInFlight.compareAndSet(false, true)) return@getState
             setState {
                 copy(
-                    isLoadingAccount = false,
-                    accountContact = null,
-                    isLoggedIn = false,
-                    lastWaterSyncAt = null,
-                    signOutEventId = signOutEventId + 1
+                    isDeletingAccount = true,
+                    deleteAccountError = null,
+                    deleteAccountErrorResId = null
                 )
             }
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val result = networkManager.resolveNullable {
+                        networkManager.appServices.deleteAccount()
+                    }
+                    if (result.isSuccess) {
+                        clearLocalAccountAndNotify(
+                            showDeleteAccountConfirm = false,
+                            isDeletingAccount = false
+                        )
+                    } else {
+                        setState {
+                            copy(
+                                showDeleteAccountConfirm = false,
+                                isDeletingAccount = false,
+                                deleteAccountError = result.exceptionOrNull()?.message,
+                                deleteAccountErrorResId = R.string.settings_delete_account_failed_message
+                            )
+                        }
+                    }
+                } finally {
+                    deleteAccountRequestInFlight.set(false)
+                    getState { currentState ->
+                        if (currentState.isDeletingAccount) {
+                            setState { copy(isDeletingAccount = false) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun clearLocalAccountAndNotify(
+        showDeleteAccountConfirm: Boolean = false,
+        isDeletingAccount: Boolean = false
+    ) {
+        runCatching { accountSharePref.clear() }
+        runCatching { userProfileSharePref.clear() }
+        runCatching { waterTrackingRepository.clearAllLocalData() }
+        runCatching { weightTrackingRepository.clearAll() }
+        setState {
+            copy(
+                isLoadingAccount = false,
+                accountContact = null,
+                isLoggedIn = false,
+                lastWaterSyncAt = null,
+                showDeleteAccountConfirm = showDeleteAccountConfirm,
+                isDeletingAccount = isDeletingAccount,
+                deleteAccountError = null,
+                deleteAccountErrorResId = null,
+                signOutEventId = signOutEventId + 1
+            )
         }
     }
 

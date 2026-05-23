@@ -24,6 +24,9 @@ interface AppServices {
     @GET("mobile/auth/me")
     suspend fun me(): ApiResponse<LoginUser>
 
+    @DELETE("mobile/auth/account")
+    suspend fun deleteAccount(): ApiResponse<Map<String, Any>?>
+
     @POST("mobile/water/intake")
     suspend fun syncWaterIntake(
         @Body request: WaterIntakeRequest

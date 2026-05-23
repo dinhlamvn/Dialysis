@@ -4,7 +4,7 @@ import com.dialysis.app.base.BaseState
 
 data class CreateDrinkState(
     val drinkName: String = "",
-    val selectedId: String = "200_ml",
+    val selectedId: String = "50_ml",
     val showCustomInputSheet: Boolean = false,
     val customInput: String = "",
     val customMl: Int? = null,
