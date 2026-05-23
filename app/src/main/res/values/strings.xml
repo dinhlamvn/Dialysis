@@ -172,6 +172,14 @@
     <string name="settings_sign_out">Đăng xuất</string>
     <string name="settings_last_sync_at">Đã cập nhật lúc %1$s</string>
     <string name="settings_last_sync_never">Chưa có lần đồng bộ nào</string>
+    <string name="settings_delete_account">Xóa Tài Khoản</string>
+    <string name="settings_delete_account_confirm_title">Xóa tài khoản?</string>
+    <string name="settings_delete_account_confirm_message">Hành động này sẽ xóa vĩnh viễn tài khoản của bạn khỏi hệ thống. Sau khi xóa thành công, bạn sẽ bị đăng xuất và toàn bộ dữ liệu tài khoản được lưu trên thiết bị này cũng sẽ bị xóa. Bạn có chắc chắn muốn tiếp tục không?</string>
+    <string name="settings_delete_account_confirm_action">Xóa tài khoản</string>
+    <string name="settings_delete_account_deleting">Đang xóa tài khoản...</string>
+    <string name="settings_delete_account_failed_title">Không thể xóa tài khoản</string>
+    <string name="settings_delete_account_failed_message">Không thể xóa tài khoản. Vui lòng thử lại.</string>
+    <string name="settings_delete_account_invalid_token">Token không hợp lệ hoặc đã hết hạn.</string>
     <string name="settings_sign_in_up">Đăng nhập hoặc Đăng ký</string>
     <string name="settings_account">Tài khoản</string>
     <string name="settings_profile">Hồ sơ</string>
