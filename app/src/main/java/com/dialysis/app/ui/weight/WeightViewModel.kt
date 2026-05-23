@@ -30,14 +30,22 @@ class WeightViewModel(
     private val periodOffsetFlow = MutableStateFlow(0)
     private var latestRange: WeightReportRange = buildWeightReportRange(WeightReportTab.MONTH, 0)
 
-    val weightGoalKgState = collectStateUI(WeightState::weightGoalKg); val initialWeightKgState = collectStateUI(WeightState::initialWeightKg)
-    val currentWeightKgState = collectStateUI(WeightState::currentWeightKg); val selectedTabState = collectStateUI(WeightState::selectedTab)
-    val periodTitleState = collectStateUI(WeightState::periodTitle); val showAddWeightSheetState = collectStateUI(WeightState::showAddWeightSheet)
-    val draftWeightKgState = collectStateUI(WeightState::draftWeightKg); val editingModeState = collectStateUI(WeightState::editingMode)
-    val isSavingWeightState = collectStateUI(WeightState::isSavingWeight); val isLoadingState = collectStateUI(WeightState::isLoading)
-    val chartDataState = collectStateUI(WeightState::chartData); val xAxisLabelsState = collectStateUI(WeightState::xAxisLabels)
-    val yMinState = collectStateUI(WeightState::yMin); val yMaxState = collectStateUI(WeightState::yMax)
-    val historyState = collectStateUI(WeightState::history); val chartStatsState = collectStateUI(WeightState::chartStats)
+    val weightGoalKgState = collectStateUI(WeightState::weightGoalKg);
+    val initialWeightKgState = collectStateUI(WeightState::initialWeightKg)
+    val currentWeightKgState = collectStateUI(WeightState::currentWeightKg);
+    val selectedTabState = collectStateUI(WeightState::selectedTab)
+    val periodTitleState = collectStateUI(WeightState::periodTitle);
+    val showAddWeightSheetState = collectStateUI(WeightState::showAddWeightSheet)
+    val draftWeightKgState = collectStateUI(WeightState::draftWeightKg);
+    val editingModeState = collectStateUI(WeightState::editingMode)
+    val isSavingWeightState = collectStateUI(WeightState::isSavingWeight);
+    val isLoadingState = collectStateUI(WeightState::isLoading)
+    val chartDataState = collectStateUI(WeightState::chartData);
+    val xAxisLabelsState = collectStateUI(WeightState::xAxisLabels)
+    val yMinState = collectStateUI(WeightState::yMin);
+    val yMaxState = collectStateUI(WeightState::yMax)
+    val historyState = collectStateUI(WeightState::history);
+    val chartStatsState = collectStateUI(WeightState::chartStats)
 
     init {
         initializeStoredWeights()
@@ -52,9 +60,13 @@ class WeightViewModel(
         selectedTabFlow.value = tab; periodOffsetFlow.value = 0
     }
 
-    fun nextPeriod() { periodOffsetFlow.value = periodOffsetFlow.value + 1 }
+    fun nextPeriod() {
+        periodOffsetFlow.value = periodOffsetFlow.value + 1
+    }
 
-    fun prevPeriod() { periodOffsetFlow.value = periodOffsetFlow.value - 1 }
+    fun prevPeriod() {
+        periodOffsetFlow.value = periodOffsetFlow.value - 1
+    }
 
     fun openGoalWeightSheet() = openWeightSheet(WeightEditingMode.GOAL) { weightGoalKg }
 
@@ -68,7 +80,8 @@ class WeightViewModel(
 
     fun closeAddWeightSheet() = setState { copy(showAddWeightSheet = false) }
 
-    fun updateDraftWeight(weightKg: Float) = setState { copy(draftWeightKg = weightKg.coerceIn(MIN_WEIGHT_KG, MAX_WEIGHT_KG)) }
+    fun updateDraftWeight(weightKg: Float) =
+        setState { copy(draftWeightKg = weightKg.coerceIn(MIN_WEIGHT_KG, MAX_WEIGHT_KG)) }
 
     fun saveDraftWeight() {
         getState { state ->
@@ -134,7 +147,8 @@ class WeightViewModel(
     private fun observeLatestWeight() {
         weightTrackingRepository.observeLatestEntry()
             .onEach { latest ->
-                val latestWeight = latest?.weightKg ?: userProfileSharePref.getInitialWeightKg().toFloat()
+                val latestWeight =
+                    latest?.weightKg ?: userProfileSharePref.getInitialWeightKg().toFloat()
                 setState {
                     copy(
                         currentWeightKg = if (latestWeight > 0f) latestWeight else 0f,
@@ -152,7 +166,12 @@ class WeightViewModel(
     }
 
     private fun observeChartRange() {
-        combine(selectedTabFlow, periodOffsetFlow) { tab, offset -> tab to buildWeightReportRange(tab, offset) }
+        combine(selectedTabFlow, periodOffsetFlow) { tab, offset ->
+            tab to buildWeightReportRange(
+                tab,
+                offset
+            )
+        }
             .flatMapLatest { (tab, range) ->
                 latestRange = range
                 weightTrackingRepository.observeEntriesInRange(range.startMillis, range.endMillis)
@@ -181,9 +200,10 @@ class WeightViewModel(
         loadRemoteChart(tab, range)
     }
 
-    private fun openWeightSheet(mode: WeightEditingMode, draftValue: WeightState.() -> Float) = setState {
-        copy(showAddWeightSheet = true, editingMode = mode, draftWeightKg = draftValue())
-    }
+    private fun openWeightSheet(mode: WeightEditingMode, draftValue: WeightState.() -> Float) =
+        setState {
+            copy(showAddWeightSheet = true, editingMode = mode, draftWeightKg = draftValue())
+        }
 
     private suspend fun saveWeightByMode(mode: WeightEditingMode, weightKg: Float) {
         when (mode) {
@@ -212,7 +232,11 @@ class WeightViewModel(
 
     private suspend fun saveCurrentWeight(weightKg: Float) {
         val serverId = syncCurrentWeightToServer(weightKg)
-        weightTrackingRepository.saveDailyWeight(weightKg, serverId = serverId, note = DEFAULT_WEIGHT_NOTE)
+        weightTrackingRepository.saveDailyWeight(
+            weightKg,
+            serverId = serverId,
+            note = DEFAULT_WEIGHT_NOTE
+        )
         setState { copy(currentWeightKg = weightKg, showAddWeightSheet = false) }
     }
 
@@ -238,9 +262,11 @@ class WeightViewModel(
         setState { copy(currentWeightKg = current) }
     }
 
-    private suspend fun syncInitialWeightToServer(weightKg: Float): Boolean = remoteMediator.syncInitialWeight(weightKg)
+    private suspend fun syncInitialWeightToServer(weightKg: Float): Boolean =
+        remoteMediator.syncInitialWeight(weightKg)
 
-    private suspend fun syncCurrentWeightToServer(weightKg: Float): Long? = remoteMediator.syncCurrentWeight(weightKg)
+    private suspend fun syncCurrentWeightToServer(weightKg: Float): Long? =
+        remoteMediator.syncCurrentWeight(weightKg)
 
     private suspend fun loadRemoteChart(tab: WeightReportTab, range: WeightReportRange) {
         val result = remoteMediator.fetchChart(tab, range, currentStateGoal()) ?: return
