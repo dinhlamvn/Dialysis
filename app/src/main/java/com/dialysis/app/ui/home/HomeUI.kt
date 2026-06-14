@@ -1216,9 +1216,9 @@ private fun BannerCard(
 }
 
 private fun openGuidePdf(context: android.content.Context) {
-    val outFile = File(context.cacheDir, "huong_dan.pdf")
+    val outFile = File(context.cacheDir, "huong_dan_260614_153847.pdf")
     if (!outFile.exists()) {
-        context.resources.openRawResource(R.raw.huong_dan).use { input ->
+        context.resources.openRawResource(R.raw.huong_dan_260614_153847).use { input ->
             outFile.outputStream().use { output ->
                 input.copyTo(output)
             }

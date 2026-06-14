@@ -1,6 +1,7 @@
 package com.dialysis.app
 
 import android.app.Application
+import androidx.appcompat.app.AppCompatDelegate
 import com.dialysis.app.di.CreateDrinkModule
 import com.dialysis.app.di.DailyReportModule
 import com.dialysis.app.di.HomeModule
@@ -20,6 +21,7 @@ class DialysisApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         startKoin {
             androidContext(this@DialysisApplication)
             modules(
