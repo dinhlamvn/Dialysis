@@ -142,11 +142,11 @@ class InfoViewModel(
 
     private fun calculateLocalDailyWaterGoalMl(state: InfoState): Int {
         val rawGoal = LOCAL_BASE_DAILY_WATER_GOAL_ML + state.dailyUrineMl
-        return rawGoal.coerceIn(MIN_DAILY_WATER_GOAL_ML, MAX_DAILY_WATER_GOAL_ML)
+        return rawGoal.coerceIn(rawGoal, MAX_DAILY_WATER_GOAL_ML)
     }
 
     private companion object {
-        private const val LOCAL_BASE_DAILY_WATER_GOAL_ML = 1000
+        private const val LOCAL_BASE_DAILY_WATER_GOAL_ML = 500
         private const val MIN_DAILY_WATER_GOAL_ML = 1500
         private const val MAX_DAILY_WATER_GOAL_ML = 2000
     }
