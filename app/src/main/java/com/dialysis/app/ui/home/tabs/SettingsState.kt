@@ -12,5 +12,29 @@ data class SettingsState(
     val showDeleteAccountConfirm: Boolean = false,
     val isDeletingAccount: Boolean = false,
     val deleteAccountError: String? = null,
-    @param:StringRes val deleteAccountErrorResId: Int? = null
+    @param:StringRes val deleteAccountErrorResId: Int? = null,
+    val urineSamplesMode: UrineSamplesMode = UrineSamplesMode.Main,
+    val urineAmountInput: String = "",
+    val urineNoteInput: String = "",
+    val isSavingUrineSample: Boolean = false,
+    val urineSaveSuccess: Boolean = false,
+    val urineSaveError: String? = null,
+    @param:StringRes val urineSaveErrorResId: Int? = null,
+    val isLoadingUrineSamples: Boolean = false,
+    val urineSamples: List<UrineSampleUiModel> = emptyList(),
+    val urineSamplesError: String? = null,
+    @param:StringRes val urineSamplesErrorResId: Int? = null
 ) : BaseState
+
+enum class UrineSamplesMode {
+    Main,
+    AddToday,
+    History
+}
+
+data class UrineSampleUiModel(
+    val id: Long,
+    val amountMl: Int,
+    val sampleTimeMillis: Long?,
+    val note: String?
+)

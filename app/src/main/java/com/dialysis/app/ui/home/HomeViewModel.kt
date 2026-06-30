@@ -100,6 +100,10 @@ class HomeViewModel(
         waterTrackingRepository.observeAllEntries()
             .onEach { entries -> setState { copy(allWaterEntries = entries) } }
             .launchIn(viewModelScope)
+
+        userProfileSharePref.observeDailyWaterGoalMl()
+            .onEach { goalMl -> setState { copy(dailyWaterGoalMl = goalMl) } }
+            .launchIn(viewModelScope)
     }
 
     fun openDrinkListSheet() = setState {
