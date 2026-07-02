@@ -8,6 +8,7 @@ import com.dialysis.app.data.local.WeightTrackingRepository
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.data.network.request.UrineLogRequest
 import com.dialysis.app.data.network.response.UrineHistoryItem
+import com.dialysis.app.sharepref.LocalUrineSample
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
@@ -190,10 +191,6 @@ class SettingsViewModel(
                 setState { copy(urineSaveErrorResId = R.string.settings_urine_amount_invalid) }
                 return@getState
             }
-            if (accountSharePref.getToken().isBlank()) {
-                setState { copy(urineSaveErrorResId = R.string.settings_urine_login_required) }
-                return@getState
-            }
             if (!urineSaveRequestInFlight.compareAndSet(false, true)) return@getState
             setState {
                 copy(
@@ -205,36 +202,37 @@ class SettingsViewModel(
             }
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    val result = networkManager.resolve {
-                        networkManager.appServices.logUrine(
-                            UrineLogRequest(
-                                amount = amountMl,
-                                loggedAt = Instant.now().toString(),
-                                note = state.urineNoteInput.trim().takeIf { it.isNotBlank() },
-                                clientId = UUID.randomUUID().toString()
-                            )
-                        )
+                    val loggedAt = Instant.now().toString()
+                    val note = state.urineNoteInput.trim().takeIf { it.isNotBlank() }
+                    val clientId = UUID.randomUUID().toString()
+                    val request = UrineLogRequest(
+                        amount = amountMl,
+                        loggedAt = loggedAt,
+                        note = note,
+                        clientId = clientId
+                    )
+                    if (accountSharePref.getToken().isNotBlank()) {
+                        networkManager.resolve {
+                            networkManager.appServices.logUrine(request)
+                        }
                     }
-                    if (result.isSuccess) {
-                        val dailyWaterGoalMl = calculateDailyWaterGoalMl(amountMl)
-                        userProfileSharePref.saveDailyUrineMl(amountMl)
-                        userProfileSharePref.saveDailyWaterGoalMl(dailyWaterGoalMl)
-                        setState {
-                            copy(
-                                isSavingUrineSample = false,
-                                urineSaveSuccess = true,
-                                urineAmountInput = "",
-                                urineNoteInput = ""
-                            )
-                        }
-                    } else {
-                        setState {
-                            copy(
-                                isSavingUrineSample = false,
-                                urineSaveError = result.exceptionOrNull()?.message,
-                                urineSaveErrorResId = R.string.settings_urine_save_failed
-                            )
-                        }
+
+                    userProfileSharePref.saveLocalUrineSample(
+                        amountMl = amountMl,
+                        loggedAt = loggedAt,
+                        note = note,
+                        clientId = clientId
+                    )
+                    val dailyWaterGoalMl = calculateDailyWaterGoalMl(amountMl)
+                    userProfileSharePref.saveDailyUrineMl(amountMl)
+                    userProfileSharePref.saveDailyWaterGoalMl(dailyWaterGoalMl)
+                    setState {
+                        copy(
+                            isSavingUrineSample = false,
+                            urineSaveSuccess = true,
+                            urineAmountInput = "",
+                            urineNoteInput = ""
+                        )
                     }
                 } finally {
                     urineSaveRequestInFlight.set(false)
@@ -249,12 +247,16 @@ class SettingsViewModel(
     }
 
     fun loadUrineSamples() {
+        val localSamples = userProfileSharePref.getLocalUrineSamples()
+            .map { it.toUiModel() }
+            .sortedByDescending { it.sampleTimeMillis ?: 0L }
         if (accountSharePref.getToken().isBlank()) {
             setState {
                 copy(
                     isLoadingUrineSamples = false,
-                    urineSamples = emptyList(),
-                    urineSamplesErrorResId = R.string.settings_urine_login_required
+                    urineSamples = localSamples,
+                    urineSamplesError = null,
+                    urineSamplesErrorResId = null
                 )
             }
             return
@@ -269,12 +271,19 @@ class SettingsViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val result = networkManager.resolve { networkManager.appServices.getUrineHistory() }
             if (result.isSuccess) {
+                val remoteSamples = result.getOrNull().orEmpty()
+                val remoteClientIds = remoteSamples.mapNotNull { it.clientId }.toSet()
+                val mergedSamples = remoteSamples.map { it.toUiModel() } +
+                    localSamples.filter { local ->
+                        val localClientId = userProfileSharePref.getLocalUrineSamples()
+                            .firstOrNull { it.id == local.id }
+                            ?.clientId
+                        localClientId == null || localClientId !in remoteClientIds
+                    }
                 setState {
                     copy(
                         isLoadingUrineSamples = false,
-                        urineSamples = result.getOrNull()
-                            .orEmpty()
-                            .map { it.toUiModel() }
+                        urineSamples = mergedSamples
                             .sortedByDescending { it.sampleTimeMillis ?: 0L }
                     )
                 }
@@ -282,8 +291,9 @@ class SettingsViewModel(
                 setState {
                     copy(
                         isLoadingUrineSamples = false,
-                        urineSamplesError = result.exceptionOrNull()?.message,
-                        urineSamplesErrorResId = R.string.settings_urine_history_failed
+                        urineSamples = localSamples,
+                        urineSamplesError = null,
+                        urineSamplesErrorResId = null
                     )
                 }
             }
@@ -384,6 +394,15 @@ class SettingsViewModel(
             id = id,
             amountMl = value,
             sampleTimeMillis = parseApiInstantMillis(fromDate),
+            note = note?.takeIf { it.isNotBlank() }
+        )
+    }
+
+    private fun LocalUrineSample.toUiModel(): UrineSampleUiModel {
+        return UrineSampleUiModel(
+            id = id,
+            amountMl = amountMl,
+            sampleTimeMillis = parseApiInstantMillis(loggedAt),
             note = note?.takeIf { it.isNotBlank() }
         )
     }

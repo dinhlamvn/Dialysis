@@ -216,9 +216,9 @@ private fun SettingsMainContent(
         if (isLoggedIn) {
             AccountEntrySection(onAccountClick = onAccountClick)
         }
-        HealthSettingsSection(onUrineSamplesClick = onUrineSamplesClick)
         AppInformationSection()
         NotificationSection()
+        HealthSettingsSection(onUrineSamplesClick = onUrineSamplesClick)
         PreferencesSection(
             isLoadingAccount = isLoadingAccount,
             accountContact = accountContact,
@@ -267,7 +267,11 @@ private fun UrineSamplesContent(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
         AccountDetailsHeader(
-            title = stringResource(R.string.settings_urine_samples),
+            title = when (mode) {
+                UrineSamplesMode.Main -> stringResource(R.string.settings_urine_samples)
+                UrineSamplesMode.AddToday -> stringResource(R.string.settings_add_today_urine_sample)
+                UrineSamplesMode.History -> stringResource(R.string.settings_view_urine_samples)
+            },
             onBackClick = onBackClick
         )
         when (mode) {
@@ -430,7 +434,7 @@ private fun UrineSampleRow(sample: UrineSampleUiModel) {
         )
         if (!sample.note.isNullOrBlank()) {
             Text(
-                text = sample.note,
+                text = "${stringResource(R.string.settings_urine_note_label)}: ${sample.note}",
                 style = TextStyles.body,
                 color = TextMuted
             )
@@ -507,6 +511,7 @@ private fun AccountDetailsHeader(
             style = TextStyles.titleMedium,
             color = TextDark,
             textAlign = TextAlign.Center,
+            maxLines = 2,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 64.dp, vertical = 8.dp)
