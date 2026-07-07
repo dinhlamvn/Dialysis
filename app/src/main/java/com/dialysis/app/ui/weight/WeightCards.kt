@@ -29,7 +29,11 @@ internal fun WeightGoalHeader(
     weightGoalKg: Float,
     onEditClick: () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         Text("Mục tiêu", style = TextStyle(fontSize = 16.sp), color = WeightTextMuted)
         Row(verticalAlignment = Alignment.Bottom) {
             Text(formatWeightValue(weightGoalKg), style = TextStyle(fontSize = 48.sp), color = WeightAccentBlue)
@@ -57,7 +61,8 @@ internal fun WeightInfoCards(
     initialWeightKg: Float,
     currentWeightKg: Float,
     progressKg: Float,
-    onEditInitialWeightClick: () -> Unit
+    onEditInitialWeightClick: () -> Unit,
+    onEditCurrentWeightClick: () -> Unit
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -65,13 +70,13 @@ internal fun WeightInfoCards(
                 title = stringResource(R.string.weight_initial),
                 value = "${formatWeightValue(initialWeightKg)} kg",
                 valueColor = WeightTextDark,
-                editable = true,
-                onClick = onEditInitialWeightClick
+                onEditClick = onEditInitialWeightClick
             )
             SmallWeightInfoCard(
                 title = stringResource(R.string.weight_current),
                 value = "${formatWeightValue(currentWeightKg)} kg",
-                valueColor = WeightAccentBlue
+                valueColor = WeightAccentBlue,
+                onEditClick = onEditCurrentWeightClick
             )
         }
 
@@ -85,14 +90,13 @@ private fun SmallWeightInfoCard(
     value: String,
     valueColor: androidx.compose.ui.graphics.Color,
     modifier: Modifier = Modifier,
-    editable: Boolean = false,
-    onClick: (() -> Unit)? = null
+    onEditClick: (() -> Unit)? = null
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
             .height(100.dp)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+            .then(if (onEditClick != null) Modifier.clickable(onClick = onEditClick) else Modifier),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(
@@ -104,7 +108,7 @@ private fun SmallWeightInfoCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(title, style = TextStyle(fontSize = 14.sp), color = WeightTextMuted)
                 Spacer(modifier = Modifier.weight(1f))
-                if (editable) {
+                if (onEditClick != null) {
                     Text("✎", style = TextStyle(fontSize = 22.sp), color = WeightTextMuted)
                 }
             }

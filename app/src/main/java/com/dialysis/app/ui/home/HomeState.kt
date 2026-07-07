@@ -28,6 +28,7 @@ data class HomeState(
     val symptoms: List<String> = emptyList(),
     val selectedSymptom: String? = null,
     val symptomNotes: String = "",
+    val showSymptomNotesError: Boolean = false,
     val isSymptomsLoading: Boolean = false,
     val isSubmittingSymptom: Boolean = false,
     val showSymptomSubmitSuccessToast: Boolean = false,

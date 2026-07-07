@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -22,6 +23,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,12 +38,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dialysis.app.BuildConfig
 import com.dialysis.app.R
 import com.dialysis.app.base.BaseFragment
 import com.dialysis.app.router.Router
+import com.dialysis.app.ui.components.PrimaryButton
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.theme.AppTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -64,6 +68,7 @@ class SettingsFragment : BaseFragment() {
 fun SettingsScreen(viewModel: SettingsViewModel) {
     val context = LocalContext.current
     var showAccountDetails by rememberSaveable { mutableStateOf(false) }
+    var showUrineSamples by rememberSaveable { mutableStateOf(false) }
     val isLoadingAccount = viewModel.isLoadingAccountState.collectAsStateWithLifecycle().value
     val accountContact = viewModel.accountContactState.collectAsStateWithLifecycle().value
     val isLoggedIn = viewModel.isLoggedInState.collectAsStateWithLifecycle().value
@@ -72,6 +77,17 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     val isDeletingAccount = viewModel.isDeletingAccountState.collectAsStateWithLifecycle().value
     val deleteAccountError = viewModel.deleteAccountErrorState.collectAsStateWithLifecycle().value
     val deleteAccountErrorResId = viewModel.deleteAccountErrorResIdState.collectAsStateWithLifecycle().value
+    val urineSamplesMode = viewModel.urineSamplesModeState.collectAsStateWithLifecycle().value
+    val urineAmountInput = viewModel.urineAmountInputState.collectAsStateWithLifecycle().value
+    val urineNoteInput = viewModel.urineNoteInputState.collectAsStateWithLifecycle().value
+    val isSavingUrineSample = viewModel.isSavingUrineSampleState.collectAsStateWithLifecycle().value
+    val urineSaveSuccess = viewModel.urineSaveSuccessState.collectAsStateWithLifecycle().value
+    val urineSaveError = viewModel.urineSaveErrorState.collectAsStateWithLifecycle().value
+    val urineSaveErrorResId = viewModel.urineSaveErrorResIdState.collectAsStateWithLifecycle().value
+    val isLoadingUrineSamples = viewModel.isLoadingUrineSamplesState.collectAsStateWithLifecycle().value
+    val urineSamples = viewModel.urineSamplesState.collectAsStateWithLifecycle().value
+    val urineSamplesError = viewModel.urineSamplesErrorState.collectAsStateWithLifecycle().value
+    val urineSamplesErrorResId = viewModel.urineSamplesErrorResIdState.collectAsStateWithLifecycle().value
 
     Box(
         modifier = Modifier
@@ -82,7 +98,36 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            if (showAccountDetails && isLoggedIn) {
+            if (showUrineSamples) {
+                item {
+                    UrineSamplesContent(
+                        mode = urineSamplesMode,
+                        amountInput = urineAmountInput,
+                        noteInput = urineNoteInput,
+                        isSaving = isSavingUrineSample,
+                        isLoadingHistory = isLoadingUrineSamples,
+                        samples = urineSamples,
+                        historyErrorMessage = urineSamplesError
+                            ?: urineSamplesErrorResId?.let { stringResource(it) },
+                        onBackClick = {
+                            when (urineSamplesMode) {
+                                UrineSamplesMode.Main -> {
+                                    viewModel.closeUrineSamples()
+                                    showUrineSamples = false
+                                }
+                                else -> viewModel.openUrineSamples()
+                            }
+                        },
+                        onAddTodayClick = viewModel::openAddTodayUrineSample,
+                        onHistoryClick = viewModel::openUrineSamplesHistory,
+                        onAmountChange = viewModel::updateUrineAmount,
+                        onNoteChange = viewModel::updateUrineNote,
+                        onSaveClick = viewModel::saveTodayUrineSample,
+                        onClearSaveMessage = viewModel::clearUrineSaveMessage,
+                        onRetryHistory = viewModel::loadUrineSamples
+                    )
+                }
+            } else if (showAccountDetails && isLoggedIn) {
                 item {
                     AccountDetailsContent(
                         onDeleteAccountClick = viewModel::requestDeleteAccount,
@@ -97,7 +142,11 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                         isLoggedIn = isLoggedIn,
                         onAccountClick = { showAccountDetails = true },
                         onSignInClick = { context.startActivity(Router.login(context)) },
-                        onSignOutClick = viewModel::signOut
+                        onSignOutClick = viewModel::signOut,
+                        onUrineSamplesClick = {
+                            viewModel.openUrineSamples()
+                            showUrineSamples = true
+                        }
                     )
                 }
             }
@@ -132,6 +181,23 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 onDismiss = viewModel::clearDeleteAccountError
             )
         }
+
+        if (urineSaveSuccess || urineSaveError != null || urineSaveErrorResId != null) {
+            UrineSaveResultDialog(
+                isSuccess = urineSaveSuccess,
+                message = if (urineSaveSuccess) {
+                    stringResource(R.string.settings_urine_save_success)
+                } else {
+                    urineSaveError ?: stringResource(urineSaveErrorResId ?: R.string.settings_urine_save_failed)
+                },
+                onDismiss = {
+                    viewModel.clearUrineSaveMessage()
+                    if (urineSaveSuccess) {
+                        viewModel.openUrineSamples()
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -142,7 +208,8 @@ private fun SettingsMainContent(
     isLoggedIn: Boolean,
     onAccountClick: () -> Unit,
     onSignInClick: () -> Unit,
-    onSignOutClick: () -> Unit
+    onSignOutClick: () -> Unit,
+    onUrineSamplesClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
         SettingsTitle(title = stringResource(R.string.settings_title))
@@ -151,6 +218,7 @@ private fun SettingsMainContent(
         }
         AppInformationSection()
         NotificationSection()
+        HealthSettingsSection(onUrineSamplesClick = onUrineSamplesClick)
         PreferencesSection(
             isLoadingAccount = isLoadingAccount,
             accountContact = accountContact,
@@ -158,6 +226,219 @@ private fun SettingsMainContent(
             onSignInClick = onSignInClick,
             onSignOutClick = onSignOutClick
         )
+    }
+}
+
+@Composable
+private fun HealthSettingsSection(
+    onUrineSamplesClick: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SettingsSectionHeader(stringResource(R.string.settings_health_settings))
+        SettingsCard {
+            SettingsRow(
+                data = SettingsRowData(
+                    title = stringResource(R.string.settings_urine_samples),
+                    showChevron = true
+                ),
+                onClick = onUrineSamplesClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun UrineSamplesContent(
+    mode: UrineSamplesMode,
+    amountInput: String,
+    noteInput: String,
+    isSaving: Boolean,
+    isLoadingHistory: Boolean,
+    samples: List<UrineSampleUiModel>,
+    historyErrorMessage: String?,
+    onBackClick: () -> Unit,
+    onAddTodayClick: () -> Unit,
+    onHistoryClick: () -> Unit,
+    onAmountChange: (String) -> Unit,
+    onNoteChange: (String) -> Unit,
+    onSaveClick: () -> Unit,
+    onClearSaveMessage: () -> Unit,
+    onRetryHistory: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        AccountDetailsHeader(
+            title = when (mode) {
+                UrineSamplesMode.Main -> stringResource(R.string.settings_urine_samples)
+                UrineSamplesMode.AddToday -> stringResource(R.string.settings_add_today_urine_sample)
+                UrineSamplesMode.History -> stringResource(R.string.settings_view_urine_samples)
+            },
+            onBackClick = onBackClick
+        )
+        when (mode) {
+            UrineSamplesMode.Main -> UrineSamplesHome(
+                onAddTodayClick = onAddTodayClick,
+                onHistoryClick = onHistoryClick
+            )
+            UrineSamplesMode.AddToday -> AddTodayUrineSampleContent(
+                amountInput = amountInput,
+                noteInput = noteInput,
+                isSaving = isSaving,
+                onAmountChange = onAmountChange,
+                onNoteChange = onNoteChange,
+                onSaveClick = onSaveClick,
+                onClearSaveMessage = onClearSaveMessage
+            )
+            UrineSamplesMode.History -> UrineSamplesHistoryContent(
+                isLoading = isLoadingHistory,
+                samples = samples,
+                errorMessage = historyErrorMessage,
+                onRetry = onRetryHistory
+            )
+        }
+    }
+}
+
+@Composable
+private fun UrineSamplesHome(
+    onAddTodayClick: () -> Unit,
+    onHistoryClick: () -> Unit
+) {
+    SettingsCard {
+        SettingsRow(
+            data = SettingsRowData(
+                title = stringResource(R.string.settings_add_today_urine_sample),
+                showChevron = true
+            ),
+            onClick = onAddTodayClick
+        )
+        SettingsDivider()
+        SettingsRow(
+            data = SettingsRowData(
+                title = stringResource(R.string.settings_view_urine_samples),
+                showChevron = true
+            ),
+            onClick = onHistoryClick
+        )
+    }
+}
+
+@Composable
+private fun AddTodayUrineSampleContent(
+    amountInput: String,
+    noteInput: String,
+    isSaving: Boolean,
+    onAmountChange: (String) -> Unit,
+    onNoteChange: (String) -> Unit,
+    onSaveClick: () -> Unit,
+    onClearSaveMessage: () -> Unit
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        OutlinedTextField(
+            value = amountInput,
+            onValueChange = onAmountChange,
+            label = { Text(stringResource(R.string.settings_urine_amount_label)) },
+            suffix = { Text(stringResource(R.string.register_unit_ml)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = noteInput,
+            onValueChange = onNoteChange,
+            label = { Text(stringResource(R.string.settings_urine_note_label)) },
+            minLines = 3,
+            maxLines = 4,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Text(
+            text = stringResource(R.string.settings_urine_today_hint),
+            style = TextStyles.body,
+            color = TextMuted
+        )
+        PrimaryButton(
+            text = if (isSaving) {
+                stringResource(R.string.settings_urine_saving)
+            } else {
+                stringResource(R.string.settings_urine_save)
+            },
+            onClick = {
+                onClearSaveMessage()
+                onSaveClick()
+            },
+            enabled = !isSaving && amountInput.isNotBlank()
+        )
+    }
+}
+
+@Composable
+private fun UrineSamplesHistoryContent(
+    isLoading: Boolean,
+    samples: List<UrineSampleUiModel>,
+    errorMessage: String?,
+    onRetry: () -> Unit
+) {
+    when {
+        isLoading -> SettingsCard {
+            AccountLoadingRow()
+        }
+        !errorMessage.isNullOrBlank() -> SettingsCard {
+            Text(
+                text = errorMessage,
+                style = TextStyles.body,
+                color = DestructiveRed,
+                modifier = Modifier.padding(16.dp)
+            )
+            TextButton(onClick = onRetry) {
+                Text(text = stringResource(R.string.common_retry))
+            }
+        }
+        samples.isEmpty() -> SettingsCard {
+            Text(
+                text = stringResource(R.string.settings_urine_history_empty),
+                style = TextStyles.body,
+                color = TextMuted,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+        else -> SettingsCard {
+            samples.forEachIndexed { index, sample ->
+                UrineSampleRow(sample = sample)
+                if (index != samples.lastIndex) {
+                    SettingsDivider()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun UrineSampleRow(sample: UrineSampleUiModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.settings_urine_amount_value, sample.amountMl),
+            style = TextStyles.title,
+            color = TextDark
+        )
+        Text(
+            text = formatUrineSampleTime(sample.sampleTimeMillis),
+            style = TextStyles.body,
+            color = TextMuted
+        )
+        if (!sample.note.isNullOrBlank()) {
+            Text(
+                text = "${stringResource(R.string.settings_urine_note_label)}: ${sample.note}",
+                style = TextStyles.body,
+                color = TextMuted
+            )
+        }
     }
 }
 
@@ -205,6 +486,7 @@ private fun AccountEntrySection(
 
 @Composable
 private fun AccountDetailsHeader(
+    title: String? = null,
     onBackClick: () -> Unit
 ) {
     Box(
@@ -225,10 +507,11 @@ private fun AccountDetailsHeader(
             )
         }
         Text(
-            text = stringResource(R.string.settings_account),
+            text = title ?: stringResource(R.string.settings_account),
             style = TextStyles.titleMedium,
             color = TextDark,
             textAlign = TextAlign.Center,
+            maxLines = 2,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 64.dp, vertical = 8.dp)
@@ -513,6 +796,42 @@ private fun DeleteAccountErrorDialog(
     )
 }
 
+@Composable
+private fun UrineSaveResultDialog(
+    isSuccess: Boolean,
+    message: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(
+                    if (isSuccess) {
+                        R.string.settings_urine_save_success_title
+                    } else {
+                        R.string.settings_urine_save_failed_title
+                    }
+                ),
+                style = TextStyles.titleMedium,
+                color = TextDark
+            )
+        },
+        text = {
+            Text(
+                text = message,
+                style = TextStyles.body,
+                color = TextMuted
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.common_ok))
+            }
+        }
+    )
+}
+
 private data class SettingsRowData(
     val title: String,
     val value: String = "",
@@ -531,6 +850,12 @@ private fun lastSyncText(context: Context, lastWaterSyncAt: Long?): String {
     val timestamp = lastWaterSyncAt ?: return context.getString(R.string.settings_last_sync_never)
     val formatter = SimpleDateFormat("HH:mm dd/MM/yyyy", Locale.getDefault())
     return context.getString(R.string.settings_last_sync_at, formatter.format(Date(timestamp)))
+}
+
+private fun formatUrineSampleTime(timestamp: Long?): String {
+    if (timestamp == null) return ""
+    val formatter = SimpleDateFormat("HH:mm dd/MM/yyyy", Locale.getDefault())
+    return formatter.format(Date(timestamp))
 }
 
 private val PageBackground = Color(0xFFF2F2F7)

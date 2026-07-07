@@ -43,6 +43,7 @@ class HomeViewModel(
     val symptomsState = collectStateUI(HomeState::symptoms)
     val selectedSymptomState = collectStateUI(HomeState::selectedSymptom)
     val symptomNotesState = collectStateUI(HomeState::symptomNotes)
+    val showSymptomNotesErrorState = collectStateUI(HomeState::showSymptomNotesError)
     val isSymptomsLoadingState = collectStateUI(HomeState::isSymptomsLoading)
     val isSubmittingSymptomState = collectStateUI(HomeState::isSubmittingSymptom)
     val showSymptomSubmitSuccessToastState = collectStateUI(HomeState::showSymptomSubmitSuccessToast)
@@ -98,6 +99,10 @@ class HomeViewModel(
 
         waterTrackingRepository.observeAllEntries()
             .onEach { entries -> setState { copy(allWaterEntries = entries) } }
+            .launchIn(viewModelScope)
+
+        userProfileSharePref.observeDailyWaterGoalMl()
+            .onEach { goalMl -> setState { copy(dailyWaterGoalMl = goalMl) } }
             .launchIn(viewModelScope)
     }
 
@@ -161,21 +166,41 @@ class HomeViewModel(
             showSymptomSheet = false,
             selectedSymptom = null,
             symptomNotes = "",
+            showSymptomNotesError = false,
             isSubmittingSymptom = false
         )
     }
 
-    fun selectSymptom(symptom: String) = setState { copy(selectedSymptom = symptom) }
+    fun selectSymptom(symptom: String) = setState {
+        copy(
+            selectedSymptom = symptom,
+            showSymptomNotesError = symptom.isOtherSymptom() && symptomNotes.isBlank()
+        )
+    }
 
-    fun updateSymptomNotes(notes: String) = setState { copy(symptomNotes = notes) }
+    fun updateSymptomNotes(notes: String) = setState {
+        copy(
+            symptomNotes = notes,
+            showSymptomNotesError = false
+        )
+    }
 
     fun submitSymptomLog() {
         getState { state ->
             val symptom = state.selectedSymptom?.trim().orEmpty()
             val notes = state.symptomNotes.trim()
-            if (symptom.isBlank() || notes.isBlank() || state.isSubmittingSymptom) return@getState
+            if (symptom.isBlank() || state.isSubmittingSymptom) return@getState
+            if (symptom.isOtherSymptom() && notes.isBlank()) {
+                setState { copy(showSymptomNotesError = true) }
+                return@getState
+            }
 
-            setState { copy(isSubmittingSymptom = true) }
+            setState {
+                copy(
+                    isSubmittingSymptom = true,
+                    showSymptomNotesError = false
+                )
+            }
             viewModelScope.launch(Dispatchers.IO) {
                 val loggedAt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
                     .format(Date(System.currentTimeMillis()))
@@ -195,6 +220,7 @@ class HomeViewModel(
                             showSymptomSheet = false,
                             selectedSymptom = null,
                             symptomNotes = "",
+                            showSymptomNotesError = false,
                             showSymptomSubmitSuccessToast = true
                         )
                     }
@@ -240,6 +266,7 @@ class HomeViewModel(
                 symptoms = emptyList(),
                 selectedSymptom = null,
                 symptomNotes = "",
+                showSymptomNotesError = false,
                 isSymptomsLoading = false,
                 isSubmittingSymptom = false,
                 isHistorySyncing = false
@@ -316,6 +343,13 @@ class HomeViewModel(
             syncedId = id
         )
     }
+}
+
+private fun String.isOtherSymptom(): Boolean {
+    val normalized = trim().lowercase(Locale.ROOT)
+    return normalized.contains("other") ||
+        normalized.contains("khác") ||
+        normalized.contains("khac")
 }
 
 private fun String.extractMlValue(): Int {

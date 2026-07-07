@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -100,6 +101,7 @@ fun HomeScreen(
     val symptoms by viewModel.symptomsState.collectAsStateWithLifecycle()
     val selectedSymptom by viewModel.selectedSymptomState.collectAsStateWithLifecycle()
     val symptomNotes by viewModel.symptomNotesState.collectAsStateWithLifecycle()
+    val showSymptomNotesError by viewModel.showSymptomNotesErrorState.collectAsStateWithLifecycle()
     val isSymptomsLoading by viewModel.isSymptomsLoadingState.collectAsStateWithLifecycle()
     val isSubmittingSymptom by viewModel.isSubmittingSymptomState.collectAsStateWithLifecycle()
     val rolling7DayStats = buildLast7DayStats(dailyTotals)
@@ -236,6 +238,7 @@ fun HomeScreen(
                     symptoms = symptoms,
                     selectedSymptom = selectedSymptom,
                     notes = symptomNotes,
+                    showNotesError = showSymptomNotesError,
                     isSymptomsLoading = isSymptomsLoading,
                     isSubmitting = isSubmittingSymptom,
                     onCancel = viewModel::closeSymptomSheet,
@@ -780,6 +783,7 @@ private fun SymptomReportSheet(
     symptoms: List<String>,
     selectedSymptom: String?,
     notes: String,
+    showNotesError: Boolean,
     isSymptomsLoading: Boolean,
     isSubmitting: Boolean,
     onCancel: () -> Unit,
@@ -863,13 +867,23 @@ private fun SymptomReportSheet(
                 onValueChange = onNotesChange,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp),
+                    .heightIn(min = 110.dp),
                 placeholder = {
                     Text(
                         text = "Nhập chi tiết triệu chứng",
                         color = TextMuted,
                         style = TextStyles.body
                     )
+                },
+                isError = showNotesError,
+                supportingText = {
+                    if (showNotesError) {
+                        Text(
+                            text = "Vui lòng nhập ghi chú",
+                            color = Color.Red,
+                            style = TextStyles.body
+                        )
+                    }
                 }
             )
             Spacer(modifier = Modifier.height(14.dp))
