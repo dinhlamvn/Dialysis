@@ -67,7 +67,8 @@ fun WeightScreen(
                     initialWeightKg = initialWeightKg,
                     currentWeightKg = currentWeightKg,
                     progressKg = currentWeightKg - initialWeightKg,
-                    onEditInitialWeightClick = viewModel::openInitialWeightSheet
+                    onEditInitialWeightClick = viewModel::openInitialWeightSheet,
+                    onEditCurrentWeightClick = viewModel::openCurrentWeightSheet
                 )
             }
             item {

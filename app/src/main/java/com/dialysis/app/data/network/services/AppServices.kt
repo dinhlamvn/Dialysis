@@ -2,10 +2,13 @@ package com.dialysis.app.data.network.services
 
 import com.dialysis.app.data.network.request.WaterIntakeRequest
 import com.dialysis.app.data.network.request.SymptomLogRequest
+import com.dialysis.app.data.network.request.UrineLogRequest
 import com.dialysis.app.data.network.request.WeightInitialRequest
 import com.dialysis.app.data.network.request.WeightLogRequest
 import com.dialysis.app.data.network.response.ApiResponse
 import com.dialysis.app.data.network.response.LoginUser
+import com.dialysis.app.data.network.response.UrineHistoryItem
+import com.dialysis.app.data.network.response.UrineLogResponse
 import com.dialysis.app.data.network.response.WaterIntakeResponse
 import com.dialysis.app.data.network.response.WeightActionResponse
 import com.dialysis.app.data.network.response.WeightChartResponse
@@ -49,6 +52,14 @@ interface AppServices {
     suspend fun logSymptom(
         @Body request: SymptomLogRequest
     ): ApiResponse<Map<String, Any>?>
+
+    @POST("mobile/urine/log")
+    suspend fun logUrine(
+        @Body request: UrineLogRequest
+    ): ApiResponse<UrineLogResponse>
+
+    @GET("mobile/urine/history")
+    suspend fun getUrineHistory(): ApiResponse<List<UrineHistoryItem>>
 
     @PUT("mobile/weight/initial")
     suspend fun updateInitialWeight(
