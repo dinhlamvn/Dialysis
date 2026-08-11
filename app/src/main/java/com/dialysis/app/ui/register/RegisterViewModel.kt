@@ -23,7 +23,7 @@ class RegisterViewModel(
     val isRegisterLoadingState = collectStateUI(RegisterState::isRegisterLoading)
     val registerErrorState = collectStateUI(RegisterState::registerError)
 
-    fun updateUsername(value: String) = setState { copy(username = value) }
+    fun updateUsername(value: String) = setState { copy(username = value.withoutWhitespace()) }
 
     fun updateEmail(value: String) = setState { copy(email = value) }
 
@@ -56,9 +56,22 @@ class RegisterViewModel(
             }
 
             viewModelScope.launch(Dispatchers.IO) {
-                val username = state.username.trim()
+                val username = state.username.withoutWhitespace()
                 val email = state.email.trim()
                 val phone = state.phone.trim()
+                setState { copy(username = username) }
+                if (!username.isAlphanumericUsername()) {
+                    setState {
+                        copy(
+                            username = username,
+                            isRegisterLoading = false,
+                            registerError = USERNAME_ALPHANUMERIC_ONLY_MESSAGE,
+                            isRegisterSuccess = false
+                        )
+                    }
+                    return@launch
+                }
+
                 val request = RegisterRequest(
                     username = username,
                     email = email,
@@ -90,5 +103,16 @@ class RegisterViewModel(
                 }
             }
         }
+    }
+
+    private fun String.withoutWhitespace(): String = filterNot { it.isWhitespace() }
+
+    private fun String.isAlphanumericUsername(): Boolean {
+        return length in 3..50 && all { it in 'A'..'Z' || it in 'a'..'z' || it in '0'..'9' }
+    }
+
+    private companion object {
+        const val USERNAME_ALPHANUMERIC_ONLY_MESSAGE =
+            "Tên đăng nhập chỉ được chứa chữ cái và số, không có khoảng trắng."
     }
 }
