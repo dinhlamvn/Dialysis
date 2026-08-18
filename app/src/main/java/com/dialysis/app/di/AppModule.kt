@@ -75,7 +75,7 @@ val RegisterModule = module {
 }
 
 val LoginModule = module {
-    viewModel { LoginViewModel(get(), get(), get()) }
+    viewModel { LoginViewModel(get(), get(), get(), get()) }
     viewModel { ForgotPasswordViewModel(get()) }
     viewModel { ChangePasswordViewModel(get()) }
 }

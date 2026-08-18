@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.dialysis.app.R
 import com.dialysis.app.ui.drink.DrinkCatalog
 import com.dialysis.app.ui.components.TextStyles
@@ -34,26 +35,24 @@ private val PageBackground = Color(0xFFFFFFFF)
 private val CardBackground = Color(0xFFE9E9EE)
 private val TextDark = Color(0xFF111111)
 private val HandleColor = Color(0xFF4E4E59)
-private val IconFrame = Color(0xFFF8F8FB)
 
 @Composable
 fun DrinkListScreen(
     onDrinkClick: (String) -> Unit = {}
 ) {
     val items = listOf(
-        stringResource(R.string.drink_water),
         "Nước lọc",
         "Nước trà / chè",
-        stringResource(R.string.drink_coffee),
-        stringResource(R.string.drink_soda),
-        stringResource(R.string.drink_fruit_water),
-        stringResource(R.string.drink_smoothie),
+        "Cà phê",
+        "Nước ngọt / soda",
+        "Nước ép",
+        "Sinh tố",
         "Bia / rượu",
-        stringResource(R.string.drink_milk),
-        stringResource(R.string.drink_yogurt),
+        "Sữa",
+        "Sữa chua",
         "Cháo",
         "Súp / canh",
-        stringResource(R.string.drink_other)
+        "Khác"
     ).map { name ->
         DrinkItemData(
             title = name,
@@ -67,15 +66,6 @@ fun DrinkListScreen(
             .background(PageBackground)
             .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .size(width = 62.dp, height = 6.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(HandleColor)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         HeaderBar()
 
@@ -141,28 +131,18 @@ private fun DrinkCard(item: DrinkItemData) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Box(
+            val visual = DrinkCatalog.resolve(item.title)
+            Text(
+                text = visual.icon,
+                color = visual.iconTextColor,
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(IconFrame),
-                contentAlignment = Alignment.Center
-            ) {
-                val visual = DrinkCatalog.resolve(item.title)
-                Box(
-                    modifier = Modifier
-                        .size(34.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(visual.tileGradient),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = visual.icon,
-                        color = visual.iconTextColor,
-                        style = TextStyles.bodyMedium
-                    )
-                }
-            }
+                    .size(48.dp),
+                style = TextStyles.bodyMedium.copy(
+                    fontSize = 40.sp,
+                    lineHeight = 48.sp
+                ),
+                textAlign = TextAlign.Center
+            )
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = item.title,
