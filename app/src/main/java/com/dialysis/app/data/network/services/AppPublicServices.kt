@@ -1,13 +1,11 @@
 package com.dialysis.app.data.network.services
 
-import com.dialysis.app.data.network.request.CalculateWaterTargetRequest
 import com.dialysis.app.data.network.request.ChangePasswordRequest
 import com.dialysis.app.data.network.request.ForgotPasswordRequest
 import com.dialysis.app.data.network.request.LoginRequest
 import com.dialysis.app.data.network.request.RegisterRequest
 import com.dialysis.app.data.network.request.VerifyOtpRequest
 import com.dialysis.app.data.network.response.ApiResponse
-import com.dialysis.app.data.network.response.CalculateWaterTargetResponse
 import com.dialysis.app.data.network.response.ForgotPasswordResponse
 import com.dialysis.app.data.network.response.LoginResponse
 import com.dialysis.app.data.network.response.RegisterResponse
@@ -40,8 +38,4 @@ interface AppPublicServices {
         @Body request: ChangePasswordRequest
     ): ApiResponse<Map<String, Any>?>
 
-    @POST("mobile/water/calculate")
-    suspend fun calculateDailyWaterTarget(
-        @Body request: CalculateWaterTargetRequest
-    ): ApiResponse<CalculateWaterTargetResponse>
 }

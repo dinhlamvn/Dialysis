@@ -33,6 +33,11 @@ object Router {
         return Intent(context, InfoActivity::class.java)
     }
 
+    fun infoAfterAuth(context: Context): Intent {
+        return Intent(context, InfoActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    }
+
     fun home(context: Context): Intent {
         return Intent(context, HomeActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)

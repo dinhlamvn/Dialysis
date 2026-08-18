@@ -5,6 +5,7 @@ import com.dialysis.app.data.network.request.SymptomLogRequest
 import com.dialysis.app.data.network.request.UrineLogRequest
 import com.dialysis.app.data.network.request.WeightInitialRequest
 import com.dialysis.app.data.network.request.WeightLogRequest
+import com.dialysis.app.data.network.request.ProfileUpdateRequest
 import com.dialysis.app.data.network.response.ApiResponse
 import com.dialysis.app.data.network.response.LoginUser
 import com.dialysis.app.data.network.response.UrineHistoryItem
@@ -29,6 +30,11 @@ interface AppServices {
 
     @DELETE("mobile/auth/account")
     suspend fun deleteAccount(): ApiResponse<Map<String, Any>?>
+
+    @PUT("mobile/auth/profile")
+    suspend fun updateProfile(
+        @Body request: ProfileUpdateRequest
+    ): ApiResponse<LoginUser?>
 
     @POST("mobile/water/intake")
     suspend fun syncWaterIntake(

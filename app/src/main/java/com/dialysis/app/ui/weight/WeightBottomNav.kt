@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.TextStyles
 
@@ -66,6 +67,10 @@ private fun WeightFloatingAddButton() {
         colors = ButtonDefaults.buttonColors(containerColor = WeightAccentBlue),
         contentPadding = PaddingValues(0.dp)
     ) {
-        Text(text = "+", color = WeightWhite, style = TextStyles.titleMedium)
+        Text(
+            text = "+",
+            color = WeightWhite,
+            style = TextStyles.titleMedium.copy(fontSize = 22.sp)
+        )
     }
 }

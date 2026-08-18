@@ -7,6 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.dialysis.app.base.BaseActivity
 import com.dialysis.app.router.Router
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -26,12 +27,21 @@ class LoginActivity : BaseActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.flowOf(LoginState::isLoginSuccess)
-                        .collect { isLoginSuccess ->
+                    combine(
+                        viewModel.flowOf(LoginState::isLoginSuccess),
+                        viewModel.flowOf(LoginState::requiresInfoCompletion)
+                    ) { isLoginSuccess, requiresInfoCompletion ->
+                        isLoginSuccess to requiresInfoCompletion
+                    }.collect { (isLoginSuccess, requiresInfoCompletion) ->
                             if (isLoginSuccess) {
-                                startActivity(Router.homeAfterAuth(this@LoginActivity))
+                                val destination = if (requiresInfoCompletion) {
+                                    Router.infoAfterAuth(this@LoginActivity)
+                                } else {
+                                    Router.homeAfterAuth(this@LoginActivity)
+                                }
+                                startActivity(destination)
                                 finish()
-                            }
+                                }
                         }
                 }
             }

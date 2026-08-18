@@ -62,7 +62,7 @@
     <string name="register_unit_ml">ml</string>
     <string name="register_unit_age">tuổi</string>
     <string name="register_unit_year">năm</string>
-    <string name="home_title">Sống\nvà uống nước!</string>
+    <string name="home_title">Hãy kiểm soát nước để bảo vệ\nsự sống của bạn</string>
     <string name="home_progress_value">34%</string>
     <string name="home_progress_detail">415ml của 1.2l</string>
     <string name="home_drinks_title">Đồ uống hôm nay đã được thêm vào</string>

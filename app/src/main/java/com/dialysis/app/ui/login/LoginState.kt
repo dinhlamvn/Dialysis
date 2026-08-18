@@ -9,4 +9,5 @@ data class LoginState(
     val isLoginLoading: Boolean = false,
     val loginError: String? = null,
     val isLoginSuccess: Boolean = false,
+    val requiresInfoCompletion: Boolean = false,
 ) : BaseState
