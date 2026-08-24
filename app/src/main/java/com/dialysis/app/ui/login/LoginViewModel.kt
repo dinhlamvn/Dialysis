@@ -5,6 +5,7 @@ import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.data.network.request.LoginRequest
 import com.dialysis.app.sharepref.AccountSharePref
+import com.dialysis.app.sharepref.UserProfileSharePref
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -12,7 +13,8 @@ import kotlinx.coroutines.launch
 class LoginViewModel(
     private val accountSharePref: AccountSharePref,
     private val networkManager: NetworkManager,
-    private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler
+    private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler,
+    private val userProfileSharePref: UserProfileSharePref
 ) : BaseViewModel<LoginState>(LoginState()) {
 
     val identifierState = collectStateUI(LoginState::identifier)
@@ -20,6 +22,7 @@ class LoginViewModel(
     val isPasswordVisibleState = collectStateUI(LoginState::isPasswordVisible)
     val isLoginLoadingState = collectStateUI(LoginState::isLoginLoading)
     val loginErrorState = collectStateUI(LoginState::loginError)
+    val requiresInfoCompletionState = collectStateUI(LoginState::requiresInfoCompletion)
 
     fun updateIdentifier(value: String) = setState { copy(identifier = value) }
 
@@ -60,12 +63,22 @@ class LoginViewModel(
                     val data = result.getOrNull() ?: return@launch
                     accountSharePref.setToken(data.token)
                     accountSharePref.setTokenType(data.tokenType)
+                    data.user.initialWeight?.toFloat()?.takeIf { it > 0f }?.let {
+                        userProfileSharePref.saveInitialWeightKg(it)
+                    }
+                    data.user.dailyWaterTarget?.takeIf { it > 0 }?.let {
+                        userProfileSharePref.saveDailyWaterGoalMl(it)
+                    }
+                    val requiresInfoCompletion = data.user.weight == null ||
+                        data.user.gender.isNullOrBlank() ||
+                        data.user.age == null
                     waterIntakeSyncScheduler.enqueue()
                     setState {
                         copy(
                             isLoginLoading = false,
                             loginError = null,
-                            isLoginSuccess = true
+                            isLoginSuccess = true,
+                            requiresInfoCompletion = requiresInfoCompletion
                         )
                     }
                 } else {

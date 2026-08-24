@@ -14,23 +14,23 @@ data class DrinkVisual(
 
 object DrinkCatalog {
     val items = listOf(
-        DrinkVisual("nuoc", "Nước", "🥛", Brush.verticalGradient(listOf(Color(0xFF66D6FF), Color(0xFF1D9BF0)))),
-        DrinkVisual("nuoc loc", "Nước lọc", "🥛", Brush.verticalGradient(listOf(Color(0xFF66D6FF), Color(0xFF1D9BF0)))),
+        DrinkVisual("nuoc loc", "Nước lọc", "💧", Brush.verticalGradient(listOf(Color(0xFF66D6FF), Color(0xFF1D9BF0)))),
         DrinkVisual("tra", "Trà", "🍵", Brush.verticalGradient(listOf(Color(0xFFFFD766), Color(0xFFF1A500)))),
         DrinkVisual("nuoc tra / che", "Nước trà / chè", "🍵", Brush.verticalGradient(listOf(Color(0xFFFFD766), Color(0xFFF1A500)))),
         DrinkVisual("ca phe", "Cà phê", "☕", Brush.verticalGradient(listOf(Color(0xFF8B5A3C), Color(0xFF5E3725)))),
         DrinkVisual("soda", "Nước ngọt", "🥤", Brush.verticalGradient(listOf(Color(0xFFA37EFF), Color(0xFF7E57C2)))),
+        DrinkVisual("nuoc ep", "Nước ép", "🧃", Brush.verticalGradient(listOf(Color(0xFFFFA24A), Color(0xFFFF6A00)))),
         DrinkVisual("nuoc hoa qua", "Nước hoa quả", "🧃", Brush.verticalGradient(listOf(Color(0xFFFFA24A), Color(0xFFFF6A00)))),
         DrinkVisual("sinh to", "Sinh tố", "🍹", Brush.verticalGradient(listOf(Color(0xFFFFD15A), Color(0xFFF3A51E)))),
         DrinkVisual("bia", "Bia", "🍺", Brush.verticalGradient(listOf(Color(0xFFD98A2B), Color(0xFF9E5A16)))),
         DrinkVisual("bia / ruou", "Bia / rượu", "🍺", Brush.verticalGradient(listOf(Color(0xFFD98A2B), Color(0xFF9E5A16)))),
         DrinkVisual("sua", "Sữa", "🥛", Brush.verticalGradient(listOf(Color(0xFFFFFFFF), Color(0xFFE7ECF4))), iconTextColor = Color(0xFFB9BCC4)),
-        DrinkVisual("sua chua", "Sữa chua", "☕", Brush.verticalGradient(listOf(Color(0xFF8E6C5A), Color(0xFF64493D)))),
-        DrinkVisual("chao", "Cháo", "🍵", Brush.verticalGradient(listOf(Color(0xFFFFD766), Color(0xFFF1A500)))),
-        DrinkVisual("sup", "Súp", "🍵", Brush.verticalGradient(listOf(Color(0xFFFFD766), Color(0xFFF1A500)))),
-        DrinkVisual("sup / canh", "Súp / canh", "🍵", Brush.verticalGradient(listOf(Color(0xFFFFD766), Color(0xFFF1A500)))),
+        DrinkVisual("sua chua", "Sữa chua", "🥣", Brush.verticalGradient(listOf(Color(0xFF8E6C5A), Color(0xFF64493D)))),
+        DrinkVisual("chao", "Cháo", "🍚", Brush.verticalGradient(listOf(Color(0xFFFFD766), Color(0xFFF1A500)))),
+        DrinkVisual("sup", "Súp", "🍲", Brush.verticalGradient(listOf(Color(0xFFFFD766), Color(0xFFF1A500)))),
+        DrinkVisual("sup / canh", "Súp / canh", "🍲", Brush.verticalGradient(listOf(Color(0xFFFFD766), Color(0xFFF1A500)))),
         DrinkVisual("nuoc dua", "Nước dừa", "🥥", Brush.verticalGradient(listOf(Color(0xFF7FD9A6), Color(0xFF31A36A)))),
-        DrinkVisual("khac", "Khác", "?", Brush.verticalGradient(listOf(Color(0xFFE3E8EF), Color(0xFFC5CDD8))), iconTextColor = Color(0xFF7A7F89))
+        DrinkVisual("khac", "Khác", "🥤", Brush.verticalGradient(listOf(Color(0xFFE3E8EF), Color(0xFFC5CDD8))), iconTextColor = Color(0xFF7A7F89))
     )
 
     fun resolve(name: String): DrinkVisual {
@@ -102,6 +102,8 @@ object DrinkCatalog {
             .replace("ỷ", "y")
             .replace("ỹ", "y")
             .replace("ỵ", "y")
-        return items.firstOrNull { normalized.contains(it.key) } ?: items.last()
+        return items.firstOrNull { normalized == it.key }
+            ?: items.firstOrNull { normalized.contains(it.key) }
+            ?: items.last()
     }
 }

@@ -105,7 +105,7 @@ class WeightViewModel(
     }
 
     fun refreshLocalData() {
-        val initialWeight = userProfileSharePref.getInitialWeightKg().toFloat()
+        val initialWeight = userProfileSharePref.getInitialWeightKgFloat()
         val goalWeight = userProfileSharePref.getWeightGoalKg(AppGoals.WEIGHT_GOAL_KG.toFloat())
         setState {
             copy(
@@ -132,7 +132,7 @@ class WeightViewModel(
     }
 
     private fun initializeStoredWeights() {
-        val initialWeight = userProfileSharePref.getInitialWeightKg().toFloat()
+        val initialWeight = userProfileSharePref.getInitialWeightKgFloat()
         val goalWeight = userProfileSharePref.getWeightGoalKg(AppGoals.WEIGHT_GOAL_KG.toFloat())
         setState {
             copy(
@@ -148,7 +148,7 @@ class WeightViewModel(
         weightTrackingRepository.observeLatestEntry()
             .onEach { latest ->
                 val latestWeight =
-                    latest?.weightKg ?: userProfileSharePref.getInitialWeightKg().toFloat()
+                    latest?.weightKg ?: userProfileSharePref.getInitialWeightKgFloat()
                 setState {
                     copy(
                         currentWeightKg = if (latestWeight > 0f) latestWeight else 0f,

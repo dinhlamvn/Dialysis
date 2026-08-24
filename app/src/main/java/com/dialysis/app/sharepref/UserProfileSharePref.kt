@@ -46,13 +46,25 @@ class UserProfileSharePref(
     }
 
     fun saveInitialWeightKg(weightKg: Int) {
-        put(KEY_INITIAL_WEIGHT_KG, weightKg)
+        saveInitialWeightKg(weightKg.toFloat())
+    }
+
+    fun saveInitialWeightKg(weightKg: Float) {
+        if (weightKg > 0f) {
+            put(KEY_INITIAL_WEIGHT_KG, weightKg)
+        }
     }
 
     fun getInitialWeightKg(): Int {
-        val stored = get(KEY_INITIAL_WEIGHT_KG, 0)
-        if (stored > 0) return stored
+        val stored = getInitialWeightKgFloat()
+        if (stored > 0f) return stored.toInt()
         return getProfile()?.weight ?: 0
+    }
+
+    fun getInitialWeightKgFloat(): Float {
+        val stored = sharePref.all[KEY_INITIAL_WEIGHT_KG]
+        if (stored is Number && stored.toFloat() > 0f) return stored.toFloat()
+        return getProfile()?.weight?.toFloat() ?: 0f
     }
 
     fun saveWeightGoalKg(weightKg: Float) {

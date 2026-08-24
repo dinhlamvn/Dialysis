@@ -23,11 +23,11 @@ class RegisterViewModel(
     val isRegisterLoadingState = collectStateUI(RegisterState::isRegisterLoading)
     val registerErrorState = collectStateUI(RegisterState::registerError)
 
-    fun updateUsername(value: String) = setState { copy(username = value) }
+    fun updateUsername(value: String) = setState { copy(username = value.withoutWhitespace()) }
 
-    fun updateEmail(value: String) = setState { copy(email = value) }
+    fun updateEmail(value: String) = setState { copy(email = value.withoutWhitespace()) }
 
-    fun updatePhone(value: String) = setState { copy(phone = value) }
+    fun updatePhone(value: String) = setState { copy(phone = value.withoutWhitespace()) }
 
     fun updateName(value: String) = setState { copy(name = value) }
 
@@ -56,9 +56,9 @@ class RegisterViewModel(
             }
 
             viewModelScope.launch(Dispatchers.IO) {
-                val username = state.username.trim()
-                val email = state.email.trim()
-                val phone = state.phone.trim()
+                val username = state.username.withoutWhitespace()
+                val email = state.email.withoutWhitespace()
+                val phone = state.phone.withoutWhitespace()
                 val request = RegisterRequest(
                     username = username,
                     email = email,
@@ -92,3 +92,5 @@ class RegisterViewModel(
         }
     }
 }
+
+private fun String.withoutWhitespace(): String = filterNot(Char::isWhitespace)

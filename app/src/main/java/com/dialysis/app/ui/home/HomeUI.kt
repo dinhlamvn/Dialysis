@@ -491,13 +491,18 @@ private fun SmallDrinkCard(
                 Text(
                     text = title,
                     color = AccentBlue,
-                    style = TextStyles.titleMedium
+                    modifier = Modifier.size(48.dp),
+                    style = TextStyles.titleMedium.copy(
+                        fontSize = 40.sp,
+                        lineHeight = 48.sp
+                    ),
+                    textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = subtitle,
                     color = TextMuted,
-                    style = TextStyles.caption
+                    style = TextStyles.caption.copy(fontSize = 13.sp)
                 )
             }
         }
@@ -520,27 +525,16 @@ private fun DrinkCard(amount: String, name: String, time: String) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFF8F8FB)),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(visual.tileGradient),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = visual.icon,
-                        color = visual.iconTextColor,
-                        style = TextStyles.caption
-                    )
-                }
-            }
+            Text(
+                text = visual.icon,
+                color = visual.iconTextColor,
+                modifier = Modifier.size(48.dp),
+                style = TextStyles.bodyMedium.copy(
+                    fontSize = 40.sp,
+                    lineHeight = 48.sp
+                ),
+                textAlign = TextAlign.Center
+            )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = amount,

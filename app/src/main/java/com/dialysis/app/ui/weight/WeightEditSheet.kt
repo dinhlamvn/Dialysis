@@ -20,6 +20,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.roundToInt
 
 @Composable
 internal fun WeightEditSheet(
@@ -57,8 +58,9 @@ internal fun WeightEditSheet(
         Spacer(modifier = Modifier.height(16.dp))
         Slider(
             value = draftWeightKg,
-            onValueChange = { onWeightChange((it * 10f).toInt() / 10f) },
-            valueRange = 25f..200f
+            onValueChange = { onWeightChange((it * 2f).roundToInt() / 2f) },
+            valueRange = 25f..200f,
+            steps = ((200f - 25f) / 0.5f).toInt() - 1
         )
         Spacer(modifier = Modifier.height(220.dp))
     }

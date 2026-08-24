@@ -11,7 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,11 +59,13 @@ private fun WeightHistoryItem(
             }
             Text("${formatWeightValue(row.weightKg)} kg", style = TextStyle(fontSize = 14.sp), color = WeightAccentBlue)
             Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                "🗑",
-                style = TextStyle(fontSize = 20.sp),
-                color = WeightNegativeRed,
-                modifier = Modifier.clickable { onDelete(row) }
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Xóa bản ghi cân nặng",
+                tint = WeightNegativeRed,
+                modifier = Modifier
+                    .clickable { onDelete(row) }
+                    .padding(2.dp)
             )
         }
     }
