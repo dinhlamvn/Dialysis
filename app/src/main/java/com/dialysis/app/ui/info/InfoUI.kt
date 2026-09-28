@@ -72,7 +72,7 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) 
     val age by viewModel.ageState.collectAsStateWithLifecycle()
     val dialysisYear by viewModel.dialysisStartYearState.collectAsStateWithLifecycle()
     val urinePerDay by viewModel.dailyUrineMlState.collectAsStateWithLifecycle()
-    val isCalculatingGoal by viewModel.isCalculatingGoalState.collectAsStateWithLifecycle()
+    
 
     val weightValues = remember { (30..150).toList() }
     val heightValues = remember { (100..250).toList() }
@@ -160,7 +160,7 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) 
                     stringResource(R.string.register_next)
                 },
                 onClick = {
-                    if (isCalculatingGoal) return@PrimaryButton
+                
                     if (currentStep < TotalSteps - 1) {
                         viewModel.nextStep()
                     } else {
@@ -173,9 +173,7 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) 
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        if (isCalculatingGoal) {
-            Loading()
-        }
+        
     }
 }
 

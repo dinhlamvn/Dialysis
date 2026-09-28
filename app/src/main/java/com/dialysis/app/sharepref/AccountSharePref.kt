@@ -11,6 +11,7 @@ class AccountSharePref(context: Context) : SharePref(context, "account_pref") {
         private const val KEY_TOKEN = "token"
         private const val KEY_TOKEN_TYPE = "token_type"
         private const val KEY_LAST_WATER_SYNC_AT = "last_water_sync_at"
+        private const val KEY_HAS_LOGGED_IN = "has_logged_in"
     }
 
     fun setToken(token: String) {
@@ -55,5 +56,14 @@ class AccountSharePref(context: Context) : SharePref(context, "account_pref") {
         remove(KEY_TOKEN)
         remove(KEY_TOKEN_TYPE)
         remove(KEY_LAST_WATER_SYNC_AT)
+        remove(KEY_HAS_LOGGED_IN)
+    }
+
+    fun setHasLoggedIn(value: Boolean) {
+        put(KEY_HAS_LOGGED_IN, value)
+    }
+
+    fun hasLoggedIn(): Boolean {
+        return get(KEY_HAS_LOGGED_IN, false)
     }
 }

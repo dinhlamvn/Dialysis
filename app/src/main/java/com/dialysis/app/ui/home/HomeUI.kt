@@ -312,7 +312,7 @@ private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
                             )
                         )
                         Text(
-                            text = "${todayTotalMl}ml của ${goalMl / 1000f}l",
+                            text = "${todayTotalMl}ml của ${goalMl / 1000f}lít",
                             color = Color.White.copy(alpha = 0.8f),
                             style = TextStyles.body.copy(fontSize = 15.sp)
                         )
