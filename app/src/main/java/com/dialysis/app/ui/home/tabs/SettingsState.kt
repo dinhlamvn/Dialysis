@@ -24,6 +24,11 @@ data class SettingsState(
     val urineSamples: List<UrineSampleUiModel> = emptyList(),
     val urineSamplesError: String? = null,
     @param:StringRes val urineSamplesErrorResId: Int? = null
+    ,
+    val isSyncingWater: Boolean = false,
+    val syncWaterSuccess: Boolean = false,
+    val syncWaterError: String? = null,
+    @param:StringRes val syncWaterErrorResId: Int? = null
 ) : BaseState
 
 enum class UrineSamplesMode {

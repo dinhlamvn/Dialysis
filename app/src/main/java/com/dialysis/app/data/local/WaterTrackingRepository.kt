@@ -92,6 +92,10 @@ class WaterTrackingRepository(
         return waterEntryDao.getUnsyncedEntries()
     }
 
+    suspend fun getUnsyncedEntriesBetween(startMillis: Long, endMillis: Long): List<WaterEntryEntity> {
+        return waterEntryDao.getUnsyncedEntriesBetween(startMillis, endMillis)
+    }
+
     suspend fun getSyncedEntries(): List<WaterEntryEntity> {
         return waterEntryDao.getSyncedEntries()
     }

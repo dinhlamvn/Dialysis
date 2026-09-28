@@ -13,6 +13,7 @@ import com.dialysis.app.domain.auth.RequestPasswordResetOtpUseCase
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
+import com.dialysis.app.sync.UrineSyncScheduler
 import com.dialysis.app.ui.changepassword.ChangePasswordViewModel
 import com.dialysis.app.ui.daily.DailyReportViewModel
 import com.dialysis.app.ui.drink.create.CreateDrinkViewModel
@@ -62,6 +63,7 @@ val appModule = module {
     single { get<AppDatabase>().weightEntryDao() }
     single { get<AppDatabase>().pendingWaterDeleteDao() }
     single { WaterIntakeSyncScheduler(androidContext()) }
+    single { UrineSyncScheduler(androidContext()) }
     single { WaterTrackingRepository(get(), get()) }
     single { WeightTrackingRepository(get()) }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
@@ -75,7 +77,7 @@ val RegisterModule = module {
 }
 
 val LoginModule = module {
-    viewModel { LoginViewModel(get(), get(), get(), get()) }
+    viewModel { LoginViewModel(get(), get(), get(), get(), get()) }
     viewModel { ForgotPasswordViewModel(get()) }
     viewModel { ChangePasswordViewModel(get()) }
 }
@@ -86,7 +88,7 @@ val CreateDrinkModule = module {
 
 val HomeModule = module {
     viewModel { HomeViewModel(get(), get(), get(), get(), get()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
 }
 
 val DailyReportModule = module {
