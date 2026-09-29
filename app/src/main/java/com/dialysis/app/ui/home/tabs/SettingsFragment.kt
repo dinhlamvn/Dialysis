@@ -36,6 +36,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardType
@@ -586,15 +589,50 @@ private fun AccountDeleteSection(
 
 @Composable
 private fun AppInformationSection() {
-    SettingsSection(
-        title = stringResource(R.string.settings_app_information),
-        rows = listOf(
-            SettingsRowData(
-                title = stringResource(R.string.settings_version),
-                value = normalizedVersion(BuildConfig.VERSION_NAME)
+    val context = LocalContext.current
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SettingsSectionHeader(stringResource(R.string.settings_app_information))
+        SettingsCard {
+            SettingsRow(
+                data = SettingsRowData(
+                    title = stringResource(R.string.settings_version),
+                    value = normalizedVersion(BuildConfig.VERSION_NAME)
+                )
             )
-        )
-    )
+            SettingsDivider()
+            SettingsRow(
+                data = SettingsRowData(
+                    title = stringResource(R.string.settings_terms),
+                    showChevron = true
+                ),
+                onClick = {
+                    context.startActivity(
+                        Router.webView(
+                            context,
+                            "https://dialysis-intake-app.io.vn/terms.html",
+                            context.getString(R.string.settings_terms)
+                        )
+                    )
+                }
+            )
+            SettingsDivider()
+            SettingsRow(
+                data = SettingsRowData(
+                    title = stringResource(R.string.settings_privacy),
+                    showChevron = true
+                ),
+                onClick = {
+                    context.startActivity(
+                        Router.webView(
+                            context,
+                            "https://dialysis-intake-app.io.vn/privacy.html",
+                            context.getString(R.string.settings_privacy)
+                        )
+                    )
+                }
+            )
+        }
+    }
 }
 
 @Composable
@@ -886,7 +924,7 @@ private fun SyncWaterDialog(
     onSyncWeek: () -> Unit,
     onSyncMonth: () -> Unit
 ) {
-    var selected by rememberSaveable { mutableStateOf(0) }
+    var selected by rememberSaveable { mutableStateOf(-1) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -894,19 +932,60 @@ private fun SyncWaterDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SettingsRow(data = SettingsRowData(title = stringResource(R.string.settings_sync_water_today), showChevron = false), onClick = { selected = 0 })
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { selected = if (selected == 0) -1 else 0 }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = stringResource(R.string.settings_sync_water_today), style = TextStyles.body, color = TextDark)
+                    Spacer(modifier = Modifier.weight(1f))
+                    if (selected == 0) {
+                        Icon(imageVector = Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+                    }
+                }
                 SettingsDivider()
-                SettingsRow(data = SettingsRowData(title = stringResource(R.string.settings_sync_water_week), showChevron = false), onClick = { selected = 1 })
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { selected = if (selected == 1) -1 else 1 }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = stringResource(R.string.settings_sync_water_week), style = TextStyles.body, color = TextDark)
+                    Spacer(modifier = Modifier.weight(1f))
+                    if (selected == 1) {
+                        Icon(imageVector = Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+                    }
+                }
                 SettingsDivider()
-                SettingsRow(data = SettingsRowData(title = stringResource(R.string.settings_sync_water_month), showChevron = false), onClick = { selected = 2 })
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { selected = if (selected == 2) -1 else 2 }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = stringResource(R.string.settings_sync_water_month), style = TextStyles.body, color = TextDark)
+                    Spacer(modifier = Modifier.weight(1f))
+                    if (selected == 2) {
+                        Icon(imageVector = Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+                    }
+                }
+
             }
         },
         confirmButton = {
             TextButton(onClick = {
-                when (selected) {
-                    0 -> onSyncToday()
-                    1 -> onSyncWeek()
-                    else -> onSyncMonth()
+                if (selected == -1) {
+                    onDismiss()
+                } else {
+                    when (selected) {
+                        0 -> onSyncToday()
+                        1 -> onSyncWeek()
+                        else -> onSyncMonth()
+                    }
                 }
             }, enabled = !isRunning) {
                 if (isRunning) {
@@ -914,7 +993,7 @@ private fun SyncWaterDialog(
                     Spacer(modifier = Modifier.size(8.dp))
                     Text(text = stringResource(R.string.settings_sync_water_running))
                 } else {
-                    Text(text = stringResource(R.string.common_ok))
+                    Text(text = "Ok")
                 }
             }
         },
