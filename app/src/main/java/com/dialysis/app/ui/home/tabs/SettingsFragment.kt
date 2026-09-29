@@ -36,6 +36,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardType
@@ -69,6 +72,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     val context = LocalContext.current
     var showAccountDetails by rememberSaveable { mutableStateOf(false) }
     var showUrineSamples by rememberSaveable { mutableStateOf(false) }
+    var showSyncWaterDialog by rememberSaveable { mutableStateOf(false) }
     val isLoadingAccount = viewModel.isLoadingAccountState.collectAsStateWithLifecycle().value
     val accountContact = viewModel.accountContactState.collectAsStateWithLifecycle().value
     val isLoggedIn = viewModel.isLoggedInState.collectAsStateWithLifecycle().value
@@ -88,6 +92,10 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     val urineSamples = viewModel.urineSamplesState.collectAsStateWithLifecycle().value
     val urineSamplesError = viewModel.urineSamplesErrorState.collectAsStateWithLifecycle().value
     val urineSamplesErrorResId = viewModel.urineSamplesErrorResIdState.collectAsStateWithLifecycle().value
+    val isSyncingWater = viewModel.isSyncingWaterState.collectAsStateWithLifecycle().value
+    val syncWaterSuccess = viewModel.syncWaterSuccessState.collectAsStateWithLifecycle().value
+    val syncWaterError = viewModel.syncWaterErrorState.collectAsStateWithLifecycle().value
+    val syncWaterErrorResId = viewModel.syncWaterErrorResIdState.collectAsStateWithLifecycle().value
 
     Box(
         modifier = Modifier
@@ -146,6 +154,9 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                         onUrineSamplesClick = {
                             viewModel.openUrineSamples()
                             showUrineSamples = true
+                        },
+                        onSyncWaterClick = {
+                            showSyncWaterDialog = true
                         }
                     )
                 }
@@ -171,6 +182,34 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 isDeleting = isDeletingAccount,
                 onDismiss = viewModel::dismissDeleteAccountConfirm,
                 onConfirm = viewModel::confirmDeleteAccount
+            )
+        }
+        if (showSyncWaterDialog) {
+            SyncWaterDialog(
+                isRunning = isSyncingWater,
+                onDismiss = { showSyncWaterDialog = false },
+                onSyncToday = {
+                    showSyncWaterDialog = false
+                    viewModel.syncWaterToday()
+                },
+                onSyncWeek = {
+                    showSyncWaterDialog = false
+                    viewModel.syncWaterWeek()
+                },
+                onSyncMonth = {
+                    showSyncWaterDialog = false
+                    viewModel.syncWaterMonth()
+                }
+            )
+        }
+
+        if (syncWaterSuccess || syncWaterError != null || syncWaterErrorResId != null) {
+            SyncResultDialog(
+                isSuccess = syncWaterSuccess,
+                message = if (syncWaterSuccess) stringResource(R.string.settings_sync_water_success) else (syncWaterError ?: syncWaterErrorResId?.let { stringResource(it) } ?: stringResource(R.string.settings_sync_water_failed)),
+                onDismiss = {
+                    viewModel.clearSyncWaterMessage()
+                }
             )
         }
 
@@ -209,7 +248,8 @@ private fun SettingsMainContent(
     onAccountClick: () -> Unit,
     onSignInClick: () -> Unit,
     onSignOutClick: () -> Unit,
-    onUrineSamplesClick: () -> Unit
+    onUrineSamplesClick: () -> Unit,
+    onSyncWaterClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
         SettingsTitle(title = stringResource(R.string.settings_title))
@@ -218,7 +258,7 @@ private fun SettingsMainContent(
         }
         AppInformationSection()
         NotificationSection()
-        HealthSettingsSection(onUrineSamplesClick = onUrineSamplesClick)
+        HealthSettingsSection(onUrineSamplesClick = onUrineSamplesClick, onSyncWaterClick = onSyncWaterClick)
         PreferencesSection(
             isLoadingAccount = isLoadingAccount,
             accountContact = accountContact,
@@ -231,7 +271,8 @@ private fun SettingsMainContent(
 
 @Composable
 private fun HealthSettingsSection(
-    onUrineSamplesClick: () -> Unit
+    onUrineSamplesClick: () -> Unit,
+    onSyncWaterClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SettingsSectionHeader(stringResource(R.string.settings_health_settings))
@@ -242,6 +283,14 @@ private fun HealthSettingsSection(
                     showChevron = true
                 ),
                 onClick = onUrineSamplesClick
+            )
+            SettingsDivider()
+            SettingsRow(
+                data = SettingsRowData(
+                    title = stringResource(R.string.settings_sync_water),
+                    showChevron = true
+                ),
+                onClick = onSyncWaterClick
             )
         }
     }
@@ -540,15 +589,50 @@ private fun AccountDeleteSection(
 
 @Composable
 private fun AppInformationSection() {
-    SettingsSection(
-        title = stringResource(R.string.settings_app_information),
-        rows = listOf(
-            SettingsRowData(
-                title = stringResource(R.string.settings_version),
-                value = normalizedVersion(BuildConfig.VERSION_NAME)
+    val context = LocalContext.current
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SettingsSectionHeader(stringResource(R.string.settings_app_information))
+        SettingsCard {
+            SettingsRow(
+                data = SettingsRowData(
+                    title = stringResource(R.string.settings_version),
+                    value = normalizedVersion(BuildConfig.VERSION_NAME)
+                )
             )
-        )
-    )
+            SettingsDivider()
+            SettingsRow(
+                data = SettingsRowData(
+                    title = stringResource(R.string.settings_terms),
+                    showChevron = true
+                ),
+                onClick = {
+                    context.startActivity(
+                        Router.webView(
+                            context,
+                            "https://dialysis-intake-app.io.vn/terms.html",
+                            context.getString(R.string.settings_terms)
+                        )
+                    )
+                }
+            )
+            SettingsDivider()
+            SettingsRow(
+                data = SettingsRowData(
+                    title = stringResource(R.string.settings_privacy),
+                    showChevron = true
+                ),
+                onClick = {
+                    context.startActivity(
+                        Router.webView(
+                            context,
+                            "https://dialysis-intake-app.io.vn/privacy.html",
+                            context.getString(R.string.settings_privacy)
+                        )
+                    )
+                }
+            )
+        }
+    }
 }
 
 @Composable
@@ -790,7 +874,7 @@ private fun DeleteAccountErrorDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.common_ok))
+                Text(text = "Ok")
             }
         }
     )
@@ -823,6 +907,117 @@ private fun UrineSaveResultDialog(
                 style = TextStyles.body,
                 color = TextMuted
             )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.common_ok))
+            }
+        }
+    )
+}
+
+@Composable
+private fun SyncWaterDialog(
+    isRunning: Boolean,
+    onDismiss: () -> Unit,
+    onSyncToday: () -> Unit,
+    onSyncWeek: () -> Unit,
+    onSyncMonth: () -> Unit
+) {
+    var selected by rememberSaveable { mutableStateOf(-1) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = stringResource(R.string.settings_sync_water), style = TextStyles.titleMedium, color = TextDark)
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { selected = if (selected == 0) -1 else 0 }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = stringResource(R.string.settings_sync_water_today), style = TextStyles.body, color = TextDark)
+                    Spacer(modifier = Modifier.weight(1f))
+                    if (selected == 0) {
+                        Icon(imageVector = Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+                    }
+                }
+                SettingsDivider()
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { selected = if (selected == 1) -1 else 1 }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = stringResource(R.string.settings_sync_water_week), style = TextStyles.body, color = TextDark)
+                    Spacer(modifier = Modifier.weight(1f))
+                    if (selected == 1) {
+                        Icon(imageVector = Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+                    }
+                }
+                SettingsDivider()
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { selected = if (selected == 2) -1 else 2 }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = stringResource(R.string.settings_sync_water_month), style = TextStyles.body, color = TextDark)
+                    Spacer(modifier = Modifier.weight(1f))
+                    if (selected == 2) {
+                        Icon(imageVector = Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+                    }
+                }
+
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                if (selected == -1) {
+                    onDismiss()
+                } else {
+                    when (selected) {
+                        0 -> onSyncToday()
+                        1 -> onSyncWeek()
+                        else -> onSyncMonth()
+                    }
+                }
+            }, enabled = !isRunning) {
+                if (isRunning) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = AccentBlue)
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(text = stringResource(R.string.settings_sync_water_running))
+                } else {
+                    Text(text = "Ok")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isRunning) {
+                Text(text = stringResource(R.string.common_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun SyncResultDialog(
+    isSuccess: Boolean,
+    message: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = stringResource(R.string.settings_sync_water), style = TextStyles.titleMedium, color = TextDark)
+        },
+        text = {
+            Text(text = message, style = TextStyles.body, color = TextMuted)
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {

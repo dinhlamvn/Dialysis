@@ -30,32 +30,15 @@ class InfoActivity : BaseActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.flowOf(InfoState::calculateGoalStatus).collect { status ->
-                        when (status) {
-                            is CalculateGoalStatus.None -> Unit
-                            is CalculateGoalStatus.Success -> {
-                                startActivity(Router.home(this@InfoActivity))
-                                finish()
-                            }
-                            is CalculateGoalStatus.Failed -> {
-                                viewModel.clearCalculateGoalStatus()
-                                showCalculateGoalFailedAlert(status.message)
-                            }
-                        }
+                    viewModel.shouldOpenHomeState.collect { shouldOpen ->
+                        if (!shouldOpen) return@collect
+                        viewModel.consumeOpenHomeEvent()
+                        startActivity(Router.home(this@InfoActivity))
+                        finish()
                     }
                 }
             }
         }
     }
 
-    private fun showCalculateGoalFailedAlert(message: String) {
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.info_calculate_goal_failed_title))
-            .setMessage("$message\n\n${getString(R.string.info_calculate_goal_failed_retry_suffix)}")
-            .setNegativeButton(getString(R.string.common_cancel), null)
-            .setPositiveButton(getString(R.string.common_retry)) { _, _ ->
-                viewModel.retryCalculateGoal()
-            }
-            .show()
-    }
 }

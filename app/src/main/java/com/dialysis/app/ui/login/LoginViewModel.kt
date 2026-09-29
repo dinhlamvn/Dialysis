@@ -6,7 +6,9 @@ import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.data.network.request.LoginRequest
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
+import com.dialysis.app.ui.info.InfoState
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
+import com.dialysis.app.sync.UrineSyncScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -14,7 +16,8 @@ class LoginViewModel(
     private val accountSharePref: AccountSharePref,
     private val networkManager: NetworkManager,
     private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler,
-    private val userProfileSharePref: UserProfileSharePref
+    private val userProfileSharePref: UserProfileSharePref,
+    private val urineSyncScheduler: UrineSyncScheduler
 ) : BaseViewModel<LoginState>(LoginState()) {
 
     val identifierState = collectStateUI(LoginState::identifier)
@@ -69,10 +72,29 @@ class LoginViewModel(
                     data.user.dailyWaterTarget?.takeIf { it > 0 }?.let {
                         userProfileSharePref.saveDailyWaterGoalMl(it)
                     }
-                    val requiresInfoCompletion = data.user.weight == null ||
+                    // If login response contains profile-like data, save it so InfoScreen can
+                    // pre-fill fields. Build an InfoState from available user fields.
+                    val profileInfoState = InfoState(
+                        gender = if (data.user.gender.equals("Male", ignoreCase = true)) 1 else 2,
+                        weight = data.user.weight?.toInt()
+                            ?: data.user.initialWeight?.toInt()
+                            ?: 50,
+                        height = 170,
+                        age = data.user.age ?: 30,
+                        name = data.user.name.orEmpty(),
+                        phone = data.user.phone.orEmpty(),
+                        dialysisStartYear = data.user.dialysisStartYear ?: 0,
+                        dialysisFreqWeek = data.user.dialysisFreqWeek ?: 0,
+                        dailyUrineMl = data.user.dailyUrineMl ?: 0
+                    )
+                    userProfileSharePref.saveProfile(profileInfoState)
+                    val isFirstTimeLogin = !accountSharePref.hasLoggedIn()
+                    val requiresInfoCompletion = isFirstTimeLogin ||
+                        data.user.weight == null ||
                         data.user.gender.isNullOrBlank() ||
                         data.user.age == null
                     waterIntakeSyncScheduler.enqueue()
+                    urineSyncScheduler.enqueue()
                     setState {
                         copy(
                             isLoginLoading = false,
@@ -81,13 +103,30 @@ class LoginViewModel(
                             requiresInfoCompletion = requiresInfoCompletion
                         )
                     }
+                    // mark that user has logged in at least once
+                    accountSharePref.setHasLoggedIn(true)
                 } else {
-                    setState {
-                        copy(
-                            isLoginLoading = false,
-                            loginError = result.exceptionOrNull()?.message.toLoginErrorMessage(),
-                            isLoginSuccess = false
-                        )
+                    val errorMessage = result.exceptionOrNull()?.message.orEmpty()
+                    if (errorMessage.equals("No data", ignoreCase = true) ||
+                        errorMessage.contains("no data", ignoreCase = true)
+                    ) {
+                        // Server returned 'No data' — treat as requiring info completion and navigate to info screen
+                        setState {
+                            copy(
+                                isLoginLoading = false,
+                                loginError = null,
+                                isLoginSuccess = true,
+                                requiresInfoCompletion = true
+                            )
+                        }
+                    } else {
+                        setState {
+                            copy(
+                                isLoginLoading = false,
+                                loginError = errorMessage.toLoginErrorMessage(),
+                                isLoginSuccess = false
+                            )
+                        }
                     }
                 }
             }

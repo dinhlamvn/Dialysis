@@ -8,7 +8,10 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 
 private val LightColors = lightColorScheme(
     primary = md_theme_light_primary,
@@ -59,9 +62,19 @@ fun AppTheme(
         else -> LightColors
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val ctx = LocalContext.current
+    val currentDensity = LocalDensity.current
+    val fontScale = ctx.resources.configuration.fontScale
+    // Clamp font scale to avoid extreme system font sizes from breaking layouts.
+    val clampedFontScale = fontScale.coerceIn(1f, 1.25f)
+
+    CompositionLocalProvider(
+        LocalDensity provides Density(density = currentDensity.density, fontScale = clampedFontScale)
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

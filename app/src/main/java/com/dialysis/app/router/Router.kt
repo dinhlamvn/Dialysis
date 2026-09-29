@@ -14,6 +14,7 @@ import com.dialysis.app.ui.login.LoginActivity
 import com.dialysis.app.ui.otpverify.OtpVerifyActivity
 import com.dialysis.app.ui.register.RegisterActivity
 import com.dialysis.app.ui.weight.WeightActivity
+import com.dialysis.app.ui.web.WebViewActivity
 
 object Router {
     const val EXTRA_OTP_IDENTIFIER_TYPE = "extra_otp_identifier_type"
@@ -82,6 +83,13 @@ object Router {
 
     fun drinkList(context: Context): Intent {
         return Intent(context, DrinkListActivity::class.java)
+    }
+
+    fun webView(context: Context, url: String, title: String?): Intent {
+        return Intent(context, WebViewActivity::class.java).apply {
+            putExtra(WebViewActivity.EXTRA_URL, url)
+            putExtra(WebViewActivity.EXTRA_TITLE, title ?: "")
+        }
     }
 
     fun createDrink(context: Context): Intent {

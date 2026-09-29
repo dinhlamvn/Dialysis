@@ -9,10 +9,8 @@ import com.dialysis.app.data.network.request.WeightInitialRequest
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
+import java.time.Year
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class InfoViewModel(
     private val userProfileSharePref: UserProfileSharePref,
@@ -32,8 +30,7 @@ class InfoViewModel(
     val dialysisStartYearState = collectStateUI(InfoState::dialysisStartYear)
     val dialysisFreqWeekState = collectStateUI(InfoState::dialysisFreqWeek)
     val dailyUrineMlState = collectStateUI(InfoState::dailyUrineMl)
-    val isCalculatingGoalState = collectStateUI(InfoState::isCalculatingGoal)
-    val calculateGoalStatusState = collectStateUI(InfoState::calculateGoalStatus)
+    val shouldOpenHomeState = collectStateUI(InfoState::shouldOpenHome)
 
     fun loadInitialData() {
         if (hasLoadedInitialData) return
@@ -78,106 +75,60 @@ class InfoViewModel(
 
     fun saveProfile() {
         getState { state ->
-            if (state.calculateGoalStatus is CalculateGoalStatus.Success) return@getState
-            if (state.isCalculatingGoal) return@getState
-            setState {
-                copy(
-                    isCalculatingGoal = true,
-                    calculateGoalStatus = CalculateGoalStatus.None
-                )
-            }
+            if (state.shouldOpenHome) return@getState
             viewModelScope.launch(Dispatchers.IO) {
                 weightTrackingRepository.saveDailyWeight(weightKg = state.weight.toFloat())
-                if (accountSharePref.getToken().isBlank()) {
-                    userProfileSharePref.saveProfile(state)
-                    userProfileSharePref.saveDailyWaterGoalMl(calculateLocalDailyWaterGoalMl(state))
-                    setState {
-                        copy(
-                            isCalculatingGoal = false,
-                            calculateGoalStatus = CalculateGoalStatus.Success
+                userProfileSharePref.saveProfile(state)
+                userProfileSharePref.saveDailyWaterGoalMl(calculateLocalDailyWaterGoalMl(state))
+                // If user is logged in, send profile update to server with the required fields
+                if (accountSharePref.getToken().isNotBlank()) {
+                    try {
+                        val genderStr = when (state.gender) {
+                            1 -> "Male"
+                            2 -> "Female"
+                            else -> "Other"
+                        }
+                        val dailyUrine = state.dailyUrineMl
+                        val dailyWaterTarget = LOCAL_BASE_DAILY_WATER_GOAL_ML + dailyUrine
+                        val dialysisStartYearVal = if (state.dialysisStartYear == 0) Year.now().value else state.dialysisStartYear
+                        val request = ProfileUpdateRequest(
+                            gender = genderStr,
+                            name = state.name,
+                            dialysisStartYear = dialysisStartYearVal,
+                            dailyWaterTarget = dailyWaterTarget,
+                            age = state.age,
+                            weight = state.weight,
+                            dialysisFreqWeek = state.dialysisFreqWeek,
+                            dailyUrineMl = dailyUrine,
+                            initialWeight = state.weight
                         )
-                    }
-                    return@launch
-                }
 
-                val initialWeightResult = networkManager.resolveNullable {
-                    networkManager.appServices.updateInitialWeight(
-                        WeightInitialRequest(
-                            weight = state.weight.toDouble(),
-                            date = formatApiDate(System.currentTimeMillis()),
-                            note = ""
-                        )
-                    )
-                }
-                if (initialWeightResult.isSuccess) {
-                    val profileResult = networkManager.resolveNullable {
-                        networkManager.appServices.updateProfile(
-                            ProfileUpdateRequest(
-                                gender = if (state.gender == 1) "Male" else "Female",
-                                name = state.name,
-                                dialysisStartYear = state.dialysisStartYear,
-                                dailyWaterTarget = calculateLocalDailyWaterGoalMl(state),
-                                age = state.age,
-                                weight = state.weight,
-                                dialysisFreqWeek = state.dialysisFreqWeek,
-                                dailyUrineMl = state.dailyUrineMl,
-                                initialWeight = state.weight
-                            )
-                        )
-                    }
-                    if (profileResult.isSuccess) {
-                        userProfileSharePref.saveProfile(state)
-                        val dailyWaterGoalMl = profileResult.getOrNull()?.dailyWaterTarget
-                            ?.takeIf { it > 0 }
-                            ?: calculateLocalDailyWaterGoalMl(state)
-                        userProfileSharePref.saveDailyWaterGoalMl(dailyWaterGoalMl)
-                        setState {
-                            copy(
-                                isCalculatingGoal = false,
-                                calculateGoalStatus = CalculateGoalStatus.Success
-                            )
+                        try {
+                            networkManager.appServices.updateProfile(request)
+                            setState { copy(shouldOpenHome = true) }
+                        } catch (e: Exception) {
+                            // swallow - do not block UI, navigate home
+                            setState { copy(shouldOpenHome = true) }
                         }
-                    } else {
-                        setState {
-                            copy(
-                                isCalculatingGoal = false,
-                                calculateGoalStatus = failedStatus(profileResult)
-                            )
-                        }
+                    } catch (e: Exception) {
+                        // swallow - do not block UI, navigate home
+                        setState { copy(shouldOpenHome = true) }
                     }
                 } else {
-                    setState {
-                        copy(
-                            isCalculatingGoal = false,
-                            calculateGoalStatus = failedStatus(initialWeightResult)
-                        )
-                    }
+                    // Not logged in: continue to home immediately
+                    setState { copy(shouldOpenHome = true) }
                 }
             }
         }
     }
 
-    private fun failedStatus(result: Result<*>): CalculateGoalStatus {
-        val apiMessage = result.exceptionOrNull()?.message?.takeIf { it.isNotBlank() }
-            ?: "Không thể lưu thông tin. Vui lòng thử lại."
-        return CalculateGoalStatus.Failed(apiMessage)
-    }
+    
 
-    fun retryCalculateGoal() {
-        setState { copy(calculateGoalStatus = CalculateGoalStatus.None, isCalculatingGoal = false) }
-        saveProfile()
-    }
-
-    fun clearCalculateGoalStatus() = setState {
-        copy(calculateGoalStatus = CalculateGoalStatus.None)
-    }
+    fun consumeOpenHomeEvent() = setState { copy(shouldOpenHome = false) }
 
     private fun calculateLocalDailyWaterGoalMl(state: InfoState): Int {
         return LOCAL_BASE_DAILY_WATER_GOAL_ML + state.dailyUrineMl
     }
-
-    private fun formatApiDate(timeMillis: Long): String =
-        SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(timeMillis))
 
     private companion object {
         private const val LOCAL_BASE_DAILY_WATER_GOAL_ML = 500

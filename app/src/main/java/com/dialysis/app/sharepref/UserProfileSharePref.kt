@@ -141,6 +141,11 @@ class UserProfileSharePref(
         }.getOrNull().orEmpty()
     }
 
+    fun removeLocalUrineSamplesByClientIds(clientIds: Set<String>) {
+        if (clientIds.isEmpty()) return
+        val remaining = getLocalUrineSamples().filterNot { it.clientId in clientIds }
+        put(KEY_URINE_SAMPLES_JSON, gson.toJson(remaining))
+    }
     fun clear() {
         remove(KEY_PROFILE_JSON)
         remove(KEY_INITIAL_WEIGHT_KG)

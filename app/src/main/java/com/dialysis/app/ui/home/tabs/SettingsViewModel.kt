@@ -9,6 +9,7 @@ import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.data.network.request.UrineLogRequest
 import com.dialysis.app.data.network.response.UrineHistoryItem
 import com.dialysis.app.sharepref.LocalUrineSample
+import com.dialysis.app.sync.UrineSyncScheduler
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
@@ -17,13 +18,18 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import com.dialysis.app.data.network.request.WaterIntakeRequest
 
 class SettingsViewModel(
     private val accountSharePref: AccountSharePref,
     private val userProfileSharePref: UserProfileSharePref,
     private val waterTrackingRepository: WaterTrackingRepository,
     private val weightTrackingRepository: WeightTrackingRepository,
-    private val networkManager: NetworkManager
+    private val networkManager: NetworkManager,
+    private val urineSyncScheduler: UrineSyncScheduler
 ) : BaseViewModel<SettingsState>(SettingsState()) {
 
     val isLoadingAccountState = collectStateUI(SettingsState::isLoadingAccount)
@@ -46,6 +52,10 @@ class SettingsViewModel(
     val urineSamplesState = collectStateUI(SettingsState::urineSamples)
     val urineSamplesErrorState = collectStateUI(SettingsState::urineSamplesError)
     val urineSamplesErrorResIdState = collectStateUI(SettingsState::urineSamplesErrorResId)
+    val isSyncingWaterState = collectStateUI(SettingsState::isSyncingWater)
+    val syncWaterSuccessState = collectStateUI(SettingsState::syncWaterSuccess)
+    val syncWaterErrorState = collectStateUI(SettingsState::syncWaterError)
+    val syncWaterErrorResIdState = collectStateUI(SettingsState::syncWaterErrorResId)
 
     private val deleteAccountRequestInFlight = AtomicBoolean(false)
     private val urineSaveRequestInFlight = AtomicBoolean(false)
@@ -183,6 +193,15 @@ class SettingsViewModel(
         copy(urineSaveSuccess = false, urineSaveError = null, urineSaveErrorResId = null)
     }
 
+    fun clearSyncWaterMessage() = setState {
+        copy(
+            isSyncingWater = false,
+            syncWaterSuccess = false,
+            syncWaterError = null,
+            syncWaterErrorResId = null
+        )
+    }
+
     fun saveTodayUrineSample() {
         getState { state ->
             if (state.isSavingUrineSample) return@getState
@@ -217,12 +236,16 @@ class SettingsViewModel(
                         }
                     }
 
-                    userProfileSharePref.saveLocalUrineSample(
+                    val saved = userProfileSharePref.saveLocalUrineSample(
                         amountMl = amountMl,
                         loggedAt = loggedAt,
                         note = note,
                         clientId = clientId
                     )
+                    if (accountSharePref.getToken().isNotBlank()) {
+                        // schedule background sync to ensure any missed uploads are retried
+                        urineSyncScheduler.enqueue()
+                    }
                     val dailyWaterGoalMl = calculateDailyWaterGoalMl(amountMl)
                     userProfileSharePref.saveDailyUrineMl(amountMl)
                     userProfileSharePref.saveDailyWaterGoalMl(dailyWaterGoalMl)
@@ -352,6 +375,129 @@ class SettingsViewModel(
                 }
             }
         }
+    }
+
+    fun syncWaterToday() = syncWaterRange(startOfDay(System.currentTimeMillis()), endOfDay(System.currentTimeMillis()))
+
+    fun syncWaterWeek() {
+        val now = System.currentTimeMillis()
+        syncWaterRange(startOfWeek(now), endOfWeek(now))
+    }
+
+    fun syncWaterMonth() {
+        val now = System.currentTimeMillis()
+        syncWaterRange(startOfMonth(now), endOfMonth(now))
+    }
+
+    private fun syncWaterRange(startMillis: Long, endMillis: Long) {
+        getState { state ->
+            if (state.isSyncingWater) return@getState
+            if (accountSharePref.getToken().isBlank()) {
+                setState { copy(syncWaterErrorResId = R.string.settings_urine_login_required) }
+                return@getState
+            }
+            setState { copy(isSyncingWater = true, syncWaterSuccess = false, syncWaterError = null, syncWaterErrorResId = null) }
+            viewModelScope.launch(Dispatchers.IO) {
+                var hasFailure = false
+                var didSync = false
+                try {
+                    val dailyGoalMl = userProfileSharePref.getDailyWaterGoalMl().coerceAtLeast(1)
+                    val entries = waterTrackingRepository.getUnsyncedEntriesBetween(startMillis, endMillis)
+                    if (entries.isEmpty()) {
+                        setState {
+                            copy(
+                                isSyncingWater = false,
+                                syncWaterSuccess = true
+                            )
+                        }
+                        return@launch
+                    }
+                    entries.forEach { entry ->
+                        val request = WaterIntakeRequest(
+                            drinkName = entry.drinkName,
+                            rawAmount = entry.amountMl,
+                            weightRatio = entry.amountMl.toDouble() / dailyGoalMl.toDouble(),
+                            loggedAt = Instant.ofEpochMilli(entry.createdAt).toString()
+                        )
+                        val result = networkManager.resolve { networkManager.appServices.syncWaterIntake(request) }
+                        if (result.isSuccess) {
+                            val syncedId = result.getOrNull()?.id ?: return@forEach
+                            waterTrackingRepository.markEntrySynced(entry.id, syncedId)
+                            didSync = true
+                        } else {
+                            hasFailure = true
+                        }
+                    }
+                    if (!hasFailure && didSync) {
+                        accountSharePref.setLastWaterSyncAt(System.currentTimeMillis())
+                        setState { copy(isSyncingWater = false, syncWaterSuccess = true) }
+                    } else if (didSync) {
+                        setState { copy(isSyncingWater = false, syncWaterError = null, syncWaterErrorResId = R.string.settings_sync_water_failed) }
+                    } else {
+                        setState { copy(isSyncingWater = false, syncWaterError = null, syncWaterErrorResId = R.string.settings_sync_water_failed) }
+                    }
+                } catch (e: Exception) {
+                    setState { copy(isSyncingWater = false, syncWaterError = e.message ?: e.toString(), syncWaterErrorResId = R.string.settings_sync_water_failed) }
+                }
+            }
+        }
+    }
+
+    private fun startOfDay(timeMillis: Long): Long {
+        return Calendar.getInstance().apply {
+            timeInMillis = timeMillis
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
+
+    private fun endOfDay(timeMillis: Long): Long {
+        return Calendar.getInstance().apply {
+            timeInMillis = startOfDay(timeMillis)
+            add(Calendar.DAY_OF_MONTH, 1)
+            add(Calendar.MILLISECOND, -1)
+        }.timeInMillis
+    }
+
+    private fun startOfWeek(timeMillis: Long): Long {
+        return Calendar.getInstance().apply {
+            timeInMillis = timeMillis
+            firstDayOfWeek = Calendar.MONDAY
+            set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
+
+    private fun endOfWeek(timeMillis: Long): Long {
+        return Calendar.getInstance().apply {
+            timeInMillis = startOfWeek(timeMillis)
+            add(Calendar.DAY_OF_YEAR, 7)
+            add(Calendar.MILLISECOND, -1)
+        }.timeInMillis
+    }
+
+    private fun startOfMonth(timeMillis: Long): Long {
+        return Calendar.getInstance().apply {
+            timeInMillis = timeMillis
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
+
+    private fun endOfMonth(timeMillis: Long): Long {
+        return Calendar.getInstance().apply {
+            timeInMillis = startOfMonth(timeMillis)
+            add(Calendar.MONTH, 1)
+            add(Calendar.MILLISECOND, -1)
+        }.timeInMillis
     }
 
     private suspend fun clearLocalAccountAndNotify(

@@ -91,6 +91,17 @@ interface WaterEntryDao {
         """
         SELECT *
         FROM water_entries
+        WHERE synced_id IS NULL
+          AND created_at BETWEEN :startMillis AND :endMillis
+        ORDER BY created_at ASC
+        """
+    )
+    suspend fun getUnsyncedEntriesBetween(startMillis: Long, endMillis: Long): List<WaterEntryEntity>
+
+    @Query(
+        """
+        SELECT *
+        FROM water_entries
         WHERE synced_id IS NOT NULL
         """
     )
