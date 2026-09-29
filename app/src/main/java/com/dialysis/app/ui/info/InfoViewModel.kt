@@ -9,6 +9,7 @@ import com.dialysis.app.data.network.request.WeightInitialRequest
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import kotlinx.coroutines.Dispatchers
+import java.time.Year
 import kotlinx.coroutines.launch
 
 class InfoViewModel(
@@ -79,10 +80,49 @@ class InfoViewModel(
                 weightTrackingRepository.saveDailyWeight(weightKg = state.weight.toFloat())
                 userProfileSharePref.saveProfile(state)
                 userProfileSharePref.saveDailyWaterGoalMl(calculateLocalDailyWaterGoalMl(state))
-                setState { copy(shouldOpenHome = true) }
+                // If user is logged in, send profile update to server with the required fields
+                if (accountSharePref.getToken().isNotBlank()) {
+                    try {
+                        val genderStr = when (state.gender) {
+                            1 -> "Male"
+                            2 -> "Female"
+                            else -> "Other"
+                        }
+                        val dailyUrine = state.dailyUrineMl
+                        val dailyWaterTarget = LOCAL_BASE_DAILY_WATER_GOAL_ML + dailyUrine
+                        val dialysisStartYearVal = if (state.dialysisStartYear == 0) Year.now().value else state.dialysisStartYear
+                        val request = ProfileUpdateRequest(
+                            gender = genderStr,
+                            name = state.name,
+                            dialysisStartYear = dialysisStartYearVal,
+                            dailyWaterTarget = dailyWaterTarget,
+                            age = state.age,
+                            weight = state.weight,
+                            dialysisFreqWeek = state.dialysisFreqWeek,
+                            dailyUrineMl = dailyUrine,
+                            initialWeight = state.weight
+                        )
+
+                        try {
+                            networkManager.appServices.updateProfile(request)
+                            setState { copy(shouldOpenHome = true) }
+                        } catch (e: Exception) {
+                            // swallow - do not block UI, navigate home
+                            setState { copy(shouldOpenHome = true) }
+                        }
+                    } catch (e: Exception) {
+                        // swallow - do not block UI, navigate home
+                        setState { copy(shouldOpenHome = true) }
+                    }
+                } else {
+                    // Not logged in: continue to home immediately
+                    setState { copy(shouldOpenHome = true) }
+                }
             }
         }
     }
+
+    
 
     fun consumeOpenHomeEvent() = setState { copy(shouldOpenHome = false) }
 
