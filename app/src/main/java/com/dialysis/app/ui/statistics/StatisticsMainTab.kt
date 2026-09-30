@@ -1,5 +1,12 @@
 package com.dialysis.app.ui.statistics
 
+import com.dialysis.app.ui.components.CappedFontScale
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -77,25 +84,66 @@ private fun WeeklyStatsCard(weeklyStats: WeeklyStatsUi, onDayClick: (Long) -> Un
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             weeklyStats.dailyStats.forEach { stat ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f).clickable { onDayClick(stat.dateMillis) }) {
-                    PercentRing(stat.percentage, stat.label, Color.White, Color.White.copy(alpha = 0.3f), Modifier.size(38.dp))
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(formatMl(stat.totalMl), color = Color.White.copy(alpha = 0.85f), fontSize = 9.sp, maxLines = 1)
+                    // Ring shrinks with the column; its text lives in a fixed shape so it does not follow system font scale
+                    CappedFontScale(maxFontScale = 1f) {
+                        PercentRing(
+                            stat.percentage,
+                            stat.label,
+                            Color.White,
+                            Color.White.copy(alpha = 0.3f),
+                            Modifier.widthIn(max = 38.dp).fillMaxWidth().aspectRatio(1f)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            formatMl(stat.totalMl),
+                            color = Color.White.copy(alpha = 0.85f),
+                            fontSize = 9.sp,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
                 }
             }
         }
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Column {
-                Text("Phần trăm trung bình hằng ngày", color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
-                Text(String.format("%.1f%%", weeklyStats.averagePercentage), color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text("Tổng số trong tuần", color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
-                Text(formatMl(weeklyStats.weeklyTotalMl), color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            WeeklySummaryItem(
+                label = "Phần trăm trung bình hằng ngày",
+                value = String.format("%.1f%%", weeklyStats.averagePercentage),
+                alignment = Alignment.Start,
+                modifier = Modifier.weight(1f)
+            )
+            WeeklySummaryItem(
+                label = "Tổng số trong tuần",
+                value = formatMl(weeklyStats.weeklyTotalMl),
+                alignment = Alignment.End,
+                modifier = Modifier.weight(1f)
+            )
         }
+    }
+}
+
+@Composable
+private fun WeeklySummaryItem(label: String, value: String, alignment: Alignment.Horizontal, modifier: Modifier = Modifier) {
+    val textAlign = if (alignment == Alignment.End) TextAlign.End else TextAlign.Start
+    Column(modifier = modifier, horizontalAlignment = alignment, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            label,
+            color = Color.White.copy(alpha = 0.85f),
+            fontSize = 13.sp,
+            lineHeight = 17.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = textAlign
+        )
+        BasicText(
+            value,
+            style = TextStyle(color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold, textAlign = textAlign),
+            maxLines = 1,
+            autoSize = TextAutoSize.StepBased(minFontSize = 14.sp, maxFontSize = 22.sp)
+        )
     }
 }
 
@@ -104,13 +152,35 @@ private fun WeeklyBeverageStrip(stats: List<BeverageStatUi>) {
     val consumed = stats.filter { it.volumeMl > 0 }
     Row(
         modifier = Modifier.fillMaxWidth().background(Color(0xFFF2F3F6), RoundedCornerShape(16.dp)).horizontalScroll(rememberScrollState()).padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         if (consumed.isEmpty()) Text("7 ngày qua", color = Color(0xFF7A8498), fontSize = 13.sp)
         consumed.forEach { stat ->
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(72.dp)) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier.width(80.dp)
+            ) {
                 Text(stat.visual.icon, fontSize = 28.sp)
-                Text("${formatMl(stat.volumeMl)} ${stat.visual.title}", fontSize = 9.sp, maxLines = 2)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    formatMl(stat.volumeMl),
+                    fontSize = 12.sp,
+                    lineHeight = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1F2633),
+                    maxLines = 1,
+                    softWrap = false
+                )
+                Text(
+                    stat.visual.title,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
+                    color = Color(0xFF7A8498),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

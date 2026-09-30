@@ -1,5 +1,7 @@
 package com.dialysis.app.ui.statistics
 
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -129,24 +131,35 @@ private fun StatisticsTabSelector(
     activeTab: StatisticsTab,
     onSelect: (StatisticsTab) -> Unit
 ) {
+    // Tabs share the width equally and shrink their text, so all 4 stay visible with large fonts
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
             .padding(horizontal = 8.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         StatisticsTab.entries.forEach { tab ->
-            Text(
-                text = tab.title,
-                style = TextStyle(fontSize = 14.sp, fontWeight = if (activeTab == tab) FontWeight.SemiBold else FontWeight.Medium),
-                color = if (activeTab == tab) Color.White else Color(0xFF1F2633),
+            val selected = activeTab == tab
+            Box(
                 modifier = Modifier
-                    .background(if (activeTab == tab) Color(0xFF1877F2) else Color.Transparent, RoundedCornerShape(8.dp))
+                    .weight(1f)
+                    .background(if (selected) Color(0xFF1877F2) else Color.Transparent, RoundedCornerShape(8.dp))
                     .clickable { onSelect(tab) }
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            )
+                    .padding(horizontal = 6.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                BasicText(
+                    text = tab.title,
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                        color = if (selected) Color.White else Color(0xFF1F2633)
+                    ),
+                    maxLines = 1,
+                    autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 14.sp)
+                )
+            }
         }
     }
 }
