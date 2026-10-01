@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,6 +20,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
@@ -50,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,6 +62,7 @@ import com.dialysis.app.R
 import com.dialysis.app.data.local.model.DailyTotal
 import com.dialysis.app.extensions.toast
 import com.dialysis.app.router.Router
+import com.dialysis.app.ui.components.CappedFontScale
 import com.dialysis.app.ui.components.FigureWaterProgress
 import com.dialysis.app.ui.components.Loading
 import com.dialysis.app.ui.components.TextStyles
@@ -89,6 +94,7 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     dailyReportViewModel: DailyReportViewModel,
     showBottomNav: Boolean = true,
+    showDrinkSheets: Boolean = true,
     onStatisticsMoreClick: () -> Unit = {},
     onWeightProgressClick: () -> Unit = {}
 ) {
@@ -105,12 +111,8 @@ fun HomeScreen(
     val isSymptomsLoading by viewModel.isSymptomsLoadingState.collectAsStateWithLifecycle()
     val isSubmittingSymptom by viewModel.isSubmittingSymptomState.collectAsStateWithLifecycle()
     val rolling7DayStats = buildLast7DayStats(dailyTotals)
-    val showDrinkListSheet by viewModel.showDrinkListSheetState.collectAsStateWithLifecycle()
     val showDailyReportSheet by viewModel.showDailyReportSheetState.collectAsStateWithLifecycle()
-    val selectedDrinkName by viewModel.selectedDrinkNameState.collectAsStateWithLifecycle()
-    val drinkListSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val dailyReportSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val createDrinkSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val symptomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Column(
@@ -162,21 +164,8 @@ fun HomeScreen(
         }
     }
 
-    if (showDrinkListSheet) {
-        ModalBottomSheet(
-            sheetState = drinkListSheetState,
-            onDismissRequest = viewModel::closeDrinkListSheet
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.8f)
-            ) {
-                DrinkListScreen(
-                    onDrinkClick = viewModel::onDrinkSelected
-                )
-            }
-        }
+    if (showDrinkSheets) {
+        DrinkSheets(viewModel = viewModel)
     }
 
     if (showDailyReportSheet) {
@@ -197,27 +186,6 @@ fun HomeScreen(
                     onBackClick = {
                         viewModel.closeDailyReportSheet()
                         dailyReportViewModel.showTodayReport()
-                    }
-                )
-            }
-        }
-    }
-
-    selectedDrinkName?.let { drinkName ->
-        ModalBottomSheet(
-            sheetState = createDrinkSheetState,
-            onDismissRequest = viewModel::dismissCreateDrinkSheet
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.8f)
-            ) {
-                CreateDrinkScreen(
-                    drinkName = drinkName,
-                    onBackClick = viewModel::backToDrinkListFromCreate,
-                    onAddDrink = { name, amount, time ->
-                        viewModel.addDrink(name = name, amount = amount, _time = time)
                     }
                 )
             }
@@ -251,6 +219,56 @@ fun HomeScreen(
     }
 }
 
+/**
+ * Drink list + create drink sheets. Rendered by the host so the tab bar "+" works from any pager page.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DrinkSheets(viewModel: HomeViewModel) {
+    val showDrinkListSheet by viewModel.showDrinkListSheetState.collectAsStateWithLifecycle()
+    val selectedDrinkName by viewModel.selectedDrinkNameState.collectAsStateWithLifecycle()
+    val drinkListSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val createDrinkSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    if (showDrinkListSheet) {
+        ModalBottomSheet(
+            sheetState = drinkListSheetState,
+            onDismissRequest = viewModel::closeDrinkListSheet
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.8f)
+            ) {
+                DrinkListScreen(
+                    onDrinkClick = viewModel::onDrinkSelected
+                )
+            }
+        }
+    }
+
+    selectedDrinkName?.let { drinkName ->
+        ModalBottomSheet(
+            sheetState = createDrinkSheetState,
+            onDismissRequest = viewModel::dismissCreateDrinkSheet
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.8f)
+            ) {
+                CreateDrinkScreen(
+                    drinkName = drinkName,
+                    onBackClick = viewModel::backToDrinkListFromCreate,
+                    onAddDrink = { name, amount, time ->
+                        viewModel.addDrink(name = name, amount = amount, _time = time)
+                    }
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
     val progress = if (goalMl > 0) {
@@ -269,12 +287,13 @@ private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(280.dp),
+            .heightIn(min = 280.dp),
         shape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .heightIn(min = 280.dp)
                 .background(Brush.verticalGradient(listOf(BlueTop, BlueBottom)))
                 .padding(horizontal = 24.dp, vertical = 28.dp)
         ) {
@@ -300,9 +319,10 @@ private fun HeaderCard(todayTotalMl: Int, goalMl: Int) {
                 ) {
                     FigureWaterProgress(
                         progress = progress,
-                        waterColor = waterLevelColor
+                        waterColor = waterLevelColor,
+                        size = 168.dp
                     )
-                    Column {
+                    Column(modifier = Modifier.weight(1f, fill = false)) {
                         Text(
                             text = "$progressPercent%",
                             color = Color.White,
@@ -433,13 +453,18 @@ private fun DrinksSection(
             Text(
                 text = stringResource(R.string.home_drinks_title),
                 color = TextDark,
-                style = TextStyles.titleMedium
+                style = TextStyles.titleMedium,
+                modifier = Modifier.weight(1f)
             )
             Text(
                 text = stringResource(R.string.home_edit),
                 color = AccentBlue,
                 style = TextStyles.bodyMedium,
-                modifier = Modifier.clickable(onClick = onEditClick)
+                maxLines = 1,
+                softWrap = false,
+                modifier = Modifier
+                    .clickable(onClick = onEditClick)
+                    .padding(start = 12.dp)
             )
         }
 
@@ -477,13 +502,15 @@ private fun SmallDrinkCard(
 ) {
     Card(
         modifier = Modifier
-            .size(width = 110.dp, height = 130.dp),
+            .width(110.dp)
+            .heightIn(min = 130.dp),
         shape = RoundedCornerShape(16.dp),
         onClick = onClick
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .heightIn(min = 130.dp)
                 .background(CardLight),
             contentAlignment = Alignment.Center
         ) {
@@ -514,12 +541,14 @@ private fun DrinkCard(amount: String, name: String, time: String) {
     val visual = DrinkCatalog.resolve(name)
     Card(
         modifier = Modifier
-            .size(width = 130.dp, height = 130.dp),
+            .width(130.dp)
+            .heightIn(min = 130.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .heightIn(min = 130.dp)
                 .background(CardLight)
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -569,13 +598,18 @@ private fun WeeklySection(
             Text(
                 text = stringResource(R.string.home_weekly_title),
                 color = TextDark,
-                style = TextStyles.titleMedium
+                style = TextStyles.titleMedium,
+                modifier = Modifier.weight(1f)
             )
             Text(
                 text = stringResource(R.string.home_more),
                 color = AccentBlue,
                 style = TextStyles.bodyMedium,
-                modifier = Modifier.clickable { onMoreClick() }
+                maxLines = 1,
+                softWrap = false,
+                modifier = Modifier
+                    .clickable { onMoreClick() }
+                    .padding(start = 12.dp)
             )
         }
 
@@ -685,13 +719,18 @@ private fun StatisticsListSection(
             Text(
                 text = stringResource(R.string.home_weekly_title),
                 color = TextDark,
-                style = TextStyles.titleMedium
+                style = TextStyles.titleMedium,
+                modifier = Modifier.weight(1f)
             )
             Text(
                 text = stringResource(R.string.home_more),
                 color = AccentBlue,
                 style = TextStyles.bodyMedium,
-                modifier = Modifier.clickable { onMoreClick() }
+                maxLines = 1,
+                softWrap = false,
+                modifier = Modifier
+                    .clickable { onMoreClick() }
+                    .padding(start = 12.dp)
             )
         }
 
@@ -714,8 +753,11 @@ private fun ActionCardsRow(
     onWeightProgressClick: () -> Unit
 ) {
     val context = LocalContext.current
+    // IntrinsicSize.Min keeps both cards the same height when large fonts make one grow
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         BannerCard(
@@ -746,13 +788,14 @@ private fun SymptomCard(onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(110.dp)
+            .heightIn(min = 110.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .heightIn(min = 110.dp)
                 .background(Color(0xFFFF4E5E))
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.Center
@@ -988,7 +1031,7 @@ private fun StatsChartCard(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     safeStats.forEach { dayStat ->
                         val progress = if (goalMl > 0) {
@@ -1002,15 +1045,18 @@ private fun StatsChartCard(
                                 .clickable { onDayClick(dayStat.dateMillis) },
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+                            // Circle shrinks with the column on narrow screens instead of being squeezed
                             Box(
                                 modifier = Modifier
-                                    .size(38.dp)
+                                    .widthIn(max = 38.dp)
+                                    .fillMaxWidth()
+                                    .aspectRatio(1f)
                                     .clip(CircleShape)
                                     .background(Color.White.copy(alpha = 0.12f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Canvas(modifier = Modifier.fillMaxSize()) {
-                                    val strokeWidthPx = 4.dp.toPx()
+                                    val strokeWidthPx = 3.dp.toPx()
                                     drawArc(
                                         color = Color.White.copy(alpha = 0.3f),
                                         startAngle = -90f,
@@ -1028,20 +1074,28 @@ private fun StatsChartCard(
                                         )
                                     }
                                 }
-                                Text(
-                                    text = dayStat.label,
-                                    color = Color.White,
-                                    style = TextStyles.caption
-                                )
+                                CappedFontScale(maxFontScale = 1f) {
+                                    Text(
+                                        text = dayStat.label,
+                                        color = Color.White,
+                                        style = TextStyles.caption,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
                             }
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = formatMlWithGrouping(dayStat.totalMl),
-                                color = Color.White.copy(alpha = 0.85f),
-                                fontSize = 9.sp,
-                                maxLines = 1,
-                                textAlign = TextAlign.Center
-                            )
+                            CappedFontScale(maxFontScale = 1f) {
+                                Text(
+                                    text = formatMlWithGrouping(dayStat.totalMl),
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    fontSize = 9.sp,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
                 }
@@ -1150,7 +1204,8 @@ private fun BannerCard(
 ) {
     Card(
         modifier = modifier
-            .height(172.dp)
+            .fillMaxHeight()
+            .heightIn(min = 172.dp)
             .then(
                 if (onClick != null) {
                     Modifier.clickable { onClick() }
@@ -1180,16 +1235,19 @@ private fun BannerCard(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     lineHeight = 22.sp,
-                    maxLines = 2
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = description,
                     color = descriptionColor,
                     fontSize = 13.sp,
                     lineHeight = 17.sp,
-                    maxLines = 2
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

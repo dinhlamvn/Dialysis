@@ -3,6 +3,8 @@ package com.dialysis.app.ui.home
 import android.app.Activity
 import android.os.Bundle
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,9 +43,11 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.dialysis.app.base.BaseActivity
 import com.dialysis.app.extensions.toast
 import com.dialysis.app.notification.WaterReminderScheduler
+import com.dialysis.app.ui.components.CappedFontScale
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.daily.DailyReportViewModel
 import com.dialysis.app.ui.home.tabs.SettingsViewModel
@@ -121,8 +125,10 @@ class HomeActivity : BaseActivity() {
                 .fillMaxSize()
                 .background(Color.White)
         ) {
+            // Keep all tabs composed so switching tabs does not rebuild a whole screen (was the main source of jank)
             HorizontalPager(
                 state = pagerState,
+                beyondViewportPageCount = 3,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = 64.dp)
@@ -132,6 +138,7 @@ class HomeActivity : BaseActivity() {
                         viewModel = homeViewModel,
                         dailyReportViewModel = dailyReportViewModel,
                         showBottomNav = false,
+                        showDrinkSheets = false,
                         onStatisticsMoreClick = {
                             scope.launch {
                                 pagerState.animateScrollToPage(2)
@@ -168,6 +175,8 @@ class HomeActivity : BaseActivity() {
                 },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
+
+            DrinkSheets(viewModel = homeViewModel)
 
             if (isHistorySyncing) {
                 Box(
@@ -289,11 +298,18 @@ private fun PagerBottomItem(
                     .size(22.dp)
             )
             Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = label,
-                color = itemColor,
-                style = TextStyles.caption
-            )
+            // Bar height is fixed, so keep labels on one line; shrink the text instead of cutting it
+            CappedFontScale(maxFontScale = 1.15f) {
+                BasicText(
+                    text = label,
+                    style = TextStyles.caption.copy(color = itemColor),
+                    maxLines = 1,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = 8.sp,
+                        maxFontSize = TextStyles.caption.fontSize
+                    )
+                )
+            }
         }
     }
 }

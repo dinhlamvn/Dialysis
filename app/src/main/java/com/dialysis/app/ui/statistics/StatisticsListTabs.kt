@@ -1,5 +1,14 @@
 package com.dialysis.app.ui.statistics
 
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.heightIn
+import java.util.Calendar
+import com.dialysis.app.ui.components.CappedFontScale
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,7 +38,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -43,8 +51,7 @@ fun StatisticsByDayTab(dailyStats: List<DailyStatUi>, onDayClick: (Long) -> Unit
                 ProgressRow(
                     title = stat.listTitle,
                     totalMl = stat.totalMl,
-                    percentage = stat.percentage,
-                    titleWidth = 100.dp
+                    percentage = stat.percentage
                 ) { onDayClick(stat.dateMillis) }
             }
         }
@@ -58,8 +65,7 @@ fun StatisticsMonthlyTab(summaries: List<MonthSummaryUi>, onMonthClick: (Long) -
             ProgressRow(
                 title = summary.title,
                 totalMl = summary.totalMl,
-                percentage = summary.averagePercentage,
-                titleWidth = 120.dp
+                percentage = summary.averagePercentage
             ) { onMonthClick(summary.monthStartMillis) }
         }
     }
@@ -70,14 +76,13 @@ private fun ProgressRow(
     title: String,
     totalMl: Int,
     percentage: Int,
-    titleWidth: Dp,
     onClick: () -> Unit
 ) {
     val rowShape = RoundedCornerShape(26.dp)
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .heightIn(min = 52.dp)
             .shadow(4.dp, rowShape)
             .clip(rowShape)
             .background(Color(0xFFE6E9EF))
@@ -87,7 +92,8 @@ private fun ProgressRow(
         val clampedPercentage = percentage.coerceIn(0, 100)
         Box(
             modifier = Modifier
-                .fillMaxHeight()
+                .matchParentSize()
+                .wrapContentWidth(Alignment.Start)
                 .width(maxWidth * (clampedPercentage / 100f))
                 .background(Color(0xFF1877F2))
         )
@@ -95,25 +101,26 @@ private fun ProgressRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.Center)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
+            // Title takes the free space and shrinks to stay on one line instead of being cut
+            BasicText(
                 title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.width(titleWidth)
+                autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = 16.sp),
+                modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.weight(1f))
             Text(
                 if (percentage > 0) "$percentage% - ${formatMl(totalMl)}" else "0%",
                 color = Color(0xFF6B7280),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                maxLines = 1
+                maxLines = 1,
+                softWrap = false
             )
             Text("›", color = Color(0xFFD1D5DB), fontSize = 18.sp, fontWeight = FontWeight.Medium)
         }
@@ -155,12 +162,30 @@ private fun SummaryItem(title: String, value: String) {
 fun CalendarGrid(days: List<MonthDayUi>, onDayClick: (Long) -> Unit) {
     val headers = listOf("CN", "T2", "T3", "T4", "T5", "T6", "T7")
     Column(modifier = Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(16.dp)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(modifier = Modifier.fillMaxWidth()) { headers.forEach { Text(it, color = Color(0xFF6B7280), fontSize = 12.sp, modifier = Modifier.weight(1f)) } }
-        days.chunked(7).forEach { week ->
-            Row(modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            headers.forEach {
+                Text(
+                    it,
+                    color = Color(0xFF6B7280),
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        // Leading blanks so day 1 sits under its real weekday (headers start on Sunday)
+        val leadingBlanks = days.firstOrNull()?.let {
+            Calendar.getInstance().apply { timeInMillis = it.dateMillis }.get(Calendar.DAY_OF_WEEK) - Calendar.SUNDAY
+        } ?: 0
+        val cells: List<MonthDayUi?> = List(leadingBlanks) { null } + days
+        cells.chunked(7).forEach { week ->
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 week.forEach { day ->
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        DayRing(day, Modifier.clickable { onDayClick(day.dateMillis) })
+                        if (day != null) {
+                            DayRing(day, Modifier.clickable { onDayClick(day.dateMillis) })
+                        }
                     }
                 }
                 repeat(7 - week.size) { Spacer(modifier = Modifier.weight(1f)) }
@@ -171,13 +196,28 @@ fun CalendarGrid(days: List<MonthDayUi>, onDayClick: (Long) -> Unit) {
 
 @Composable
 private fun DayRing(day: MonthDayUi, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.size(40.dp), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = modifier
+            .widthIn(max = 40.dp)
+            .fillMaxWidth()
+            .aspectRatio(1f),
+        contentAlignment = Alignment.Center
+    ) {
         Canvas(modifier = Modifier.matchParentSize()) {
             drawCircle(Color(0xFFE5E7EB), style = Stroke(width = 2.dp.toPx()))
             if (day.percentage > 0) {
                 drawArc(Color(0xFF1877F2), -90f, day.percentage * 3.6f, false, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
             }
         }
-        Text(day.day.toString(), fontSize = 14.sp, fontWeight = if (day.isToday) FontWeight.SemiBold else FontWeight.Normal)
+        CappedFontScale(maxFontScale = 1.15f) {
+            Text(
+                day.day.toString(),
+                fontSize = 14.sp,
+                maxLines = 1,
+                softWrap = false,
+                color = if (day.isToday) Color(0xFF1877F2) else Color(0xFF1F2633),
+                fontWeight = if (day.isToday) FontWeight.SemiBold else FontWeight.Normal
+            )
+        }
     }
 }

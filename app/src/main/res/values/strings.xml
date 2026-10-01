@@ -121,7 +121,7 @@
     <string name="drink_unit_litre">lít</string>
     <string name="notification_title">Nhắc ghi nhận lượng nước</string>
     <string name="notification_channel_name">Nhắc nhập nước</string>
-    <string name="notification_channel_desc">Tự động gửi nhắc nhở mỗi 2 tiếng từ 6h đến 0h.</string>
+    <string name="notification_channel_desc">Tự động gửi nhắc nhở mỗi 3 tiếng từ 6h đến 21h.</string>
     <string name="permission_notification_required">Vui lòng bật quyền thông báo để nhận nhắc nhở uống nước.</string>
     <string name="main_syncing">Đang đồng bộ...</string>
     <string name="info_calculate_goal_failed_title">Tính mục tiêu nước thất bại</string>
@@ -253,15 +253,11 @@
     <string name="home_guide_open_error">Không tìm thấy ứng dụng để mở tệp PDF</string>
 
     <string-array name="notification_messages">
-        <item>Chào bạn, hôm nay bạn đã uống gì nào?</item>
-        <item>Chào bạn, hôm nay bạn đã nhập lượng nước qua ăn uống vào app chưa?</item>
-        <item>Chào bạn, hôm nay bạn có nhớ ghi nhận lượng nước qua ăn uống chưa?</item>
-        <item>Chào bạn, bạn có nhớ lượng nước uống mỗi ngày của bạn là bao nhiêu?</item>
-        <item>Chào bạn, bạn có nhớ là phải hạn chế ăn mặn không?</item>
-        <item>Chào bạn, bạn có nhớ uống nước nhiều bạn sẽ mệt không?</item>
-        <item>Chào bạn, nếu khát quá nhớ ngậm thêm đã nha!</item>
-        <item>Chào bạn, nhớ cho tôi biết bạn đã ăn uống gì chưa?</item>
-        <item>Chào bạn, bạn đừng uống nước nhiều quá nhé!</item>
-        <item>Chào bạn, hãy nhớ tôi là người bạn đồng hành!</item>
+        <item>Chào bạn, bạn cần ghi nhớ lượng nước được uống trong hôm nay!</item>
+        <item>Chào bạn, bạn cần nhập lượng nước qua ăn uống vào ứng dụng này!</item>
+        <item>Chào bạn, nếu khát nước bạn có thể ngậm thêm nước đá!</item>
+        <item>Chào bạn, bạn nhớ là phải hạn chế ăn mặn!</item>
+        <item>Chào bạn, uống nhiều nước có thể làm bạn bị mệt!</item>
+        <item>Chào bạn, hãy kiểm tra lại lượng nước qua ăn uống trong hôm nay nhé!</item>
     </string-array>
 </resources>

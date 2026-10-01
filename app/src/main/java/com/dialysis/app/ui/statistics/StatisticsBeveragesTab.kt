@@ -1,5 +1,8 @@
 package com.dialysis.app.ui.statistics
 
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -100,8 +103,22 @@ private fun BeverageRow(stat: BeverageStatUi) {
     ) {
         Canvas(modifier = Modifier.size(12.dp)) { drawCircle(stat.visual.color, center = Offset(size.width / 2, size.height / 2)) }
         Text(stat.visual.icon, fontSize = 24.sp)
-        Text(stat.visual.title, fontSize = 15.sp, modifier = Modifier.weight(1f), maxLines = 1)
-        Text(formatMl(stat.volumeMl), fontSize = 14.sp, fontWeight = FontWeight.Medium)
-        Text("${stat.percentage}%", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.width(44.dp))
+        Text(
+            stat.visual.title,
+            fontSize = 15.sp,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(formatMl(stat.volumeMl), fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1, softWrap = false)
+        Text(
+            "${stat.percentage}%",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            softWrap = false,
+            textAlign = TextAlign.End,
+            modifier = Modifier.widthIn(min = 44.dp)
+        )
     }
 }

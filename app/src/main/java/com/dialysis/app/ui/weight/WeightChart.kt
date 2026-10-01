@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -38,10 +38,11 @@ internal fun WeightChartCard(
     goalWeightKg: Float,
     chartStats: WeightChartStatsUi?
 ) {
-    Card(modifier = Modifier.fillMaxWidth().height(276.dp), shape = RoundedCornerShape(12.dp)) {
+    Card(modifier = Modifier.fillMaxWidth().heightIn(min = 276.dp), shape = RoundedCornerShape(12.dp)) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .heightIn(min = 276.dp)
                 .background(WeightCardBackground)
                 .padding16()
         ) {

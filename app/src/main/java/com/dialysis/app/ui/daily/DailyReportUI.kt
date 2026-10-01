@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,7 +38,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.dialysis.app.R
 import com.dialysis.app.ui.components.PrimaryButton
 import com.dialysis.app.ui.components.TextStyles
@@ -288,14 +293,16 @@ private fun DrinkItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(88.dp),
+            .heightIn(min = 88.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
+        // Min height instead of fixed so title/subtitle can wrap with large system fonts
         Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .heightIn(min = 88.dp)
                 .background(CardSurface)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -323,23 +330,37 @@ private fun DrinkItem(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(
+                // Title stays on 1 line and subtitle on max 2 lines; text shrinks to fit instead of wrapping/cutting
+                BasicText(
                     text = title,
-                    color = TextDark,
-                    style = TextStyles.titleMedium
+                    style = TextStyles.titleMedium.copy(color = TextDark),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = 11.sp,
+                        maxFontSize = TextStyles.titleMedium.fontSize
+                    )
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
+                BasicText(
                     text = subtitle,
-                    color = TextMuted,
-                    style = TextStyles.body
+                    style = TextStyles.body.copy(color = TextMuted),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = 10.sp,
+                        maxFontSize = TextStyles.body.fontSize
+                    )
                 )
             }
 
             Text(
                 text = time,
                 color = TextMuted,
-                style = TextStyles.body
+                style = TextStyles.body,
+                maxLines = 1,
+                softWrap = false,
+                modifier = Modifier.padding(start = 8.dp)
             )
 
             Spacer(modifier = Modifier.width(12.dp))

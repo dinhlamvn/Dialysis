@@ -5,11 +5,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -64,7 +67,13 @@ internal fun WeightInfoCards(
     onEditInitialWeightClick: () -> Unit,
     onEditCurrentWeightClick: () -> Unit
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+    // IntrinsicSize.Min keeps the progress card as tall as the left column when large fonts make it grow
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+    ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SmallWeightInfoCard(
                 title = stringResource(R.string.weight_initial),
@@ -95,21 +104,26 @@ private fun SmallWeightInfoCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .heightIn(min = 100.dp)
             .then(if (onEditClick != null) Modifier.clickable(onClick = onEditClick) else Modifier),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .heightIn(min = 100.dp)
                 .background(WeightCardBackground)
                 .padding(16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(title, style = TextStyle(fontSize = 14.sp), color = WeightTextMuted)
-                Spacer(modifier = Modifier.weight(1f))
+                Text(title, style = TextStyle(fontSize = 14.sp), color = WeightTextMuted, modifier = Modifier.weight(1f))
                 if (onEditClick != null) {
-                    Text("✎", style = TextStyle(fontSize = 22.sp), color = WeightTextMuted)
+                    Text(
+                        "✎",
+                        style = TextStyle(fontSize = 22.sp),
+                        color = WeightTextMuted,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -120,7 +134,12 @@ private fun SmallWeightInfoCard(
 
 @Composable
 private fun WeightProgressCard(progressKg: Float, modifier: Modifier = Modifier) {
-    Card(modifier = modifier.height(212.dp), shape = RoundedCornerShape(12.dp)) {
+    Card(
+        modifier = modifier
+            .fillMaxHeight()
+            .heightIn(min = 212.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -128,9 +147,18 @@ private fun WeightProgressCard(progressKg: Float, modifier: Modifier = Modifier)
                 .padding(16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Tiến độ cân nặng", style = TextStyle(fontSize = 14.sp), color = WeightTextMuted)
-                Spacer(modifier = Modifier.weight(1f))
-                Text(">", style = TextStyle(fontSize = 12.sp), color = WeightTextMuted)
+                Text(
+                    "Tiến độ cân nặng",
+                    style = TextStyle(fontSize = 14.sp),
+                    color = WeightTextMuted,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    ">",
+                    style = TextStyle(fontSize = 12.sp),
+                    color = WeightTextMuted,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
