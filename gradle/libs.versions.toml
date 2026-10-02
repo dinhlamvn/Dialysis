@@ -17,8 +17,10 @@ httpLogging = "5.1.0"
 koin = "3.5.6"
 ksp = "2.3.4"
 work = "2.10.0"
+playAppUpdate = "2.1.0"
 
 [libraries]
+play-app-update = { group = "com.google.android.play", name = "app-update", version.ref = "playAppUpdate" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }

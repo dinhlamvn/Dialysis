@@ -65,6 +65,7 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class HomeActivity : BaseActivity() {
+    override val checkForNewUpdates: Boolean = true
     private val homeViewModel: HomeViewModel by viewModel()
     private val dailyReportViewModel: DailyReportViewModel by viewModel()
     private val weightViewModel: WeightViewModel by viewModel()

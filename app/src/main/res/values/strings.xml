@@ -1,4 +1,6 @@
 <resources>
+    <string name="update_downloaded">Bản cập nhật đã sẵn sàng. Khởi động lại để cài đặt.</string>
+    <string name="update_restart">Khởi động lại</string>
     <string name="app_name" translatable="false">Dialysis Intake</string>
     <string name="intro_title">Ứng dụng của chúng tôi sẽ giúp\nBạn kiểm soát tốt lượng dịch\nnhập mỗi ngày qua ăn uống!</string>
     <string name="intro_card_water_title" translatable="false">Dialysis Intake</string>
