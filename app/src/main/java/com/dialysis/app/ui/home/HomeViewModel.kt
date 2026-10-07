@@ -10,6 +10,13 @@ import com.dialysis.app.data.network.response.WaterIntakeResponse
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
+import com.dialysis.app.telemetry.ApiEndpoint
+import com.dialysis.app.telemetry.RecordPayload
+import com.dialysis.app.telemetry.SyncDataType
+import com.dialysis.app.telemetry.SyncFailure
+import com.dialysis.app.telemetry.SyncFailureReporter
+import com.dialysis.app.telemetry.SyncOperation
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -24,7 +31,8 @@ class HomeViewModel(
     private val userProfileSharePref: UserProfileSharePref,
     private val accountSharePref: AccountSharePref,
     private val networkManager: NetworkManager,
-    private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler
+    private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler,
+    private val syncFailureReporter: SyncFailureReporter,
 ) : BaseViewModel<HomeState>(HomeState()) {
 
     val drinksState = collectStateUI(HomeState::drinks)
@@ -143,10 +151,27 @@ class HomeViewModel(
     fun addDrink(name: String, amount: String, _time: String) {
         setState { copy(selectedDrinkName = null) }
         viewModelScope.launch(Dispatchers.IO) {
-            waterTrackingRepository.addEntry(
-                drinkName = name,
-                amountMl = amount.extractMlValue()
-            )
+            val amountMl = amount.extractMlValue()
+            val createdAt = System.currentTimeMillis()
+            try {
+                waterTrackingRepository.addEntry(
+                    drinkName = name,
+                    amountMl = amountMl,
+                    createdAt = createdAt
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                syncFailureReporter.reportWaterSaveFailure(
+                    error = e,
+                    payload = RecordPayload.Water(
+                        amountMl = amountMl,
+                        drinkName = name,
+                        loggedAt = Instant.ofEpochMilli(createdAt).toString()
+                    )
+                )
+                return@launch
+            }
             enqueueWaterSyncIfLoggedIn()
         }
     }
@@ -281,6 +306,8 @@ class HomeViewModel(
             viewModelScope.launch(Dispatchers.IO) {
                 runCatching {
                     syncWaterHistory()
+                }.onFailure { error ->
+                    if (error !is CancellationException) reportHistoryPullFailure(error)
                 }
                 setState { copy(isHistorySyncing = false) }
             }
@@ -288,7 +315,10 @@ class HomeViewModel(
     }
 
     private suspend fun syncWaterHistory() {
-        val history = fetchAllHistoryPages() ?: return
+        val history = fetchAllHistoryPages()?.getOrElse { error ->
+            reportHistoryPullFailure(error)
+            return
+        } ?: return
         if (accountSharePref.getToken().isBlank()) return
         val uniqueBySyncedId = history.distinctBy { it.id }
         val syncedIds = uniqueBySyncedId.map { it.id }
@@ -316,7 +346,19 @@ class HomeViewModel(
         }
     }
 
-    private suspend fun fetchAllHistoryPages(): List<WaterIntakeResponse>? {
+    private fun reportHistoryPullFailure(error: Throwable) {
+        syncFailureReporter.reportSyncFailure(
+            SyncFailure(
+                dataType = SyncDataType.WATER,
+                operation = SyncOperation.PULL,
+                endpoint = ApiEndpoint.WATER_HISTORY,
+                error = error
+            )
+        )
+    }
+
+    /** Returns null when the user logged out mid-way, or the first failed page request. */
+    private suspend fun fetchAllHistoryPages(): Result<List<WaterIntakeResponse>>? {
         val allItems = mutableListOf<WaterIntakeResponse>()
         var page = 1
         while (page <= MAX_HISTORY_SYNC_PAGE) {
@@ -324,13 +366,12 @@ class HomeViewModel(
             val result = networkManager.resolve {
                 networkManager.appServices.getWaterHistory(page = page)
             }
-            if (result.isFailure) return null
-            val pageItems = result.getOrNull().orEmpty()
+            val pageItems = result.getOrElse { return Result.failure(it) }
             if (pageItems.isEmpty()) break
             allItems += pageItems
             page++
         }
-        return allItems
+        return Result.success(allItems)
     }
 
     private fun WaterIntakeResponse.toEntity(): WaterEntryEntity {

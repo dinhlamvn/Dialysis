@@ -4,6 +4,7 @@ import android.content.Context
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import java.util.UUID
 
 class AccountSharePref(context: Context) : SharePref(context, "account_pref") {
 
@@ -12,6 +13,8 @@ class AccountSharePref(context: Context) : SharePref(context, "account_pref") {
         private const val KEY_TOKEN_TYPE = "token_type"
         private const val KEY_LAST_WATER_SYNC_AT = "last_water_sync_at"
         private const val KEY_HAS_LOGGED_IN = "has_logged_in"
+        private const val KEY_USER_ID = "user_id"
+        private const val KEY_INSTALL_ID = "install_id"
     }
 
     fun setToken(token: String) {
@@ -57,6 +60,23 @@ class AccountSharePref(context: Context) : SharePref(context, "account_pref") {
         remove(KEY_TOKEN_TYPE)
         remove(KEY_LAST_WATER_SYNC_AT)
         remove(KEY_HAS_LOGGED_IN)
+        remove(KEY_USER_ID)
+    }
+
+    fun setUserId(userId: Int) {
+        put(KEY_USER_ID, userId.toString())
+    }
+
+    /** Server user id of the logged-in account, or null. */
+    fun getUserId(): String? {
+        return get(KEY_USER_ID, "").takeIf { it.isNotBlank() }
+    }
+
+    /** Anonymous id for this install. Kept across sign-out ([clear] does not remove it). */
+    fun getOrCreateInstallId(): String {
+        return get(KEY_INSTALL_ID, "").ifBlank {
+            UUID.randomUUID().toString().also { put(KEY_INSTALL_ID, it) }
+        }
     }
 
     fun setHasLoggedIn(value: Boolean) {

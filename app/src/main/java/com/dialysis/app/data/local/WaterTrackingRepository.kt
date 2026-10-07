@@ -5,6 +5,7 @@ import com.dialysis.app.data.local.dao.WaterEntryDao
 import com.dialysis.app.data.local.entity.PendingWaterDeleteEntity
 import com.dialysis.app.data.local.entity.WaterEntryEntity
 import com.dialysis.app.data.local.model.DailyTotal
+import com.dialysis.app.sync.WaterSyncLocalStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
@@ -15,7 +16,7 @@ import java.util.Locale
 class WaterTrackingRepository(
     private val waterEntryDao: WaterEntryDao,
     private val pendingWaterDeleteDao: PendingWaterDeleteDao
-) {
+) : WaterSyncLocalStore {
 
     fun observeTodayTotalMl(): Flow<Int> {
         val now = System.currentTimeMillis()
@@ -88,7 +89,7 @@ class WaterTrackingRepository(
         return waterEntryDao.getById(entryId)
     }
 
-    suspend fun getUnsyncedEntries(): List<WaterEntryEntity> {
+    override suspend fun getUnsyncedEntries(): List<WaterEntryEntity> {
         return waterEntryDao.getUnsyncedEntries()
     }
 
@@ -100,7 +101,7 @@ class WaterTrackingRepository(
         return waterEntryDao.getSyncedEntries()
     }
 
-    suspend fun markEntrySynced(localId: Long, syncedId: Long) {
+    override suspend fun markEntrySynced(localId: Long, syncedId: Long) {
         waterEntryDao.updateSyncedId(localId, syncedId)
     }
 
@@ -119,11 +120,11 @@ class WaterTrackingRepository(
         waterEntryDao.deleteByIds(entryIds)
     }
 
-    suspend fun getPendingDeletes(): List<PendingWaterDeleteEntity> {
+    override suspend fun getPendingDeletes(): List<PendingWaterDeleteEntity> {
         return pendingWaterDeleteDao.getAll()
     }
 
-    suspend fun removePendingDelete(id: Long) {
+    override suspend fun removePendingDelete(id: Long) {
         pendingWaterDeleteDao.deleteById(id)
     }
 

@@ -6,14 +6,26 @@ import com.dialysis.app.data.local.AppDatabase
 import com.dialysis.app.data.local.WaterTrackingRepository
 import com.dialysis.app.data.local.WeightTrackingRepository
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.interceptor.ApiFailureInterceptor
 import com.dialysis.app.data.network.interceptor.DefaultHeadersInterceptor
 import com.dialysis.app.domain.auth.AuthRepository
 import com.dialysis.app.domain.auth.ChangePasswordUseCase
 import com.dialysis.app.domain.auth.RequestPasswordResetOtpUseCase
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
-import com.dialysis.app.sync.WaterIntakeSyncScheduler
+import com.dialysis.app.sync.NetworkUrineSyncApi
+import com.dialysis.app.sync.NetworkWaterSyncApi
+import com.dialysis.app.sync.SharePrefUrineSyncLocalStore
+import com.dialysis.app.sync.SharePrefWaterSyncAccount
+import com.dialysis.app.sync.UrineSyncRunner
 import com.dialysis.app.sync.UrineSyncScheduler
+import com.dialysis.app.sync.WaterIntakeSyncRunner
+import com.dialysis.app.sync.WaterIntakeSyncScheduler
+import com.dialysis.app.telemetry.AppTelemetry
+import com.dialysis.app.telemetry.AppTelemetryProvider
+import com.dialysis.app.telemetry.FirebaseAppTelemetry
+import com.dialysis.app.telemetry.SyncFailureReporter
+import com.dialysis.app.telemetry.TelemetryIdentity
 import com.dialysis.app.ui.changepassword.ChangePasswordViewModel
 import com.dialysis.app.ui.daily.DailyReportViewModel
 import com.dialysis.app.ui.drink.create.CreateDrinkViewModel
@@ -39,6 +51,7 @@ val NetworkModule = module {
     single<Gson> { GsonBuilder().create() }
     single<OkHttpClient> {
         OkHttpClient.Builder()
+            .addInterceptor(ApiFailureInterceptor(get()))
             .addNetworkInterceptor(DefaultHeadersInterceptor)
             .build()
     }
@@ -64,6 +77,41 @@ val appModule = module {
     single { get<AppDatabase>().pendingWaterDeleteDao() }
     single { WaterIntakeSyncScheduler(androidContext()) }
     single { UrineSyncScheduler(androidContext()) }
+    single<AppTelemetry> {
+        AppTelemetryProvider.create(
+            isFirebaseReady = { FirebaseAppTelemetry.isFirebaseReady(androidContext()) },
+            createFirebaseTelemetry = { FirebaseAppTelemetry(androidContext()) },
+        )
+    }
+    single {
+        val accountSharePref = get<AccountSharePref>()
+        SyncFailureReporter(telemetry = get(), userId = { accountSharePref.getUserId() })
+    }
+    single {
+        val accountSharePref = get<AccountSharePref>()
+        TelemetryIdentity(
+            telemetry = get(),
+            serverUserId = { accountSharePref.getUserId() },
+            installId = { accountSharePref.getOrCreateInstallId() },
+        )
+    }
+    single {
+        WaterIntakeSyncRunner(
+            store = get<WaterTrackingRepository>(),
+            api = NetworkWaterSyncApi(get()),
+            account = SharePrefWaterSyncAccount(get(), get()),
+            reporter = get(),
+        )
+    }
+    single {
+        val accountSharePref = get<AccountSharePref>()
+        UrineSyncRunner(
+            store = SharePrefUrineSyncLocalStore(get()),
+            api = NetworkUrineSyncApi(get()),
+            isLoggedIn = { accountSharePref.getToken().isNotBlank() },
+            reporter = get(),
+        )
+    }
     single { WaterTrackingRepository(get(), get()) }
     single { WeightTrackingRepository(get()) }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
@@ -73,11 +121,11 @@ val appModule = module {
 
 val RegisterModule = module {
     viewModel { RegisterViewModel(get()) }
-    viewModel { OtpVerifyViewModel(get(), get(), get(), get()) }
+    viewModel { OtpVerifyViewModel(get(), get(), get(), get(), get()) }
 }
 
 val LoginModule = module {
-    viewModel { LoginViewModel(get(), get(), get(), get(), get()) }
+    viewModel { LoginViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { ForgotPasswordViewModel(get()) }
     viewModel { ChangePasswordViewModel(get()) }
 }
@@ -87,8 +135,8 @@ val CreateDrinkModule = module {
 }
 
 val HomeModule = module {
-    viewModel { HomeViewModel(get(), get(), get(), get(), get()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get()) }
 }
 
 val DailyReportModule = module {

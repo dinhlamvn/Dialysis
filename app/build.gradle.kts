@@ -1,8 +1,12 @@
+import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -49,6 +53,10 @@ android {
         buildConfig = true
     }
 
+    lint {
+        baseline = file("lint-baseline.xml")
+    }
+
     flavorDimensions("default")
     productFlavors {
         create("dev") {
@@ -87,4 +95,13 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
+}
+
+// Builds without app/google-services.json still succeed; Firebase then stays uninitialized at runtime.
+googleServices {
+    missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN
 }

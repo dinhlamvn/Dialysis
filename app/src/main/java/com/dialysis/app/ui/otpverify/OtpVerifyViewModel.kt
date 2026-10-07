@@ -8,6 +8,7 @@ import com.dialysis.app.domain.auth.RequestPasswordResetOtpUseCase
 import com.dialysis.app.router.Router
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
+import com.dialysis.app.telemetry.TelemetryIdentity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -15,7 +16,8 @@ class OtpVerifyViewModel(
     private val accountSharePref: AccountSharePref,
     private val networkManager: NetworkManager,
     private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler,
-    private val requestPasswordResetOtp: RequestPasswordResetOtpUseCase
+    private val requestPasswordResetOtp: RequestPasswordResetOtpUseCase,
+    private val telemetryIdentity: TelemetryIdentity,
 ) : BaseViewModel<OtpVerifyState>(OtpVerifyState()) {
 
     val identifierTypeState = collectStateUI(OtpVerifyState::identifierType)
@@ -86,6 +88,8 @@ class OtpVerifyViewModel(
                     val data = result.getOrNull() ?: return@launch
                     accountSharePref.setToken(data.token)
                     accountSharePref.setTokenType(data.tokenType)
+                    accountSharePref.setUserId(data.user.id)
+                    telemetryIdentity.refreshUserId()
                     waterIntakeSyncScheduler.enqueue()
                     setState {
                         copy(

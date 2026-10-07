@@ -1,0 +1,1502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.13.2" type="baseline" client="gradle" dependencies="false" name="AGP (8.13.2)" variant="all" version="8.13.2">
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type xml"
+        errorLine1="    val parser = getXml(resId)"
+        errorLine2="                        ~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/ui/components/FigureWaterProgress.kt"
+            line="171"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="        String.format(&quot;%.1f l&quot;, valueMl / 1000f)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/ui/statistics/StatisticsFormatters.kt"
+            line="11"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="                value = String.format(&quot;%.1f%%&quot;, weeklyStats.averagePercentage),"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/ui/statistics/StatisticsMainTab.kt"
+            line="114"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="OldTargetApi"
+        message="Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the `android.os.Build.VERSION_CODES` javadoc for details."
+        errorLine1="        targetSdk = 36"
+        errorLine2="        ~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle.kts"
+            line="17"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="VectorRaster"
+        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        errorLine1="    android:width=&quot;512dp&quot;"
+        errorLine2="                   ~~~~~">
+        <location
+            file="src/main/res/drawable/figure.xml"
+            line="2"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="AndroidGradlePluginVersion"
+        message="A newer version of Gradle than 8.13 is available: 8.14.5"
+        errorLine1="distributionUrl=https\://services.gradle.org/distributions/gradle-8.13-bin.zip"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/wrapper/gradle-wrapper.properties"
+            line="4"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="AndroidGradlePluginVersion"
+        message="A newer version of com.android.application than 8.13.2 is available: 9.4.1"
+        errorLine1="agp = &quot;8.13.2&quot;"
+        errorLine2="      ~~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="2"
+            column="7"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.core:core-ktx than 1.17.0 is available: 1.19.1"
+        errorLine1="coreKtx = &quot;1.17.0&quot;"
+        errorLine2="          ~~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="4"
+            column="11"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose:compose-bom than 2026.01.00 is available: 2026.09.00"
+        errorLine1="compose = &quot;2026.01.00&quot;"
+        errorLine2="          ~~~~~~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="5"
+            column="11"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.appcompat:appcompat than 1.7.1 is available: 1.8.0"
+        errorLine1="appcompat = &quot;1.7.1&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of com.google.android.material:material than 1.13.0 is available: 1.14.0"
+        errorLine1="material = &quot;1.13.0&quot;"
+        errorLine2="           ~~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="7"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="Upgrade `androidx.compose.foundation` for keyboard and mouse support"
+        errorLine1="foundation = &quot;1.10.2&quot;"
+        errorLine2="             ~~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="8"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.constraintlayout:constraintlayout than 2.2.0 is available: 2.2.2"
+        errorLine1="constraintlayout = &quot;2.2.0&quot;"
+        errorLine2="                   ~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="9"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose.material3:material3 than 1.4.0-alpha16 is available: 1.4.0"
+        errorLine1="composeMaterial3 = &quot;1.4.0-alpha16&quot;"
+        errorLine2="                   ~~~~~~~~~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="11"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.activity:activity-compose than 1.11.0 is available: 1.13.0"
+        errorLine1="activityCompose = &quot;1.11.0&quot;"
+        errorLine2="                  ~~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="12"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-viewmodel-compose than 2.8.5 is available: 2.11.0"
+        errorLine1="lifecycleViewModelCompose = &quot;2.8.5&quot;"
+        errorLine2="                            ~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="13"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.room:room-compiler than 2.7.1 is available: 2.8.5"
+        errorLine1="room = &quot;2.7.1&quot;"
+        errorLine2="       ~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="14"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.room:room-ktx than 2.7.1 is available: 2.8.5"
+        errorLine1="room = &quot;2.7.1&quot;"
+        errorLine2="       ~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="14"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.room:room-runtime than 2.7.1 is available: 2.8.5"
+        errorLine1="room = &quot;2.7.1&quot;"
+        errorLine2="       ~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="14"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.work:work-runtime-ktx than 2.10.0 is available: 2.12.0"
+        errorLine1="work = &quot;2.10.0&quot;"
+        errorLine2="       ~~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="19"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.jetbrains.kotlin.android than 2.3.0 is available: 2.4.20"
+        errorLine1="kotlin = &quot;2.3.0&quot;"
+        errorLine2="         ~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="3"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of org.jetbrains.kotlin.plugin.compose than 2.3.0 is available: 2.4.20"
+        errorLine1="kotlin = &quot;2.3.0&quot;"
+        errorLine2="         ~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="3"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of com.squareup.okhttp3:logging-interceptor than 5.1.0 is available: 5.5.0"
+        errorLine1="httpLogging = &quot;5.1.0&quot;"
+        errorLine2="              ~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="16"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="NewerVersionAvailable"
+        message="A newer version of io.insert-koin:koin-android than 3.5.6 is available: 4.2.2"
+        errorLine1="koin = &quot;3.5.6&quot;"
+        errorLine2="       ~~~~~~~">
+        <location
+            file="$HOME/Desktop/Projects/loop-workspace/worktrees/20261005-android-firebase-crashlytics/gradle/libs.versions.toml"
+            line="17"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="ConfigurationScreenWidthHeight"
+        message="Using Configuration.screenHeightDp instead of LocalWindowInfo.current.containerSize"
+        errorLine1="    val screenHeight = LocalConfiguration.current.screenHeightDp.dp"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/ui/home/HomeUI.kt"
+            line="348"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="ConfigurationScreenWidthHeight"
+        message="Using Configuration.screenWidthDp instead of LocalWindowInfo.current.containerSize"
+        errorLine1="    val screenWidth = LocalConfiguration.current.screenWidthDp.dp"
+        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/ui/info/InfoUI.kt"
+            line="399"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="ConfigurationScreenWidthHeight"
+        message="Using Configuration.screenWidthDp instead of LocalWindowInfo.current.containerSize"
+        errorLine1="    val screenWidth = LocalConfiguration.current.screenWidthDp.dp"
+        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/ui/info/InfoUI.kt"
+            line="491"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="ConfigurationScreenWidthHeight"
+        message="Using Configuration.screenWidthDp instead of LocalWindowInfo.current.containerSize"
+        errorLine1="    val screenWidth = LocalConfiguration.current.screenWidthDp.dp"
+        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/ui/intro/IntroUI.kt"
+            line="109"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="LocalContextConfigurationRead"
+        message="Reading Configuration using LocalContext.current.resources.configuration"
+        errorLine1="    val fontScale = ctx.resources.configuration.fontScale"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/ui/theme/Theme.kt"
+            line="67"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                            context.getString(R.string.settings_terms)"
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/ui/home/tabs/SettingsFragment.kt"
+            line="613"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                            context.getString(R.string.settings_privacy)"
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/ui/home/tabs/SettingsFragment.kt"
+            line="629"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="LocalContextResourcesRead"
+        message="Reading Resources using LocalContext.current.resources"
+        errorLine1="        context.resources.readVectorPathSpec(figureResId)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/ui/components/FigureWaterProgress.kt"
+            line="43"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="SwitchIntDef"
+        message="Switch statement on an `int` with known associated constant missing case `InstallStatus.CANCELED`, `InstallStatus.DOWNLOADING`, `InstallStatus.INSTALLED`, `InstallStatus.INSTALLING`, `InstallStatus.PENDING`, `InstallStatus.REQUIRES_UI_INTENT`, `InstallStatus.UNKNOWN`"
+        errorLine1="        when (state.installStatus()) {"
+        errorLine2="        ~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/util/InAppUpdateHelper.kt"
+            line="42"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="This folder configuration (`v26`) is unnecessary; `minSdkVersion` is 29. Merge all the resources in this folder into `mipmap-anydpi`.">
+        <location
+            file="src/main/res/mipmap-anydpi-v26"/>
+    </issue>
+
+    <issue
+        id="FrequentlyChangingValue"
+        message="Reading a value annotated with @FrequentlyChangingValue inside composition"
+        errorLine1="                    abs(pagerState.currentPage - page + pagerState.currentPageOffsetFraction)"
+        errorLine2="                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/ui/intro/IntroUI.kt"
+            line="144"
+            column="68"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1="    var selected by rememberSaveable { mutableStateOf(-1) }"
+        errorLine2="                                       ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/ui/home/tabs/SettingsFragment.kt"
+            line="927"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.ic_launcher_background` appears to be unused"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/ic_launcher_background.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.ic_launcher_foreground` appears to be unused"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/ic_launcher_foreground.xml"
+            line="1"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.register_finish` appears to be unused"
+        errorLine1="    &lt;string name=&quot;register_finish&quot;>Hoàn tất&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="52"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.register_done_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;register_done_title&quot;>Hoàn tất đăng ký&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.register_done_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;register_done_desc&quot;>Thông tin của bạn đã sẵn sàng để bắt đầu.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="61"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.register_unit_year` appears to be unused"
+        errorLine1="    &lt;string name=&quot;register_unit_year&quot;>năm&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="66"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_progress_value` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_progress_value&quot;>34%&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="68"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_progress_detail` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_progress_detail&quot;>415ml của 1.2l&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="69"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_smoothie_amount` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_smoothie_amount&quot;>1.000 ml&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="73"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_smoothie` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_smoothie&quot;>Sinh tố&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="74"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_tea_amount` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_tea_amount&quot;>100 ml&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="75"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_tea` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_tea&quot;>Trà&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="76"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_time` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_time&quot;>09:58&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="77"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.daily_progress` appears to be unused"
+        errorLine1="    &lt;string name=&quot;daily_progress&quot;>24%&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="89"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.daily_coconut_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;daily_coconut_title&quot;>Nước dừa - 300 ml&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="90"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.daily_coconut_subtitle` appears to be unused"
+        errorLine1="    &lt;string name=&quot;daily_coconut_subtitle&quot;>300 ml của nước dừa còn lại&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="91"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.daily_coffee_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;daily_coffee_title&quot;>Cà phê - 50 ml&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="92"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.daily_coffee_subtitle` appears to be unused"
+        errorLine1="    &lt;string name=&quot;daily_coffee_subtitle&quot;>50 ml của cà phê còn lại&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="93"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.daily_time` appears to be unused"
+        errorLine1="    &lt;string name=&quot;daily_time&quot;>09:57&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="94"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.drink_water` appears to be unused"
+        errorLine1="    &lt;string name=&quot;drink_water&quot;>Nước&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="99"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.drink_coffee` appears to be unused"
+        errorLine1="    &lt;string name=&quot;drink_coffee&quot;>Cà phê&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="100"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.drink_tea` appears to be unused"
+        errorLine1="    &lt;string name=&quot;drink_tea&quot;>Trà&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="101"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.drink_soda` appears to be unused"
+        errorLine1="    &lt;string name=&quot;drink_soda&quot;>Nước ngọt&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="102"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.drink_fruit_water` appears to be unused"
+        errorLine1="    &lt;string name=&quot;drink_fruit_water&quot;>Nước hoa quả&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="103"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.drink_milk` appears to be unused"
+        errorLine1="    &lt;string name=&quot;drink_milk&quot;>Sữa&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="104"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.drink_yogurt` appears to be unused"
+        errorLine1="    &lt;string name=&quot;drink_yogurt&quot;>Sữa chua&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="105"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.drink_smoothie` appears to be unused"
+        errorLine1="    &lt;string name=&quot;drink_smoothie&quot;>Sinh tố&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="106"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.drink_beer` appears to be unused"
+        errorLine1="    &lt;string name=&quot;drink_beer&quot;>Bia&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="107"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.drink_coconut` appears to be unused"
+        errorLine1="    &lt;string name=&quot;drink_coconut&quot;>Nước dừa&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="108"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.drink_soup` appears to be unused"
+        errorLine1="    &lt;string name=&quot;drink_soup&quot;>Súp&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="109"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.drink_other` appears to be unused"
+        errorLine1="    &lt;string name=&quot;drink_other&quot;>Khác&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="110"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.create_drink_time` appears to be unused"
+        errorLine1="    &lt;string name=&quot;create_drink_time&quot;>9:58 SA&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="114"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.info_calculate_goal_failed_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;info_calculate_goal_failed_title&quot;>Tính mục tiêu nước thất bại&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="129"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.info_calculate_goal_failed_retry_suffix` appears to be unused"
+        errorLine1="    &lt;string name=&quot;info_calculate_goal_failed_retry_suffix&quot;>Bạn có muốn thử lại không?&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="130"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_title&quot;>Thống kê&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="142"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_today_format` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_today_format&quot;>Hôm nay, %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="143"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_find_friends` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_find_friends&quot;>Tìm bạn bè&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="144"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_me` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_me&quot;>Tôi&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="145"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_invite_friends` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_invite_friends&quot;>Mời bạn bè&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="146"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_weekly_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_weekly_title&quot;>Thống kê trong tuần&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="147"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_avg_daily_percentage` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_avg_daily_percentage&quot;>Phần trăm trung bình hằng ngày&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="148"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_total_week` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_total_week&quot;>Tổng số trong tuần&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="149"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_monthly_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_monthly_title&quot;>Thống kê theo tháng&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="150"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_empty_daily_records` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_empty_daily_records&quot;>Chưa có bản ghi theo ngày&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="151"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_locked_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_locked_desc&quot;>Chi tiết thống kê chỉ có trong\nphiên bản đầy đủ của ứng dụng&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="152"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_tab_main` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_tab_main&quot;>Chính&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="153"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_tab_by_day` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_tab_by_day&quot;>Theo ngày&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="154"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_tab_beverages` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_tab_beverages&quot;>Đồ uống&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="155"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_tab_monthly` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_tab_monthly&quot;>Tháng&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="156"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_today` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_today&quot;>Hôm nay&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="157"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_yesterday` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_yesterday&quot;>Hôm qua&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="158"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_day_mon` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_day_mon&quot;>Th 2&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="159"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_day_tue` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_day_tue&quot;>Th 3&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="160"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_day_wed` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_day_wed&quot;>Th 4&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="161"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_day_thu` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_day_thu&quot;>Th 5&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="162"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_day_fri` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_day_fri&quot;>Th 6&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="163"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_day_sat` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_day_sat&quot;>Th 7&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="164"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.stats_day_sun` appears to be unused"
+        errorLine1="    &lt;string name=&quot;stats_day_sun&quot;>CN&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="165"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_no_entries_to_sync` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_no_entries_to_sync&quot;>Không có dữ liệu cần đồng bộ&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="198"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_sync_confirm` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_sync_confirm&quot;>Bạn muốn đồng bộ %1$s không?&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="199"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_urine_history_failed` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_urine_history_failed&quot;>Không thể tải danh sách mẫu nước tiểu. Vui lòng thử lại.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="209"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_sign_in_up` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_sign_in_up&quot;>Đăng nhập hoặc Đăng ký&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="214"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_profile` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_profile&quot;>Hồ sơ&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="216"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_daily_goal` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_daily_goal&quot;>Mục tiêu mỗi ngày&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="217"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_notifications` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_notifications&quot;>Thông báo&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="218"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_off` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_off&quot;>Tắt&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="219"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_friends` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_friends&quot;>Bạn bè&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="220"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_add` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_add&quot;>Thêm&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="221"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_achievements` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_achievements&quot;>Thành tích&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="222"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_full_version` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_full_version&quot;>Phiên bản đầy đủ ›&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="223"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_full_version_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_full_version_desc&quot;>Uống nước đều hơn và sử dụng\nứng dụng hiệu quả hơn&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="224"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_beverages` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_beverages&quot;>Đồ uống&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="225"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_default_volumes` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_default_volumes&quot;>Dung tích mặc định&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="226"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_app_style` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_app_style&quot;>Giao diện ứng dụng&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="227"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_home_character` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_home_character&quot;>Nhân vật màn hình chính&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="228"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_language` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_language&quot;>Ngôn ngữ&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="229"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_language_value` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_language_value&quot;>Tiếng Việt&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="230"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_integrations` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_integrations&quot;>Tích hợp&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="231"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_units` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_units&quot;>Đơn vị đo&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="232"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_units_metric` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_units_metric&quot;>Hệ mét&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="233"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_rate_app` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_rate_app&quot;>Đánh giá ứng dụng&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="234"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_suggest_feature` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_suggest_feature&quot;>Đề xuất tính năng&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="235"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_contact_us` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_contact_us&quot;>Liên hệ&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="236"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_share_app` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_share_app&quot;>Chia sẻ ứng dụng&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="237"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_join_community` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings_join_community&quot;>Tham gia cộng đồng&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="238"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.weight_goal_prefix` appears to be unused"
+        errorLine1="    &lt;string name=&quot;weight_goal_prefix&quot;>Mục tiêu: &lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="240"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.weight_progress` appears to be unused"
+        errorLine1="    &lt;string name=&quot;weight_progress&quot;>Tiến độ cân nặng&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="243"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_tip_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_tip_title&quot;>Mẹo trong ngày&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="247"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_tip_more` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_tip_more&quot;>Thêm mẹo  &amp;gt;&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="248"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_tip_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_tip_desc&quot;>Uống ly nước đầu tiên ngay sau khi thức dậy có thể giúp cơ thể hoạt động ổn định và cân bằng nước tốt hơn.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="249"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_tip_share` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_tip_share&quot;>Chia sẻ mẹo&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="250"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;otp_verify_resending&quot;>Đang gửi lại...&lt;/string>"
+        errorLine2="                                        ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="35"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;main_syncing&quot;>Đang đồng bộ...&lt;/string>"
+        errorLine2="                                ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="128"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;settings_delete_account_deleting&quot;>Đang xóa tài khoản...&lt;/string>"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="183"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;settings_sync_water_running&quot;>Đang đồng bộ...&lt;/string>"
+        errorLine2="                                               ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="195"
+            column="48"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;settings_urine_saving&quot;>Đang lưu...&lt;/string>"
+        errorLine2="                                         ~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="204"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/ic_back.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/ic_back.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/ic_female.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/ic_female.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/ic_intro_launcher.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/ic_intro_launcher.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/ic_male.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/ic_male.png"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                    preferences.edit().putLong(LAST_PROMPT, System.currentTimeMillis()).apply()"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/util/InAppUpdateHelper.kt"
+            line="77"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs.edit()"
+        errorLine2="        ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/dialysis/app/notification/WaterReminderMessageRepository.kt"
+            line="15"
+            column="9"/>
+    </issue>
+
+</issues>

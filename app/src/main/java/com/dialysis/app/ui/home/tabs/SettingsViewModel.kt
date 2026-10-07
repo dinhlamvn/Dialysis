@@ -12,6 +12,7 @@ import com.dialysis.app.sharepref.LocalUrineSample
 import com.dialysis.app.sync.UrineSyncScheduler
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
+import com.dialysis.app.telemetry.TelemetryIdentity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -29,7 +30,8 @@ class SettingsViewModel(
     private val waterTrackingRepository: WaterTrackingRepository,
     private val weightTrackingRepository: WeightTrackingRepository,
     private val networkManager: NetworkManager,
-    private val urineSyncScheduler: UrineSyncScheduler
+    private val urineSyncScheduler: UrineSyncScheduler,
+    private val telemetryIdentity: TelemetryIdentity,
 ) : BaseViewModel<SettingsState>(SettingsState()) {
 
     val isLoadingAccountState = collectStateUI(SettingsState::isLoadingAccount)
@@ -86,6 +88,13 @@ class SettingsViewModel(
         setState { copy(isLoadingAccount = true) }
         viewModelScope.launch(Dispatchers.IO) {
             val result = networkManager.resolve { networkManager.appServices.me() }
+            // Accounts logged in before the user id was stored get it here, without a new login.
+            result.getOrNull()?.let { user ->
+                if (accountSharePref.getUserId() == null && accountSharePref.getToken().isNotBlank()) {
+                    accountSharePref.setUserId(user.id)
+                    telemetryIdentity.refreshUserId()
+                }
+            }
             val accountContact = result.getOrNull()?.let { user ->
                 user.phone?.takeIf { it.isNotBlank() }
                     ?: user.email?.takeIf { it.isNotBlank() }
@@ -505,6 +514,7 @@ class SettingsViewModel(
         isDeletingAccount: Boolean = false
     ) {
         runCatching { accountSharePref.clear() }
+        telemetryIdentity.refreshUserId()
         runCatching { userProfileSharePref.clear() }
         runCatching { waterTrackingRepository.clearAllLocalData() }
         runCatching { weightTrackingRepository.clearAll() }

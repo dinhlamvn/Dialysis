@@ -9,6 +9,7 @@ import com.dialysis.app.sharepref.UserProfileSharePref
 import com.dialysis.app.ui.info.InfoState
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
 import com.dialysis.app.sync.UrineSyncScheduler
+import com.dialysis.app.telemetry.TelemetryIdentity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -17,7 +18,8 @@ class LoginViewModel(
     private val networkManager: NetworkManager,
     private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler,
     private val userProfileSharePref: UserProfileSharePref,
-    private val urineSyncScheduler: UrineSyncScheduler
+    private val urineSyncScheduler: UrineSyncScheduler,
+    private val telemetryIdentity: TelemetryIdentity,
 ) : BaseViewModel<LoginState>(LoginState()) {
 
     val identifierState = collectStateUI(LoginState::identifier)
@@ -66,6 +68,8 @@ class LoginViewModel(
                     val data = result.getOrNull() ?: return@launch
                     accountSharePref.setToken(data.token)
                     accountSharePref.setTokenType(data.tokenType)
+                    accountSharePref.setUserId(data.user.id)
+                    telemetryIdentity.refreshUserId()
                     data.user.initialWeight?.toFloat()?.takeIf { it > 0f }?.let {
                         userProfileSharePref.saveInitialWeightKg(it)
                     }

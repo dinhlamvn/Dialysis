@@ -5,7 +5,6 @@ import com.dialysis.app.data.network.interceptor.AuthenticationInterceptor
 import com.dialysis.app.data.network.response.ApiResponse
 import com.dialysis.app.data.network.services.AppPublicServices
 import com.dialysis.app.data.network.services.AppServices
-import com.dialysis.app.extensions.parseNetworkErrorResponse
 import com.dialysis.app.sharepref.AccountSharePref
 import com.google.gson.Gson
 import okhttp3.OkHttpClient
@@ -43,11 +42,10 @@ class NetworkManager(
             if (response.success) {
                 Result.success(response.data!!)
             } else {
-                Result.failure(UnknownError(response.message))
+                Result.failure(ApiException(response.message))
             }
         } catch (e: Exception) {
-            val networkError = e.parseNetworkErrorResponse(appGson)
-            Result.failure(Exception(networkError.message))
+            Result.failure(e.toApiException(appGson))
         }
     }
 
@@ -57,11 +55,10 @@ class NetworkManager(
             if (response.success) {
                 Result.success(response.data)
             } else {
-                Result.failure(UnknownError(response.message))
+                Result.failure(ApiException(response.message))
             }
         } catch (e: Exception) {
-            val networkError = e.parseNetworkErrorResponse(appGson)
-            Result.failure(Exception(networkError.message))
+            Result.failure(e.toApiException(appGson))
         }
     }
 
