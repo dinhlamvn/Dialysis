@@ -81,15 +81,16 @@ class WeightViewModel(
     fun closeAddWeightSheet() = setState { copy(showAddWeightSheet = false) }
 
     fun updateDraftWeight(weightKg: Float) =
-        setState { copy(draftWeightKg = weightKg.coerceIn(MIN_WEIGHT_KG, MAX_WEIGHT_KG)) }
+        setState { copy(draftWeightKg = snapWeightKg(weightKg)) }
 
-    fun saveDraftWeight() {
+    /** Saves [weightKg] (the value shown in the sheet) for the current editing mode. */
+    fun saveDraftWeight(weightKg: Float) {
         getState { state ->
-            if (state.isSavingWeight || state.draftWeightKg <= 0f) return@getState
+            if (state.isSavingWeight || weightKg <= 0f) return@getState
 
             setState { copy(isSavingWeight = true) }
             viewModelScope.launch(Dispatchers.IO) {
-                saveWeightByMode(state.editingMode, state.draftWeightKg)
+                saveWeightByMode(state.editingMode, snapWeightKg(weightKg))
                 loadRemoteChart(selectedTabFlow.value, latestRange)
                 setState { copy(isSavingWeight = false) }
             }
@@ -202,7 +203,7 @@ class WeightViewModel(
 
     private fun openWeightSheet(mode: WeightEditingMode, draftValue: WeightState.() -> Float) =
         setState {
-            copy(showAddWeightSheet = true, editingMode = mode, draftWeightKg = draftValue())
+            copy(showAddWeightSheet = true, editingMode = mode, draftWeightKg = snapWeightKg(draftValue()))
         }
 
     private suspend fun saveWeightByMode(mode: WeightEditingMode, weightKg: Float) {
@@ -290,6 +291,4 @@ class WeightViewModel(
 }
 
 private const val HISTORY_LIMIT = 30
-private const val MIN_WEIGHT_KG = 25f
-private const val MAX_WEIGHT_KG = 200f
 internal const val DEFAULT_WEIGHT_NOTE = "Sau khi ăn sáng"
