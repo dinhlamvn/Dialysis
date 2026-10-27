@@ -3,13 +3,15 @@ package com.dialysis.app.ui.home
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WaterTrackingRepository
-import com.dialysis.app.data.local.entity.WaterEntryEntity
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.data.network.request.SymptomLogRequest
-import com.dialysis.app.data.network.response.WaterIntakeResponse
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
+import com.dialysis.app.sync.WaterIntakeRecorder
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
+import com.dialysis.app.sync.WaterSyncEngine
+import com.dialysis.app.sync.WaterSyncOutcome
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -17,14 +19,15 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.time.Instant
 
 class HomeViewModel(
     private val waterTrackingRepository: WaterTrackingRepository,
     private val userProfileSharePref: UserProfileSharePref,
     private val accountSharePref: AccountSharePref,
     private val networkManager: NetworkManager,
-    private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler
+    private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler,
+    private val waterSyncEngine: WaterSyncEngine,
+    private val waterIntakeRecorder: WaterIntakeRecorder
 ) : BaseViewModel<HomeState>(HomeState()) {
 
     val drinksState = collectStateUI(HomeState::drinks)
@@ -57,7 +60,6 @@ class HomeViewModel(
             )
         }
         syncWaterHistoryIfNeeded()
-        enqueueWaterSyncIfLoggedIn()
 
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
 
@@ -143,11 +145,11 @@ class HomeViewModel(
     fun addDrink(name: String, amount: String, _time: String) {
         setState { copy(selectedDrinkName = null) }
         viewModelScope.launch(Dispatchers.IO) {
-            waterTrackingRepository.addEntry(
+            waterIntakeRecorder.record(
                 drinkName = name,
-                amountMl = amount.extractMlValue()
+                amountMl = amount.extractMlValue(),
+                loggedAt = System.currentTimeMillis()
             )
-            enqueueWaterSyncIfLoggedIn()
         }
     }
 
@@ -279,69 +281,25 @@ class HomeViewModel(
             if (!state.isLoggedIn || state.isHistorySyncing) return@getState
             setState { copy(isHistorySyncing = true) }
             viewModelScope.launch(Dispatchers.IO) {
-                runCatching {
-                    syncWaterHistory()
+                val outcome = try {
+                    waterSyncEngine.runSyncSequence()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    WaterSyncOutcome.FAILED
                 }
                 setState { copy(isHistorySyncing = false) }
+                if (outcome == WaterSyncOutcome.FAILED) {
+                    enqueueWaterSyncIfLoggedIn()
+                }
             }
         }
-    }
-
-    private suspend fun syncWaterHistory() {
-        val history = fetchAllHistoryPages() ?: return
-        if (accountSharePref.getToken().isBlank()) return
-        val uniqueBySyncedId = history.distinctBy { it.id }
-        val syncedIds = uniqueBySyncedId.map { it.id }
-        val existingSyncedIds = waterTrackingRepository.getExistingSyncedIds(syncedIds)
-        val missingEntries = uniqueBySyncedId
-            .filterNot { it.id in existingSyncedIds }
-            .map { it.toEntity() }
-        waterTrackingRepository.insertSyncedEntries(missingEntries)
-
-        val fetchedSyncedIdSet = syncedIds.toSet()
-        val localSyncedEntries = waterTrackingRepository.getSyncedEntries()
-        val staleLocalEntryIds = localSyncedEntries
-            .filter { localEntry ->
-                val syncedId = localEntry.syncedId
-                syncedId != null && syncedId !in fetchedSyncedIdSet
-            }
-            .map { it.id }
-        waterTrackingRepository.deleteEntriesLocalOnly(staleLocalEntryIds)
-        accountSharePref.setLastWaterSyncAt(System.currentTimeMillis())
     }
 
     private fun enqueueWaterSyncIfLoggedIn() {
         if (accountSharePref.getToken().isNotBlank()) {
             waterIntakeSyncScheduler.enqueue()
         }
-    }
-
-    private suspend fun fetchAllHistoryPages(): List<WaterIntakeResponse>? {
-        val allItems = mutableListOf<WaterIntakeResponse>()
-        var page = 1
-        while (page <= MAX_HISTORY_SYNC_PAGE) {
-            if (accountSharePref.getToken().isBlank()) return null
-            val result = networkManager.resolve {
-                networkManager.appServices.getWaterHistory(page = page)
-            }
-            if (result.isFailure) return null
-            val pageItems = result.getOrNull().orEmpty()
-            if (pageItems.isEmpty()) break
-            allItems += pageItems
-            page++
-        }
-        return allItems
-    }
-
-    private fun WaterIntakeResponse.toEntity(): WaterEntryEntity {
-        val createdAtMillis = runCatching { Instant.parse(loggedAt).toEpochMilli() }
-            .getOrElse { System.currentTimeMillis() }
-        return WaterEntryEntity(
-            drinkName = drinkName,
-            amountMl = rawAmount,
-            createdAt = createdAtMillis,
-            syncedId = id
-        )
     }
 }
 
@@ -357,4 +315,3 @@ private fun String.extractMlValue(): Int {
     return digits.toIntOrNull() ?: 0
 }
 
-private const val MAX_HISTORY_SYNC_PAGE = 500

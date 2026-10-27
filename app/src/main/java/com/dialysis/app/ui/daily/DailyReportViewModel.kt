@@ -5,6 +5,7 @@ import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WaterTrackingRepository
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.sharepref.UserProfileSharePref
+import com.dialysis.app.sync.WaterIntakeRecorder
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,7 +26,8 @@ class DailyReportViewModel(
     private val waterTrackingRepository: WaterTrackingRepository,
     private val userProfileSharePref: UserProfileSharePref,
     private val networkManager: NetworkManager,
-    private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler
+    private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler,
+    private val waterIntakeRecorder: WaterIntakeRecorder
 ) : BaseViewModel<DailyReportState>(DailyReportState()) {
 
     private val selectedDateMillis = MutableStateFlow(System.currentTimeMillis())
@@ -114,26 +116,25 @@ class DailyReportViewModel(
     fun addDrink(name: String, amount: String) {
         setState { copy(selectedDrinkName = null) }
         viewModelScope.launch(Dispatchers.IO) {
-            waterTrackingRepository.addEntry(
+            waterIntakeRecorder.record(
                 drinkName = name,
-                amountMl = amount.extractMlValue()
+                amountMl = amount.extractMlValue(),
+                loggedAt = System.currentTimeMillis()
             )
-            waterIntakeSyncScheduler.enqueue()
         }
     }
 
     fun addDrink(name: String, amount: String, timeText: String) {
         setState { copy(selectedDrinkName = null) }
         viewModelScope.launch(Dispatchers.IO) {
-            waterTrackingRepository.addEntry(
+            waterIntakeRecorder.record(
                 drinkName = name,
                 amountMl = amount.extractMlValue(),
-                createdAt = mergeDateAndTime(
+                loggedAt = mergeDateAndTime(
                     dateMillis = selectedDateMillis.value,
                     timeText = timeText
                 )
             )
-            waterIntakeSyncScheduler.enqueue()
         }
     }
 

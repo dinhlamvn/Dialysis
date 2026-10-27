@@ -5,14 +5,20 @@ import com.dialysis.app.data.auth.AuthRepositoryImpl
 import com.dialysis.app.data.local.AppDatabase
 import com.dialysis.app.data.local.WaterTrackingRepository
 import com.dialysis.app.data.local.WeightTrackingRepository
+import com.dialysis.app.data.local.migration.MIGRATION_5_6
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.NetworkMonitor
 import com.dialysis.app.data.network.interceptor.DefaultHeadersInterceptor
 import com.dialysis.app.domain.auth.AuthRepository
 import com.dialysis.app.domain.auth.ChangePasswordUseCase
 import com.dialysis.app.domain.auth.RequestPasswordResetOtpUseCase
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
+import com.dialysis.app.sync.NetworkWaterSyncRemote
+import com.dialysis.app.sync.WaterIntakeRecorder
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
+import com.dialysis.app.sync.WaterSyncEngine
+import com.dialysis.app.sync.WaterSyncRemote
 import com.dialysis.app.sync.UrineSyncScheduler
 import com.dialysis.app.ui.changepassword.ChangePasswordViewModel
 import com.dialysis.app.ui.daily.DailyReportViewModel
@@ -57,7 +63,12 @@ val appModule = module {
             androidContext(),
             AppDatabase::class.java,
             "dialysis.db"
-        ).fallbackToDestructiveMigration().build()
+        )
+            .addMigrations(MIGRATION_5_6)
+            // Only pre-v5 schemas (no migration path) may be recreated; water data from v5 is migrated.
+            .fallbackToDestructiveMigrationFrom(true, 1, 2, 3, 4)
+            .fallbackToDestructiveMigrationOnDowngrade(true)
+            .build()
     }
     single { get<AppDatabase>().waterEntryDao() }
     single { get<AppDatabase>().weightEntryDao() }
@@ -65,6 +76,29 @@ val appModule = module {
     single { WaterIntakeSyncScheduler(androidContext()) }
     single { UrineSyncScheduler(androidContext()) }
     single { WaterTrackingRepository(get(), get()) }
+    single<WaterSyncRemote> { NetworkWaterSyncRemote(get()) }
+    single {
+        val accountSharePref = get<AccountSharePref>()
+        WaterSyncEngine(
+            repository = get(),
+            remote = get(),
+            isLoggedIn = { accountSharePref.getToken().isNotBlank() },
+            onSyncCompleted = accountSharePref::setLastWaterSyncAt
+        )
+    }
+    single { NetworkMonitor(androidContext()) }
+    single {
+        val accountSharePref = get<AccountSharePref>()
+        val networkMonitor = get<NetworkMonitor>()
+        val scheduler = get<WaterIntakeSyncScheduler>()
+        WaterIntakeRecorder(
+            repository = get(),
+            remote = get(),
+            isLoggedIn = { accountSharePref.getToken().isNotBlank() },
+            isOnline = networkMonitor::isOnline,
+            requestSync = scheduler::enqueue
+        )
+    }
     single { WeightTrackingRepository(get()) }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
     single { RequestPasswordResetOtpUseCase(get()) }
@@ -87,12 +121,12 @@ val CreateDrinkModule = module {
 }
 
 val HomeModule = module {
-    viewModel { HomeViewModel(get(), get(), get(), get(), get()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get()) }
 }
 
 val DailyReportModule = module {
-    viewModel { DailyReportViewModel(get(), get(), get(), get()) }
+    viewModel { DailyReportViewModel(get(), get(), get(), get(), get()) }
 }
 
 val InfoModule = module {
