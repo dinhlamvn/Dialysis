@@ -109,15 +109,6 @@ interface WaterEntryDao {
 
     @Query(
         """
-        SELECT synced_id
-        FROM water_entries
-        WHERE synced_id IN (:syncedIds)
-        """
-    )
-    suspend fun getExistingSyncedIds(syncedIds: List<Long>): List<Long>
-
-    @Query(
-        """
         SELECT *
         FROM water_entries
         WHERE id = :entryId
@@ -125,6 +116,28 @@ interface WaterEntryDao {
         """
     )
     suspend fun getById(entryId: Long): WaterEntryEntity?
+
+    @Query(
+        """
+        SELECT *
+        FROM water_entries
+        WHERE synced_id = :syncedId
+        LIMIT 1
+        """
+    )
+    suspend fun getBySyncedId(syncedId: Long): WaterEntryEntity?
+
+    @Query(
+        """
+        UPDATE water_entries
+        SET drink_name = :drinkName,
+            amount_ml = :amountMl,
+            weight_ratio = :weightRatio,
+            created_at = :createdAt
+        WHERE id = :entryId
+        """
+    )
+    suspend fun updateFromServer(entryId: Long, drinkName: String, amountMl: Int, weightRatio: Double, createdAt: Long)
 
     @Query(
         """

@@ -5,12 +5,34 @@ import com.dialysis.app.data.local.dao.WaterEntryDao
 import com.dialysis.app.data.local.entity.PendingWaterDeleteEntity
 import com.dialysis.app.data.local.entity.WaterEntryEntity
 import com.dialysis.app.data.local.model.DailyTotal
+import com.dialysis.app.domain.water.HydrationRatio
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
+
+/**
+ * Builds a new local record with a fresh, stable `client_id` and the drink's hydration ratio.
+ */
+fun newWaterEntry(
+    drinkName: String,
+    amountMl: Int,
+    createdAt: Long,
+    syncedId: Long? = null,
+    weightRatio: Double = HydrationRatio.forDrink(drinkName),
+    createdAtLocal: Long = System.currentTimeMillis(),
+): WaterEntryEntity = WaterEntryEntity(
+    clientId = UUID.randomUUID().toString(),
+    drinkName = drinkName,
+    amountMl = amountMl,
+    weightRatio = weightRatio,
+    createdAt = createdAt,
+    createdAtLocal = createdAtLocal,
+    syncedId = syncedId,
+)
 
 class WaterTrackingRepository(
     private val waterEntryDao: WaterEntryDao,
@@ -61,15 +83,7 @@ class WaterTrackingRepository(
         return waterEntryDao.observeAllEntries()
     }
 
-    suspend fun addEntry(drinkName: String, amountMl: Int, createdAt: Long = System.currentTimeMillis()) {
-        waterEntryDao.insert(
-            WaterEntryEntity(
-                drinkName = drinkName,
-                amountMl = amountMl,
-                createdAt = createdAt
-            )
-        )
-    }
+    suspend fun insertEntry(entry: WaterEntryEntity): Long = waterEntryDao.insert(entry)
 
     suspend fun deleteEntry(entryId: Long) {
         val currentEntry = waterEntryDao.getById(entryId)
@@ -100,14 +114,67 @@ class WaterTrackingRepository(
         return waterEntryDao.getSyncedEntries()
     }
 
-    suspend fun markEntrySynced(localId: Long, syncedId: Long) {
-        waterEntryDao.updateSyncedId(localId, syncedId)
+    /**
+     * Marks pending records synced (local id -> server id). If another local row already holds that
+     * server id (pulled from history before the sync response arrived), that copy is removed so the
+     * record is not counted twice.
+     */
+    suspend fun markEntriesSynced(serverIdByLocalId: Map<Long, Long>) {
+        serverIdByLocalId.forEach { (localId, serverId) ->
+            val duplicate = waterEntryDao.getBySyncedId(serverId)
+            if (duplicate != null && duplicate.id != localId) {
+                waterEntryDao.deleteById(duplicate.id)
+            }
+            waterEntryDao.updateSyncedId(localId, serverId)
+        }
     }
 
-    suspend fun getExistingSyncedIds(syncedIds: List<Long>): Set<Long> {
-        if (syncedIds.isEmpty()) return emptySet()
-        return waterEntryDao.getExistingSyncedIds(syncedIds).toSet()
+    /**
+     * Merges server history into local data. Only synced rows are touched: server rows are inserted
+     * or updated by server id, and, when [history] is the complete server list, synced rows the server
+     * no longer has are removed. Pending rows (`synced_id IS NULL`) are never changed.
+     * Server ids in [blockedServerIds] (local deletes not yet pushed) are not re-inserted.
+     */
+    suspend fun mergeServerHistory(
+        history: List<WaterEntryEntity>,
+        blockedServerIds: Set<Long>,
+        isCompleteHistory: Boolean
+    ) {
+        val serverEntries = history
+            .filter { it.syncedId != null && it.syncedId !in blockedServerIds }
+            .distinctBy { it.syncedId }
+        val localBySyncedId = waterEntryDao.getSyncedEntries().associateBy { it.syncedId }
+
+        val missing = mutableListOf<WaterEntryEntity>()
+        serverEntries.forEach { server ->
+            val local = localBySyncedId[server.syncedId]
+            when {
+                local == null -> missing += server
+                local.differsFrom(server) -> waterEntryDao.updateFromServer(
+                    entryId = local.id,
+                    drinkName = server.drinkName,
+                    amountMl = server.amountMl,
+                    weightRatio = server.weightRatio,
+                    createdAt = server.createdAt
+                )
+            }
+        }
+        insertSyncedEntries(missing)
+
+        if (isCompleteHistory) {
+            val serverIds = history.mapNotNull { it.syncedId }.toSet()
+            val stale = localBySyncedId.values
+                .filter { it.syncedId !in serverIds }
+                .map { it.id }
+            deleteEntriesLocalOnly(stale)
+        }
     }
+
+    private fun WaterEntryEntity.differsFrom(other: WaterEntryEntity): Boolean =
+        drinkName != other.drinkName ||
+            amountMl != other.amountMl ||
+            weightRatio != other.weightRatio ||
+            createdAt != other.createdAt
 
     suspend fun insertSyncedEntries(entries: List<WaterEntryEntity>) {
         if (entries.isEmpty()) return
