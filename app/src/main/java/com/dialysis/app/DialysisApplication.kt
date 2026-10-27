@@ -12,6 +12,7 @@ import com.dialysis.app.di.RegisterModule
 import com.dialysis.app.di.IntroModule
 import com.dialysis.app.di.WeightModule
 import com.dialysis.app.di.appModule
+import com.dialysis.app.sync.ForegroundSyncTrigger
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -37,6 +38,8 @@ class DialysisApplication : Application() {
                 IntroModule
             )
         }
-        getKoin().get<WaterIntakeSyncScheduler>().enqueue()
+        val waterSyncScheduler = getKoin().get<WaterIntakeSyncScheduler>()
+        waterSyncScheduler.enqueue()
+        registerActivityLifecycleCallbacks(ForegroundSyncTrigger(onForeground = waterSyncScheduler::enqueue))
     }
 }
