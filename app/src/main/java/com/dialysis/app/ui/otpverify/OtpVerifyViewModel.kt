@@ -86,6 +86,7 @@ class OtpVerifyViewModel(
                     val data = result.getOrNull() ?: return@launch
                     accountSharePref.setToken(data.token)
                     accountSharePref.setTokenType(data.tokenType)
+                    accountSharePref.setLoginIdentifier(data.user.username)
                     waterIntakeSyncScheduler.enqueue()
                     setState {
                         copy(

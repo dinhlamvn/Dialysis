@@ -9,6 +9,7 @@ import com.dialysis.app.data.network.response.ApiResponse
 import com.dialysis.app.data.network.response.ForgotPasswordResponse
 import com.dialysis.app.data.network.response.LoginResponse
 import com.dialysis.app.data.network.response.RegisterResponse
+import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -17,6 +18,12 @@ interface AppPublicServices {
     suspend fun login(
         @Body request: LoginRequest
     ): ApiResponse<LoginResponse>
+
+    /** Blocking login, for the sync client's 401 authenticator (runs on an OkHttp thread). */
+    @POST("mobile/auth/login")
+    fun loginCall(
+        @Body request: LoginRequest
+    ): Call<ApiResponse<LoginResponse>>
 
     @POST("mobile/auth/register")
     suspend fun register(

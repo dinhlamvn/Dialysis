@@ -46,7 +46,7 @@ class NetworkWaterSyncRemote(
 
     override suspend fun deleteIntake(serverId: Long): RemoteDeleteResult {
         return try {
-            val response = networkManager.appServices.deleteWaterIntake(serverId)
+            val response = networkManager.syncAppServices.deleteWaterIntake(serverId)
             when {
                 response.success -> RemoteDeleteResult.DELETED
                 isNotFoundMessage(response.message) -> RemoteDeleteResult.NOT_FOUND
@@ -67,10 +67,10 @@ class NetworkWaterSyncRemote(
     }
 
     override suspend fun syncOffline(request: MobileSyncRequest): Result<MobileSyncResponseData> =
-        networkManager.resolve { networkManager.appServices.syncOffline(request) }
+        networkManager.resolve { networkManager.syncAppServices.syncOffline(request) }
 
     override suspend fun getHistoryPage(page: Int): Result<List<WaterIntakeResponse>> =
-        networkManager.resolveNullable { networkManager.appServices.getWaterHistory(page = page) }
+        networkManager.resolveNullable { networkManager.syncAppServices.getWaterHistory(page = page) }
             .map { it.orEmpty() }
 
     private companion object {

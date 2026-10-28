@@ -1,33 +1,44 @@
 package com.dialysis.app.sharepref
 
 import android.content.Context
+import com.dialysis.app.data.network.auth.SessionStore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-class AccountSharePref(context: Context) : SharePref(context, "account_pref") {
+class AccountSharePref(context: Context) : SharePref(context, "account_pref"), SessionStore {
 
     companion object {
         private const val KEY_TOKEN = "token"
         private const val KEY_TOKEN_TYPE = "token_type"
         private const val KEY_LAST_WATER_SYNC_AT = "last_water_sync_at"
         private const val KEY_HAS_LOGGED_IN = "has_logged_in"
+        private const val KEY_LOGIN_IDENTIFIER = "login_identifier"
     }
 
-    fun setToken(token: String) {
+    override fun setToken(token: String) {
         put(KEY_TOKEN, token)
     }
 
-    fun getToken(): String {
+    override fun getToken(): String {
         return get(KEY_TOKEN, "")
     }
 
-    fun setTokenType(tokenType: String) {
+    override fun setTokenType(tokenType: String) {
         put(KEY_TOKEN_TYPE, tokenType)
     }
 
     fun getTokenType(): String {
         return get(KEY_TOKEN_TYPE, "")
+    }
+
+    /** Username of the last successful login, used for the silent re-login on 401. */
+    fun setLoginIdentifier(identifier: String) {
+        put(KEY_LOGIN_IDENTIFIER, identifier)
+    }
+
+    override fun getLoginIdentifier(): String {
+        return get(KEY_LOGIN_IDENTIFIER, "")
     }
 
     fun setLastWaterSyncAt(timestampMillis: Long) {
@@ -57,6 +68,7 @@ class AccountSharePref(context: Context) : SharePref(context, "account_pref") {
         remove(KEY_TOKEN_TYPE)
         remove(KEY_LAST_WATER_SYNC_AT)
         remove(KEY_HAS_LOGGED_IN)
+        remove(KEY_LOGIN_IDENTIFIER)
     }
 
     fun setHasLoggedIn(value: Boolean) {

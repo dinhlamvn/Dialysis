@@ -34,7 +34,7 @@ class UrineSyncWorker(
                 clientId = sample.clientId
             )
             val result = networkManager.resolve {
-                networkManager.appServices.logUrine(request)
+                networkManager.syncAppServices.logUrine(request)
             }
             if (result.isSuccess) {
                 syncedClientIds += sample.clientId
