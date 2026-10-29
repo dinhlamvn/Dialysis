@@ -134,12 +134,13 @@ class WaterTrackingRepository(
      * or updated by server id, and, when [history] is the complete server list, synced rows the server
      * no longer has are removed. Pending rows (`synced_id IS NULL`) are never changed.
      * Server ids in [blockedServerIds] (local deletes not yet pushed) are not re-inserted.
+     * Returns the stale synced rows that were removed (empty unless [isCompleteHistory]).
      */
     suspend fun mergeServerHistory(
         history: List<WaterEntryEntity>,
         blockedServerIds: Set<Long>,
         isCompleteHistory: Boolean
-    ) {
+    ): List<WaterEntryEntity> {
         val serverEntries = history
             .filter { it.syncedId != null && it.syncedId !in blockedServerIds }
             .distinctBy { it.syncedId }
@@ -161,13 +162,11 @@ class WaterTrackingRepository(
         }
         insertSyncedEntries(missing)
 
-        if (isCompleteHistory) {
-            val serverIds = history.mapNotNull { it.syncedId }.toSet()
-            val stale = localBySyncedId.values
-                .filter { it.syncedId !in serverIds }
-                .map { it.id }
-            deleteEntriesLocalOnly(stale)
-        }
+        if (!isCompleteHistory) return emptyList()
+        val serverIds = history.mapNotNull { it.syncedId }.toSet()
+        val stale = localBySyncedId.values.filter { it.syncedId !in serverIds }
+        deleteEntriesLocalOnly(stale.map { it.id })
+        return stale
     }
 
     private fun WaterEntryEntity.differsFrom(other: WaterEntryEntity): Boolean =

@@ -63,6 +63,15 @@ class AccountSharePref(context: Context) : SharePref(context, "account_pref"), S
         }
     }
 
+    /**
+     * Session expired: drops only the token, so the user must log in again. Local water/urine/weight
+     * data and pending records stay and are pushed by the sync after the next login.
+     */
+    fun clearSession() {
+        remove(KEY_TOKEN)
+        remove(KEY_TOKEN_TYPE)
+    }
+
     fun clear() {
         remove(KEY_TOKEN)
         remove(KEY_TOKEN_TYPE)

@@ -8,6 +8,7 @@ import com.dialysis.app.data.local.WeightTrackingRepository
 import com.dialysis.app.data.local.migration.MIGRATION_5_6
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.data.network.NetworkMonitor
+import com.dialysis.app.data.network.auth.SessionExpiredNotifier
 import com.dialysis.app.data.network.interceptor.DefaultHeadersInterceptor
 import com.dialysis.app.domain.auth.AuthRepository
 import com.dialysis.app.domain.auth.ChangePasswordUseCase
@@ -18,6 +19,7 @@ import com.dialysis.app.sync.NetworkWaterSyncRemote
 import com.dialysis.app.sync.WaterIntakeRecorder
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
 import com.dialysis.app.sync.WaterSyncEngine
+import com.dialysis.app.sync.WaterSyncLog
 import com.dialysis.app.sync.WaterSyncRemote
 import com.dialysis.app.sync.UrineSyncScheduler
 import com.dialysis.app.ui.changepassword.ChangePasswordViewModel
@@ -52,7 +54,8 @@ val NetworkModule = module {
         Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create(get<Gson>()))
     }
-    single { NetworkManager(get(), get(), get(), get()) }
+    single { SessionExpiredNotifier() }
+    single { NetworkManager(get(), get(), get(), get(), get()) }
 }
 
 val appModule = module {
@@ -83,7 +86,8 @@ val appModule = module {
             repository = get(),
             remote = get(),
             isLoggedIn = { accountSharePref.getToken().isNotBlank() },
-            onSyncCompleted = accountSharePref::setLastWaterSyncAt
+            onSyncCompleted = accountSharePref::setLastWaterSyncAt,
+            log = WaterSyncLog::d
         )
     }
     single { NetworkMonitor(androidContext()) }
@@ -107,7 +111,7 @@ val appModule = module {
 
 val RegisterModule = module {
     viewModel { RegisterViewModel(get()) }
-    viewModel { OtpVerifyViewModel(get(), get(), get(), get()) }
+    viewModel { OtpVerifyViewModel(get(), get(), get(), get(), get()) }
 }
 
 val LoginModule = module {

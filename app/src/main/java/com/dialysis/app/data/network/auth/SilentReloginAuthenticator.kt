@@ -15,11 +15,15 @@ typealias ReloginCall = (identifier: String, password: String) -> LoginResponse?
  * Runs only on HTTP 401 of the sync client: when another device logged in to the same account the
  * token was revoked, so log in again silently as the stored user and retry the request once.
  * Returning null hands the original 401 back to the caller (no logout, no UI).
+ * Without a stored username no re-login is possible: [onSessionExpired] is called instead.
  *
  * [relogin] must go through a client without this authenticator, so it cannot recurse.
+ * [log] gets diagnostic lines only; they never contain the token, password or username.
  */
 class SilentReloginAuthenticator(
     private val store: SessionStore,
+    private val onSessionExpired: () -> Unit = {},
+    private val log: (String) -> Unit = {},
     private val relogin: ReloginCall,
 ) : Authenticator {
 
@@ -33,22 +37,39 @@ class SilentReloginAuthenticator(
 
         synchronized(lock) {
             val currentToken = store.getToken()
-            if (currentToken.isBlank()) return null // logged out
+            if (currentToken.isBlank()) {
+                log("re-login skipped: logged out")
+                return null
+            }
             // Another request already refreshed the token while this one was in flight.
-            if (currentToken != failedToken) return response.request.withToken(currentToken)
+            if (currentToken != failedToken) {
+                log("re-login skipped: token already refreshed, retrying")
+                return response.request.withToken(currentToken)
+            }
 
             val identifier = store.getLoginIdentifier()
-            if (identifier.isBlank()) return null
+            if (identifier.isBlank()) {
+                log("re-login skipped: no username -> session expired")
+                onSessionExpired()
+                return null
+            }
 
             val login = runCatching { relogin(identifier, DEFAULT_RELOGIN_PASSWORD) }.getOrNull()
                 ?.takeIf { it.token.isNotBlank() }
-                ?: return null
+            if (login == null) {
+                log("re-login failed")
+                return null
+            }
 
             // The user may have logged out while the login was in flight; do not restore the session.
-            if (store.getToken().isBlank()) return null
+            if (store.getToken().isBlank()) {
+                log("re-login discarded: logged out during login")
+                return null
+            }
 
             store.setToken(login.token)
             store.setTokenType(login.tokenType)
+            log("re-login succeeded, retrying ${response.request.url.encodedPath}")
             return response.request.withToken(login.token)
         }
     }
@@ -73,8 +94,13 @@ class SilentReloginAuthenticator(
  * Client for the sync calls only: bearer token set by an application interceptor (so the
  * authenticator can read the token the failed request used) plus [SilentReloginAuthenticator].
  */
-internal fun OkHttpClient.withSilentRelogin(store: SessionStore, relogin: ReloginCall): OkHttpClient =
+internal fun OkHttpClient.withSilentRelogin(
+    store: SessionStore,
+    onSessionExpired: () -> Unit = {},
+    log: (String) -> Unit = {},
+    relogin: ReloginCall,
+): OkHttpClient =
     newBuilder()
         .addInterceptor(AuthenticationInterceptor(store))
-        .authenticator(SilentReloginAuthenticator(store, relogin))
+        .authenticator(SilentReloginAuthenticator(store, onSessionExpired, log, relogin))
         .build()

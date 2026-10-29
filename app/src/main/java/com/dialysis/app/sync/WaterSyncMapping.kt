@@ -8,37 +8,40 @@ import com.dialysis.app.data.network.response.MobileSyncResult
 import com.dialysis.app.data.network.response.WaterIntakeResponse
 import java.time.Instant
 import java.time.OffsetDateTime
-import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 private const val MIN_RAW_AMOUNT = 1
 private const val MAX_RAW_AMOUNT = 5000
 
-/** ISO-8601 with milliseconds and the zone offset, e.g. `2026-10-27T08:30:00.000+07:00`. */
-private val ISO_OFFSET_MILLIS: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+/** ISO-8601 in UTC with milliseconds, e.g. `2026-10-29T14:29:12.889Z`. */
+private val ISO_UTC_MILLIS: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).withZone(ZoneOffset.UTC)
 
-fun formatIsoOffset(epochMillis: Long, zone: ZoneId = ZoneId.systemDefault()): String =
-    ISO_OFFSET_MILLIS.format(Instant.ofEpochMilli(epochMillis).atZone(zone))
+/**
+ * Formats [epochMillis] in UTC, independent of the device time zone, like iOS
+ * (`ISO8601DateFormatter` with fractional seconds, GMT). The server appears to ignore a non-UTC offset: a
+ * `+09:00` time was stored 9h late and moved late-evening records to the next day.
+ */
+fun formatIsoUtc(epochMillis: Long): String = ISO_UTC_MILLIS.format(Instant.ofEpochMilli(epochMillis))
 
-/** Water intake payload for one local record (iOS `WaterSyncEngine.buildIntakeRequest`). */
-fun WaterEntryEntity.toWaterIntakeRequest(zone: ZoneId = ZoneId.systemDefault()): WaterIntakeRequest =
+/** Water intake payload for one local record (iOS `WaterSyncEngine.buildIntakeRequest`); times in UTC. */
+fun WaterEntryEntity.toWaterIntakeRequest(): WaterIntakeRequest =
     WaterIntakeRequest(
         drinkName = drinkName,
         rawAmount = amountMl.coerceIn(MIN_RAW_AMOUNT, MAX_RAW_AMOUNT),
         weightRatio = weightRatio.coerceIn(0.0, 1.0),
-        loggedAt = formatIsoOffset(createdAt, zone)
+        loggedAt = formatIsoUtc(createdAt)
     )
 
-/** `/mobile/sync` items for pending water records (iOS `WaterSyncEngine.pushPendingIntakes`). */
-fun buildWaterSyncItems(
-    entries: List<WaterEntryEntity>,
-    zone: ZoneId = ZoneId.systemDefault()
-): List<MobileSyncItem> = entries.map { entry ->
+/** `/mobile/sync` items for pending water records (iOS `WaterSyncEngine.pushPendingIntakes`); times in UTC. */
+fun buildWaterSyncItems(entries: List<WaterEntryEntity>): List<MobileSyncItem> = entries.map { entry ->
     MobileSyncItem(
         type = MobileSyncItem.TYPE_WATER_INTAKE,
         clientId = entry.clientId,
-        data = entry.toWaterIntakeRequest(zone),
-        createdAtLocal = formatIsoOffset(entry.createdAtLocal, zone)
+        data = entry.toWaterIntakeRequest(),
+        createdAtLocal = formatIsoUtc(entry.createdAtLocal)
     )
 }
 
@@ -62,7 +65,10 @@ fun mapWaterSyncResults(
         .toMap()
 }
 
-/** Parses server timestamps with an offset (`+07:00` or `Z`); null when the format is unknown. */
+/**
+ * Parses server timestamps with any offset (`Z`, `+00:00`, `+07:00`, ...), including the UTC strings
+ * from [formatIsoUtc]; null when the format is unknown.
+ */
 fun parseServerTime(value: String): Long? =
     runCatching { OffsetDateTime.parse(value).toInstant().toEpochMilli() }
         .recoverCatching { Instant.parse(value).toEpochMilli() }

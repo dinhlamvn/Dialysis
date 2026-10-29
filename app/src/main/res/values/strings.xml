@@ -132,6 +132,7 @@
     <string name="symptom_submit_success">Thành công</string>
     <string name="common_back">Quay lại</string>
     <string name="common_ok">Đồng ý</string>
+    <string name="session_expired_message">Phiên đăng nhập đã hết hiệu lực. Vui lòng đăng nhập lại.</string>
     <string name="common_avatar">Ảnh đại diện</string>
     <string name="common_show_password">Hiện mật khẩu</string>
     <string name="common_hide_password">Ẩn mật khẩu</string>

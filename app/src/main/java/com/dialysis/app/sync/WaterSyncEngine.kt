@@ -16,6 +16,7 @@ enum class WaterSyncOutcome { SKIPPED, SUCCESS, FAILED }
  * Runs are serialized so two triggers never push the same records at once.
  * [runSyncSequence] with `pendingCreatedBetween` pushes only pending records logged in that range
  * (Settings "sync today/week/month"); deletes and the pull always run in full.
+ * [log] receives diagnostic lines (record ids, amounts, times; never credentials).
  */
 class WaterSyncEngine(
     private val repository: WaterTrackingRepository,
@@ -23,6 +24,7 @@ class WaterSyncEngine(
     private val isLoggedIn: () -> Boolean,
     private val onSyncCompleted: (Long) -> Unit = {},
     private val clock: () -> Long = System::currentTimeMillis,
+    private val log: (String) -> Unit = {},
 ) {
     private val mutex = Mutex()
 
@@ -58,10 +60,21 @@ class WaterSyncEngine(
             repository.getUnsyncedEntriesBetween(createdBetween.first, createdBetween.last)
         }
         if (pending.isEmpty()) return true
+        pending.forEach {
+            log("push pending: client_id=${it.clientId} amount=${it.amountMl} logged_at=${it.createdAt}")
+        }
         val response = remote.syncOffline(MobileSyncRequest(buildWaterSyncItems(pending)))
-            .getOrElse { return false }
-        val synced = mapWaterSyncResults(pending, response.results.orEmpty())
+            .getOrElse {
+                log("sync failed: ${it.message}")
+                return false
+            }
+        val results = response.results.orEmpty()
+        results.forEach {
+            log("sync result: client_id=${it.clientId} success=${it.success} server_id=${it.serverId}")
+        }
+        val synced = mapWaterSyncResults(pending, results)
         if (!isLoggedIn()) return false
+        log("mark synced (local_id -> server_id): $synced")
         repository.markEntriesSynced(synced)
         return synced.size == pending.size
     }
@@ -71,7 +84,10 @@ class WaterSyncEngine(
         var isComplete = false
         for (page in 1..MAX_HISTORY_PAGES) {
             if (!isLoggedIn()) return false
-            val items = remote.getHistoryPage(page).getOrElse { return false }
+            val items = remote.getHistoryPage(page).getOrElse {
+                log("history pull failed at page $page: ${it.message}")
+                return false
+            }
             if (items.isEmpty()) {
                 isComplete = true
                 break
@@ -79,13 +95,17 @@ class WaterSyncEngine(
             history += items
         }
         if (!isLoggedIn()) return false
+        log("history pull: count=${history.size} complete=$isComplete server_ids=${history.map { it.id }}")
         val blockedServerIds = repository.getPendingDeletes().map { it.syncedId }.toSet()
         val now = clock()
-        repository.mergeServerHistory(
+        val removed = repository.mergeServerHistory(
             history = history.map { it.toSyncedEntity(now) },
             blockedServerIds = blockedServerIds,
             isCompleteHistory = isComplete
         )
+        removed.forEach {
+            log("removed stale: local_id=${it.id} server_id=${it.syncedId} amount=${it.amountMl} created_at=${it.createdAt}")
+        }
         return true
     }
 

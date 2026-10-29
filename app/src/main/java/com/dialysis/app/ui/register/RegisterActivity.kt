@@ -11,6 +11,8 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class RegisterActivity : BaseActivity() {
+    override val showsSessionExpiredDialog = false
+
     private val viewModel: RegisterViewModel by viewModel()
 
     @Composable
