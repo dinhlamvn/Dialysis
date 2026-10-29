@@ -15,7 +15,7 @@ android {
         applicationId = "com.dialysis.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 7
+        versionCode = 8
         versionName = "1.6.0"
     }
 
