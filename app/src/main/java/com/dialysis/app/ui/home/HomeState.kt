@@ -33,4 +33,5 @@ data class HomeState(
     val isSubmittingSymptom: Boolean = false,
     val showSymptomSubmitSuccessToast: Boolean = false,
     val isHistorySyncing: Boolean = false,
+    val showNoInternetDialog: Boolean = false,
 ) : BaseState

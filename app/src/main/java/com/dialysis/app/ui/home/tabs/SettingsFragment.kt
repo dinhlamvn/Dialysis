@@ -48,6 +48,7 @@ import com.dialysis.app.BuildConfig
 import com.dialysis.app.R
 import com.dialysis.app.base.BaseFragment
 import com.dialysis.app.router.Router
+import com.dialysis.app.ui.components.NoInternetDialog
 import com.dialysis.app.ui.components.PrimaryButton
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.theme.AppTheme
@@ -96,6 +97,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     val syncWaterSuccess = viewModel.syncWaterSuccessState.collectAsStateWithLifecycle().value
     val syncWaterError = viewModel.syncWaterErrorState.collectAsStateWithLifecycle().value
     val syncWaterErrorResId = viewModel.syncWaterErrorResIdState.collectAsStateWithLifecycle().value
+    val showNoInternetDialog = viewModel.showNoInternetDialogState.collectAsStateWithLifecycle().value
 
     Box(
         modifier = Modifier
@@ -237,6 +239,8 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 }
             )
         }
+
+        NoInternetDialog(visible = showNoInternetDialog, onDismiss = viewModel::dismissNoInternetDialog)
     }
 }
 

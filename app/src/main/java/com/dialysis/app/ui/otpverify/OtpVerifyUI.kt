@@ -27,6 +27,7 @@ import com.dialysis.app.R
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.InputCardField
 import com.dialysis.app.ui.components.Loading
+import com.dialysis.app.ui.components.NoInternetDialog
 import com.dialysis.app.ui.components.PrimaryButton
 import com.dialysis.app.ui.components.TextStyles
 
@@ -43,6 +44,7 @@ fun OtpVerifyScreen(viewModel: OtpVerifyViewModel = viewModel()) {
     val resendMessage by viewModel.resendMessageState.collectAsStateWithLifecycle()
     val isVerifying by viewModel.isVerifyingState.collectAsStateWithLifecycle()
     val isResending by viewModel.isResendingState.collectAsStateWithLifecycle()
+    val showNoInternetDialog by viewModel.showNoInternetDialogState.collectAsStateWithLifecycle()
     val isPasswordReset = mode == Router.OTP_MODE_PASSWORD_RESET
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -141,5 +143,6 @@ fun OtpVerifyScreen(viewModel: OtpVerifyViewModel = viewModel()) {
         if (isVerifying || isResending) {
             Loading()
         }
+        NoInternetDialog(visible = showNoInternetDialog, onDismiss = viewModel::dismissNoInternetDialog)
     }
 }

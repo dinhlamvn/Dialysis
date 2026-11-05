@@ -2,7 +2,9 @@ package com.dialysis.app.ui.otpverify
 
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
+import com.dialysis.app.data.network.ConnectivityChecker
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.isNoInternetFailure
 import com.dialysis.app.data.network.request.VerifyOtpRequest
 import com.dialysis.app.domain.auth.RequestPasswordResetOtpUseCase
 import com.dialysis.app.router.Router
@@ -17,7 +19,8 @@ class OtpVerifyViewModel(
     private val networkManager: NetworkManager,
     private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler,
     private val requestPasswordResetOtp: RequestPasswordResetOtpUseCase,
-    private val urineSyncScheduler: UrineSyncScheduler
+    private val urineSyncScheduler: UrineSyncScheduler,
+    private val connectivityChecker: ConnectivityChecker
 ) : BaseViewModel<OtpVerifyState>(OtpVerifyState()) {
 
     val identifierTypeState = collectStateUI(OtpVerifyState::identifierType)
@@ -28,6 +31,7 @@ class OtpVerifyViewModel(
     val isResendingState = collectStateUI(OtpVerifyState::isResending)
     val verifyErrorState = collectStateUI(OtpVerifyState::verifyError)
     val resendMessageState = collectStateUI(OtpVerifyState::resendMessage)
+    val showNoInternetDialogState = collectStateUI(OtpVerifyState::showNoInternetDialog)
 
     fun setIdentifierData(identifierType: String, identifier: String, mode: String) = setState {
         copy(identifierType = identifierType, identifier = identifier, mode = mode.ifBlank { Router.OTP_MODE_REGISTRATION })
@@ -64,6 +68,10 @@ class OtpVerifyViewModel(
                 setState { copy(verifyError = null, isVerifySuccess = true) }
                 return@getState
             }
+            if (!connectivityChecker.isOnline()) {
+                setState { copy(isVerifying = false, showNoInternetDialog = true) }
+                return@getState
+            }
 
             setState {
                 copy(
@@ -98,6 +106,8 @@ class OtpVerifyViewModel(
                             isVerifySuccess = true
                         )
                     }
+                } else if (result.isNoInternetFailure()) {
+                    setState { copy(isVerifying = false, showNoInternetDialog = true) }
                 } else {
                     setState {
                         copy(
@@ -119,6 +129,10 @@ class OtpVerifyViewModel(
                 setState { copy(verifyError = "Thiếu thông tin định danh") }
                 return@getState
             }
+            if (!connectivityChecker.isOnline()) {
+                setState { copy(isResending = false, showNoInternetDialog = true) }
+                return@getState
+            }
 
             setState { copy(isResending = true, verifyError = null, resendMessage = null) }
             viewModelScope.launch {
@@ -126,6 +140,8 @@ class OtpVerifyViewModel(
                 setState {
                     if (result.isSuccess) {
                         copy(isResending = false, resendMessage = "Mã OTP đã được gửi lại.")
+                    } else if (result.isNoInternetFailure()) {
+                        copy(isResending = false, showNoInternetDialog = true)
                     } else {
                         copy(
                             isResending = false,
@@ -136,4 +152,6 @@ class OtpVerifyViewModel(
             }
         }
     }
+
+    fun dismissNoInternetDialog() = setState { copy(showNoInternetDialog = false) }
 }

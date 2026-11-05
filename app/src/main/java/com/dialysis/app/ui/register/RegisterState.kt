@@ -14,4 +14,5 @@ data class RegisterState(
     val isRegisterLoading: Boolean = false,
     val registerError: String? = null,
     val isRegisterSuccess: Boolean = false,
+    val showNoInternetDialog: Boolean = false,
 ) : BaseState

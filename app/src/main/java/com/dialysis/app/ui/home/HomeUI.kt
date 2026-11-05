@@ -65,6 +65,7 @@ import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.CappedFontScale
 import com.dialysis.app.ui.components.FigureWaterProgress
 import com.dialysis.app.ui.components.Loading
+import com.dialysis.app.ui.components.NoInternetDialog
 import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.daily.DailyReportScreen
 import com.dialysis.app.ui.daily.DailyReportViewModel
@@ -110,6 +111,7 @@ fun HomeScreen(
     val showSymptomNotesError by viewModel.showSymptomNotesErrorState.collectAsStateWithLifecycle()
     val isSymptomsLoading by viewModel.isSymptomsLoadingState.collectAsStateWithLifecycle()
     val isSubmittingSymptom by viewModel.isSubmittingSymptomState.collectAsStateWithLifecycle()
+    val showNoInternetDialog by viewModel.showNoInternetDialogState.collectAsStateWithLifecycle()
     val rolling7DayStats = buildLast7DayStats(dailyTotals)
     val showDailyReportSheet by viewModel.showDailyReportSheetState.collectAsStateWithLifecycle()
     val dailyReportSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -217,6 +219,8 @@ fun HomeScreen(
             }
         }
     }
+
+    NoInternetDialog(visible = showNoInternetDialog, onDismiss = viewModel::dismissNoInternetDialog)
 }
 
 /**

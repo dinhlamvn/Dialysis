@@ -3,7 +3,9 @@ package com.dialysis.app.ui.info
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WeightTrackingRepository
+import com.dialysis.app.data.network.ConnectivityChecker
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.isNoInternet
 import com.dialysis.app.data.network.request.ProfileUpdateRequest
 import com.dialysis.app.data.network.request.WeightInitialRequest
 import com.dialysis.app.sharepref.AccountSharePref
@@ -16,7 +18,8 @@ class InfoViewModel(
     private val userProfileSharePref: UserProfileSharePref,
     private val accountSharePref: AccountSharePref,
     private val weightTrackingRepository: WeightTrackingRepository,
-    private val networkManager: NetworkManager
+    private val networkManager: NetworkManager,
+    private val connectivityChecker: ConnectivityChecker
 ) : BaseViewModel<InfoState>(InfoState()) {
     private var hasLoadedInitialData = false
 
@@ -31,6 +34,7 @@ class InfoViewModel(
     val dialysisFreqWeekState = collectStateUI(InfoState::dialysisFreqWeek)
     val dailyUrineMlState = collectStateUI(InfoState::dailyUrineMl)
     val shouldOpenHomeState = collectStateUI(InfoState::shouldOpenHome)
+    val showNoInternetDialogState = collectStateUI(InfoState::showNoInternetDialog)
 
     fun loadInitialData() {
         if (hasLoadedInitialData) return
@@ -76,6 +80,11 @@ class InfoViewModel(
     fun saveProfile() {
         getState { state ->
             if (state.shouldOpenHome) return@getState
+            // Logged in = the profile is sent to the server, so it needs a connection.
+            if (accountSharePref.getToken().isNotBlank() && !connectivityChecker.isOnline()) {
+                setState { copy(showNoInternetDialog = true) }
+                return@getState
+            }
             viewModelScope.launch(Dispatchers.IO) {
                 weightTrackingRepository.saveDailyWeight(weightKg = state.weight.toFloat())
                 userProfileSharePref.saveProfile(state)
@@ -107,8 +116,13 @@ class InfoViewModel(
                             networkManager.appServices.updateProfile(request)
                             setState { copy(shouldOpenHome = true) }
                         } catch (e: Exception) {
-                            // swallow - do not block UI, navigate home
-                            setState { copy(shouldOpenHome = true) }
+                            if (e.isNoInternet()) {
+                                // Saved locally; stay here so the user can retry once online.
+                                setState { copy(showNoInternetDialog = true) }
+                            } else {
+                                // swallow - do not block UI, navigate home
+                                setState { copy(shouldOpenHome = true) }
+                            }
                         }
                     } catch (e: Exception) {
                         // swallow - do not block UI, navigate home
@@ -125,6 +139,8 @@ class InfoViewModel(
     
 
     fun consumeOpenHomeEvent() = setState { copy(shouldOpenHome = false) }
+
+    fun dismissNoInternetDialog() = setState { copy(showNoInternetDialog = false) }
 
     private fun calculateLocalDailyWaterGoalMl(state: InfoState): Int {
         return LOCAL_BASE_DAILY_WATER_GOAL_ML + state.dailyUrineMl

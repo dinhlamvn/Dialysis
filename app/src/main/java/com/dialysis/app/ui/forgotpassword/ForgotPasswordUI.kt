@@ -31,6 +31,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dialysis.app.R
 import com.dialysis.app.ui.components.InputCardField
 import com.dialysis.app.ui.components.Loading
+import com.dialysis.app.ui.components.NoInternetDialog
 import com.dialysis.app.ui.components.PrimaryButton
 import com.dialysis.app.ui.components.TextStyles
 
@@ -42,6 +43,7 @@ fun ForgotPasswordScreen(
     val identifier by viewModel.identifierState.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoadingState.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessageState.collectAsStateWithLifecycle()
+    val showNoInternetDialog by viewModel.showNoInternetDialogState.collectAsStateWithLifecycle()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -96,5 +98,6 @@ fun ForgotPasswordScreen(
         }
 
         if (isLoading) Loading()
+        NoInternetDialog(visible = showNoInternetDialog, onDismiss = viewModel::dismissNoInternetDialog)
     }
 }
