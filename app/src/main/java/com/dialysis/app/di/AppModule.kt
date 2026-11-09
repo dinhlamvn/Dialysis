@@ -17,11 +17,14 @@ import com.dialysis.app.domain.auth.RequestPasswordResetOtpUseCase
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
 import com.dialysis.app.sync.NetworkWaterSyncRemote
+import com.dialysis.app.sync.NetworkWeightSyncRemote
 import com.dialysis.app.sync.WaterIntakeRecorder
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
 import com.dialysis.app.sync.WaterSyncEngine
 import com.dialysis.app.sync.WaterSyncLog
 import com.dialysis.app.sync.WaterSyncRemote
+import com.dialysis.app.sync.WeightSyncEngine
+import com.dialysis.app.sync.WeightSyncRemote
 import com.dialysis.app.sync.UrineSyncScheduler
 import com.dialysis.app.ui.changepassword.ChangePasswordViewModel
 import com.dialysis.app.ui.daily.DailyReportViewModel
@@ -106,6 +109,17 @@ val appModule = module {
         )
     }
     single { WeightTrackingRepository(get()) }
+    single<WeightSyncRemote> { NetworkWeightSyncRemote(get()) }
+    single {
+        val accountSharePref = get<AccountSharePref>()
+        val networkMonitor = get<NetworkMonitor>()
+        WeightSyncEngine(
+            repository = get(),
+            remote = get(),
+            isLoggedIn = { accountSharePref.getToken().isNotBlank() },
+            isOnline = networkMonitor::isOnline
+        )
+    }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
     single { RequestPasswordResetOtpUseCase(get()) }
     single { ChangePasswordUseCase(get()) }
@@ -140,7 +154,7 @@ val InfoModule = module {
 }
 
 val WeightModule = module {
-    viewModel { WeightViewModel(get(), get(), get(), get()) }
+    viewModel { WeightViewModel(get(), get(), get(), get(), get()) }
 }
 
 val IntroModule = module {

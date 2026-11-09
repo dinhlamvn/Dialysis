@@ -6,8 +6,9 @@ import retrofit2.HttpException
 
 fun Throwable.parseNetworkErrorResponse(appGson: Gson): NetworkErrorResponse {
     val httpException = this.castToAsNull<HttpException>() ?: return defaultNetworkErrorResponse()
-    val body =
-        httpException.response()?.errorBody()?.string() ?: return defaultNetworkErrorResponse()
+    // Reading the body can fail on a dropped connection; callers must still get a failure Result.
+    val body = runCatching { httpException.response()?.errorBody()?.string() }.getOrNull()
+        ?: return defaultNetworkErrorResponse()
     return appGson.runCatching {
         val networkErrorResponse = fromJson(body, NetworkErrorResponse::class.java)
         val errors = networkErrorResponse.errors.orEmpty()
