@@ -28,7 +28,8 @@ data class SettingsState(
     val isSyncingWater: Boolean = false,
     val syncWaterSuccess: Boolean = false,
     val syncWaterError: String? = null,
-    @param:StringRes val syncWaterErrorResId: Int? = null
+    @param:StringRes val syncWaterErrorResId: Int? = null,
+    val showNoInternetDialog: Boolean = false
 ) : BaseState
 
 enum class UrineSamplesMode {

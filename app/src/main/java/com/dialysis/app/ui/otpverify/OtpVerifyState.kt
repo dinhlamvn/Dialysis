@@ -12,4 +12,5 @@ data class OtpVerifyState(
     val verifyError: String? = null,
     val resendMessage: String? = null,
     val isVerifySuccess: Boolean = false,
+    val showNoInternetDialog: Boolean = false,
 ) : BaseState

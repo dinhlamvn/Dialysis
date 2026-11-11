@@ -2,7 +2,9 @@ package com.dialysis.app.ui.login
 
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
+import com.dialysis.app.data.network.ConnectivityChecker
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.isNoInternetFailure
 import com.dialysis.app.data.network.request.LoginRequest
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
@@ -17,7 +19,8 @@ class LoginViewModel(
     private val networkManager: NetworkManager,
     private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler,
     private val userProfileSharePref: UserProfileSharePref,
-    private val urineSyncScheduler: UrineSyncScheduler
+    private val urineSyncScheduler: UrineSyncScheduler,
+    private val connectivityChecker: ConnectivityChecker
 ) : BaseViewModel<LoginState>(LoginState()) {
 
     val identifierState = collectStateUI(LoginState::identifier)
@@ -26,6 +29,7 @@ class LoginViewModel(
     val isLoginLoadingState = collectStateUI(LoginState::isLoginLoading)
     val loginErrorState = collectStateUI(LoginState::loginError)
     val requiresInfoCompletionState = collectStateUI(LoginState::requiresInfoCompletion)
+    val showNoInternetDialogState = collectStateUI(LoginState::showNoInternetDialog)
 
     fun updateIdentifier(value: String) = setState { copy(identifier = value) }
 
@@ -41,6 +45,10 @@ class LoginViewModel(
 
             if (state.identifier.isBlank() || state.password.isBlank()) {
                 setState { copy(loginError = "Vui lòng nhập tài khoản và mật khẩu") }
+                return@getState
+            }
+            if (!connectivityChecker.isOnline()) {
+                setState { copy(isLoginLoading = false, showNoInternetDialog = true) }
                 return@getState
             }
 
@@ -106,6 +114,8 @@ class LoginViewModel(
                     }
                     // mark that user has logged in at least once
                     accountSharePref.setHasLoggedIn(true)
+                } else if (result.isNoInternetFailure()) {
+                    setState { copy(isLoginLoading = false, showNoInternetDialog = true) }
                 } else {
                     val errorMessage = result.exceptionOrNull()?.message.orEmpty()
                     if (errorMessage.equals("No data", ignoreCase = true) ||
@@ -133,6 +143,8 @@ class LoginViewModel(
             }
         }
     }
+
+    fun dismissNoInternetDialog() = setState { copy(showNoInternetDialog = false) }
 }
 
 private fun String?.toLoginErrorMessage(): String {

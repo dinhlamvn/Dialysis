@@ -36,6 +36,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dialysis.app.R
 import com.dialysis.app.ui.components.InputCardField
 import com.dialysis.app.ui.components.Loading
+import com.dialysis.app.ui.components.NoInternetDialog
 import com.dialysis.app.ui.components.PrimaryButton
 import com.dialysis.app.ui.components.TextStyles
 
@@ -56,6 +57,7 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel(), onBackClick: () -
     val isConfirmPasswordVisible by viewModel.isConfirmPasswordVisibleState.collectAsStateWithLifecycle()
     val registerError by viewModel.registerErrorState.collectAsStateWithLifecycle()
     val isRegistering by viewModel.isRegisterLoadingState.collectAsStateWithLifecycle()
+    val showNoInternetDialog by viewModel.showNoInternetDialogState.collectAsStateWithLifecycle()
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -229,5 +231,6 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel(), onBackClick: () -
         if (isRegistering) {
             Loading()
         }
+        NoInternetDialog(visible = showNoInternetDialog, onDismiss = viewModel::dismissNoInternetDialog)
     }
 }

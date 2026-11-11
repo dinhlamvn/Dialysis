@@ -2,13 +2,16 @@ package com.dialysis.app.ui.register
 
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
+import com.dialysis.app.data.network.ConnectivityChecker
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.isNoInternetFailure
 import com.dialysis.app.data.network.request.RegisterRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class RegisterViewModel(
-    private val networkManager: NetworkManager
+    private val networkManager: NetworkManager,
+    private val connectivityChecker: ConnectivityChecker
 ) : BaseViewModel<RegisterState>(RegisterState()) {
 
     val usernameState = collectStateUI(RegisterState::username)
@@ -22,6 +25,7 @@ class RegisterViewModel(
         collectStateUI(RegisterState::isConfirmPasswordVisible)
     val isRegisterLoadingState = collectStateUI(RegisterState::isRegisterLoading)
     val registerErrorState = collectStateUI(RegisterState::registerError)
+    val showNoInternetDialogState = collectStateUI(RegisterState::showNoInternetDialog)
 
     fun updateUsername(value: String) = setState { copy(username = value.withoutWhitespace()) }
 
@@ -46,6 +50,10 @@ class RegisterViewModel(
     fun register() {
         getState { state ->
             if (state.isRegisterLoading) return@getState
+            if (!connectivityChecker.isOnline()) {
+                setState { copy(isRegisterLoading = false, showNoInternetDialog = true) }
+                return@getState
+            }
 
             setState {
                 copy(
@@ -79,6 +87,8 @@ class RegisterViewModel(
                             isRegisterSuccess = true
                         )
                     }
+                } else if (result.isNoInternetFailure()) {
+                    setState { copy(isRegisterLoading = false, showNoInternetDialog = true) }
                 } else {
                     setState {
                         copy(
@@ -91,6 +101,8 @@ class RegisterViewModel(
             }
         }
     }
+
+    fun dismissNoInternetDialog() = setState { copy(showNoInternetDialog = false) }
 }
 
 private fun String.withoutWhitespace(): String = filterNot(Char::isWhitespace)

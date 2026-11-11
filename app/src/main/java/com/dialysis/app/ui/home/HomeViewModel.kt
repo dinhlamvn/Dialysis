@@ -3,7 +3,9 @@ package com.dialysis.app.ui.home
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WaterTrackingRepository
+import com.dialysis.app.data.network.ConnectivityChecker
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.isNoInternetFailure
 import com.dialysis.app.data.network.request.SymptomLogRequest
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
@@ -27,7 +29,8 @@ class HomeViewModel(
     private val networkManager: NetworkManager,
     private val waterIntakeSyncScheduler: WaterIntakeSyncScheduler,
     private val waterSyncEngine: WaterSyncEngine,
-    private val waterIntakeRecorder: WaterIntakeRecorder
+    private val waterIntakeRecorder: WaterIntakeRecorder,
+    private val connectivityChecker: ConnectivityChecker
 ) : BaseViewModel<HomeState>(HomeState()) {
 
     val drinksState = collectStateUI(HomeState::drinks)
@@ -51,6 +54,7 @@ class HomeViewModel(
     val isSubmittingSymptomState = collectStateUI(HomeState::isSubmittingSymptom)
     val showSymptomSubmitSuccessToastState = collectStateUI(HomeState::showSymptomSubmitSuccessToast)
     val isHistorySyncingState = collectStateUI(HomeState::isHistorySyncing)
+    val showNoInternetDialogState = collectStateUI(HomeState::showNoInternetDialog)
 
     init {
         setState {
@@ -196,6 +200,10 @@ class HomeViewModel(
                 setState { copy(showSymptomNotesError = true) }
                 return@getState
             }
+            if (!connectivityChecker.isOnline()) {
+                setState { copy(isSubmittingSymptom = false, showNoInternetDialog = true) }
+                return@getState
+            }
 
             setState {
                 copy(
@@ -226,6 +234,8 @@ class HomeViewModel(
                             showSymptomSubmitSuccessToast = true
                         )
                     }
+                } else if (result.isNoInternetFailure()) {
+                    setState { copy(isSubmittingSymptom = false, showNoInternetDialog = true) }
                 } else {
                     setState { copy(isSubmittingSymptom = false) }
                 }
@@ -254,6 +264,8 @@ class HomeViewModel(
             }
         }
     }
+
+    fun dismissNoInternetDialog() = setState { copy(showNoInternetDialog = false) }
 
     fun clearSymptomSubmitSuccessToast() = setState {
         copy(showSymptomSubmitSuccessToast = false)

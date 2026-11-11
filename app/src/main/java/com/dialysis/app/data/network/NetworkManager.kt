@@ -8,7 +8,6 @@ import com.dialysis.app.data.network.request.LoginRequest
 import com.dialysis.app.data.network.response.ApiResponse
 import com.dialysis.app.data.network.services.AppPublicServices
 import com.dialysis.app.data.network.services.AppServices
-import com.dialysis.app.extensions.parseNetworkErrorResponse
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sync.WaterSyncLog
 import com.google.gson.Gson
@@ -80,8 +79,7 @@ class NetworkManager(
                 Result.failure(UnknownError(response.message))
             }
         } catch (e: Exception) {
-            val networkError = e.parseNetworkErrorResponse(appGson)
-            Result.failure(Exception(networkError.message))
+            Result.failure(e.toResolveFailure(appGson))
         }
     }
 
@@ -94,8 +92,7 @@ class NetworkManager(
                 Result.failure(UnknownError(response.message))
             }
         } catch (e: Exception) {
-            val networkError = e.parseNetworkErrorResponse(appGson)
-            Result.failure(Exception(networkError.message))
+            Result.failure(e.toResolveFailure(appGson))
         }
     }
 

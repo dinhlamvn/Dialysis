@@ -8,5 +8,6 @@ data class ForgotPasswordState(
     val errorMessage: String? = null,
     val successIdentifier: String = "",
     val successIdentifierType: String = "",
-    val isOtpSent: Boolean = false
+    val isOtpSent: Boolean = false,
+    val showNoInternetDialog: Boolean = false
 ) : BaseState

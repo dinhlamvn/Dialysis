@@ -24,5 +24,6 @@ data class MobileSyncItem(
 ) {
     companion object {
         const val TYPE_WATER_INTAKE = "water_intake"
+        const val TYPE_WEIGHT_LOG = "weight_log"
     }
 }

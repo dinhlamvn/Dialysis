@@ -5,7 +5,10 @@ import com.dialysis.app.R
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WaterTrackingRepository
 import com.dialysis.app.data.local.WeightTrackingRepository
+import com.dialysis.app.data.network.ConnectivityChecker
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.isNoInternet
+import com.dialysis.app.data.network.isNoInternetFailure
 import com.dialysis.app.data.network.request.UrineLogRequest
 import com.dialysis.app.data.network.response.UrineHistoryItem
 import com.dialysis.app.sharepref.LocalUrineSample
@@ -32,7 +35,8 @@ class SettingsViewModel(
     private val weightTrackingRepository: WeightTrackingRepository,
     private val networkManager: NetworkManager,
     private val urineSyncScheduler: UrineSyncScheduler,
-    private val waterSyncEngine: WaterSyncEngine
+    private val waterSyncEngine: WaterSyncEngine,
+    private val connectivityChecker: ConnectivityChecker
 ) : BaseViewModel<SettingsState>(SettingsState()) {
 
     val isLoadingAccountState = collectStateUI(SettingsState::isLoadingAccount)
@@ -59,6 +63,7 @@ class SettingsViewModel(
     val syncWaterSuccessState = collectStateUI(SettingsState::syncWaterSuccess)
     val syncWaterErrorState = collectStateUI(SettingsState::syncWaterError)
     val syncWaterErrorResIdState = collectStateUI(SettingsState::syncWaterErrorResId)
+    val showNoInternetDialogState = collectStateUI(SettingsState::showNoInternetDialog)
 
     private val deleteAccountRequestInFlight = AtomicBoolean(false)
     private val urineSaveRequestInFlight = AtomicBoolean(false)
@@ -129,6 +134,8 @@ class SettingsViewModel(
     fun clearDeleteAccountError() = setState {
         copy(deleteAccountError = null, deleteAccountErrorResId = null)
     }
+
+    fun dismissNoInternetDialog() = setState { copy(showNoInternetDialog = false) }
 
     fun openUrineSamples() {
         setState { copy(urineSamplesMode = UrineSamplesMode.Main) }
@@ -340,6 +347,16 @@ class SettingsViewModel(
                 }
                 return@getState
             }
+            if (!connectivityChecker.isOnline()) {
+                setState {
+                    copy(
+                        showDeleteAccountConfirm = false,
+                        isDeletingAccount = false,
+                        showNoInternetDialog = true
+                    )
+                }
+                return@getState
+            }
             if (!deleteAccountRequestInFlight.compareAndSet(false, true)) return@getState
             setState {
                 copy(
@@ -358,6 +375,14 @@ class SettingsViewModel(
                             showDeleteAccountConfirm = false,
                             isDeletingAccount = false
                         )
+                    } else if (result.isNoInternetFailure()) {
+                        setState {
+                            copy(
+                                showDeleteAccountConfirm = false,
+                                isDeletingAccount = false,
+                                showNoInternetDialog = true
+                            )
+                        }
                     } else {
                         setState {
                             copy(
@@ -399,6 +424,10 @@ class SettingsViewModel(
                 setState { copy(syncWaterErrorResId = R.string.settings_urine_login_required) }
                 return@getState
             }
+            if (!connectivityChecker.isOnline()) {
+                setState { copy(isSyncingWater = false, showNoInternetDialog = true) }
+                return@getState
+            }
             setState { copy(isSyncingWater = true, syncWaterSuccess = false, syncWaterError = null, syncWaterErrorResId = null) }
             viewModelScope.launch(Dispatchers.IO) {
                 val outcome = try {
@@ -407,6 +436,14 @@ class SettingsViewModel(
                     throw e
                 } catch (e: Exception) {
                     Result.failure(e)
+                }
+                // The engine swallows remote errors, so a FAILED run is checked against connectivity.
+                val failed = outcome.isFailure || outcome.getOrNull() == WaterSyncOutcome.FAILED
+                val lostConnection = failed &&
+                    (outcome.exceptionOrNull()?.isNoInternet() == true || !connectivityChecker.isOnline())
+                if (lostConnection) {
+                    setState { copy(isSyncingWater = false, showNoInternetDialog = true) }
+                    return@launch
                 }
                 outcome.onSuccess { result ->
                     if (result == WaterSyncOutcome.FAILED) {
