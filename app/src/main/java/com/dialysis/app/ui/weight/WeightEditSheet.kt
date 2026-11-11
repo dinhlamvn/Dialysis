@@ -10,26 +10,61 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlin.math.roundToInt
+import kotlinx.coroutines.flow.filter
 
 @Composable
 internal fun WeightEditSheet(
     editingMode: WeightEditingMode,
     draftWeightKg: Float,
     onCancel: () -> Unit,
-    onSave: () -> Unit,
+    onSave: (Float) -> Unit,
     onWeightChange: (Float) -> Unit
 ) {
+    // The ruler's own scroll state is the source of the shown value: ViewModel updates arrive asynchronously
+    // (StateManager channel), so they must never move the ruler while the user scrolls.
+    val rulerState = rememberWeightRulerState(key = editingMode, initialKg = draftWeightKg)
+    val shownKg by rememberRulerCenterWeightKg(rulerState)
+    val sentWeights = remember(editingMode) { SentWeights() }
+    val latestDraftKg by rememberUpdatedState(draftWeightKg)
+    val latestOnWeightChange by rememberUpdatedState(onWeightChange)
+
+    fun sendWeight(weightKg: Float) {
+        if (weightKg == (sentWeights.last ?: snapWeightKg(latestDraftKg))) return
+        sentWeights.add(weightKg)
+        latestOnWeightChange(weightKg)
+    }
+
+    // Send only new snapped values, never every scroll frame.
+    LaunchedEffect(rulerState) {
+        snapshotFlow { shownKg }.collect { sendWeight(it) }
+    }
+    // Settle: make sure the final tick reached the ViewModel.
+    LaunchedEffect(rulerState) {
+        snapshotFlow { rulerState.isScrollInProgress }.filter { !it }.collect { sendWeight(shownKg) }
+    }
+    // Re-sync with a draft the ruler did not produce, while idle (e.g. the draft for a new mode arrives late).
+    // Echoes of sent values may arrive late or out of order, so they never move the ruler.
+    LaunchedEffect(draftWeightKg, editingMode) {
+        val incomingKg = snapWeightKg(draftWeightKg)
+        if (!sentWeights.isEcho(incomingKg) && !rulerState.isScrollInProgress && incomingKg != shownKg) {
+            rulerState.scrollToItem(weightKgToRulerIndex(incomingKg))
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -42,7 +77,7 @@ internal fun WeightEditSheet(
             verticalAlignment = Alignment.CenterVertically
         ) {
             WeightSheetActionButton(text = "Hủy", onClick = onCancel, primary = false)
-            WeightSheetActionButton(text = "Lưu", onClick = onSave, primary = true)
+            WeightSheetActionButton(text = "Lưu", onClick = { onSave(shownKg) }, primary = true)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -54,16 +89,25 @@ internal fun WeightEditSheet(
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(16.dp))
-        WeightDraftValue(draftWeightKg)
+        WeightDraftValue(shownKg)
         Spacer(modifier = Modifier.height(16.dp))
-        Slider(
-            value = draftWeightKg,
-            onValueChange = { onWeightChange((it * 2f).roundToInt() / 2f) },
-            valueRange = 25f..200f,
-            steps = ((200f - 25f) / 0.5f).toInt() - 1
-        )
+        WeightRulerPicker(state = rulerState)
         Spacer(modifier = Modifier.height(220.dp))
     }
+}
+
+/** Weights sent to the ViewModel for one editing mode; a draft equal to one of them is an echo of the ruler. */
+internal class SentWeights {
+    private val sent = HashSet<Float>()
+    var last: Float? = null
+        private set
+
+    fun add(weightKg: Float) {
+        sent += weightKg
+        last = weightKg
+    }
+
+    fun isEcho(weightKg: Float): Boolean = weightKg in sent
 }
 
 @Composable
