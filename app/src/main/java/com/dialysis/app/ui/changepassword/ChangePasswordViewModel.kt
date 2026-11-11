@@ -2,12 +2,15 @@ package com.dialysis.app.ui.changepassword
 
 import androidx.lifecycle.viewModelScope
 import com.dialysis.app.base.BaseViewModel
+import com.dialysis.app.data.network.ConnectivityChecker
+import com.dialysis.app.data.network.isNoInternetFailure
 import com.dialysis.app.domain.auth.AuthInputValidator
 import com.dialysis.app.domain.auth.ChangePasswordUseCase
 import kotlinx.coroutines.launch
 
 class ChangePasswordViewModel(
-    private val changePasswordUseCase: ChangePasswordUseCase
+    private val changePasswordUseCase: ChangePasswordUseCase,
+    private val connectivityChecker: ConnectivityChecker
 ) : BaseViewModel<ChangePasswordState>(ChangePasswordState()) {
 
     val newPasswordState = collectStateUI(ChangePasswordState::newPassword)
@@ -16,6 +19,7 @@ class ChangePasswordViewModel(
     val isConfirmPasswordVisibleState = collectStateUI(ChangePasswordState::isConfirmPasswordVisible)
     val isLoadingState = collectStateUI(ChangePasswordState::isLoading)
     val errorMessageState = collectStateUI(ChangePasswordState::errorMessage)
+    val showNoInternetDialogState = collectStateUI(ChangePasswordState::showNoInternetDialog)
 
     fun setResetData(identifier: String, otpCode: String) = setState {
         copy(identifier = identifier, otpCode = otpCode)
@@ -52,6 +56,10 @@ class ChangePasswordViewModel(
                 setState { copy(errorMessage = "Thiếu thông tin xác minh OTP") }
                 return@getState
             }
+            if (!connectivityChecker.isOnline()) {
+                setState { copy(isLoading = false, showNoInternetDialog = true) }
+                return@getState
+            }
 
             setState { copy(isLoading = true, errorMessage = null, isSuccess = false) }
             viewModelScope.launch {
@@ -63,6 +71,8 @@ class ChangePasswordViewModel(
                 setState {
                     if (result.isSuccess) {
                         copy(isLoading = false, isSuccess = true)
+                    } else if (result.isNoInternetFailure()) {
+                        copy(isLoading = false, showNoInternetDialog = true)
                     } else {
                         copy(
                             isLoading = false,
@@ -73,4 +83,6 @@ class ChangePasswordViewModel(
             }
         }
     }
+
+    fun dismissNoInternetDialog() = setState { copy(showNoInternetDialog = false) }
 }

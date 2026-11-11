@@ -35,6 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dialysis.app.R
 import com.dialysis.app.ui.components.InputCardField
 import com.dialysis.app.ui.components.Loading
+import com.dialysis.app.ui.components.NoInternetDialog
 import com.dialysis.app.ui.components.PrimaryButton
 import com.dialysis.app.ui.components.TextStyles
 
@@ -49,6 +50,7 @@ fun ChangePasswordScreen(
     val isConfirmVisible by viewModel.isConfirmPasswordVisibleState.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoadingState.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessageState.collectAsStateWithLifecycle()
+    val showNoInternetDialog by viewModel.showNoInternetDialogState.collectAsStateWithLifecycle()
     val canSubmit = newPassword.isNotEmpty() && confirmPassword.isNotEmpty() && newPassword == confirmPassword
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -100,6 +102,7 @@ fun ChangePasswordScreen(
         }
 
         if (isLoading) Loading()
+        NoInternetDialog(visible = showNoInternetDialog, onDismiss = viewModel::dismissNoInternetDialog)
     }
 }
 

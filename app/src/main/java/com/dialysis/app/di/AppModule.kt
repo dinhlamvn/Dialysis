@@ -5,14 +5,26 @@ import com.dialysis.app.data.auth.AuthRepositoryImpl
 import com.dialysis.app.data.local.AppDatabase
 import com.dialysis.app.data.local.WaterTrackingRepository
 import com.dialysis.app.data.local.WeightTrackingRepository
+import com.dialysis.app.data.local.migration.MIGRATION_5_6
+import com.dialysis.app.data.network.ConnectivityChecker
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.NetworkMonitor
+import com.dialysis.app.data.network.auth.SessionExpiredNotifier
 import com.dialysis.app.data.network.interceptor.DefaultHeadersInterceptor
 import com.dialysis.app.domain.auth.AuthRepository
 import com.dialysis.app.domain.auth.ChangePasswordUseCase
 import com.dialysis.app.domain.auth.RequestPasswordResetOtpUseCase
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
+import com.dialysis.app.sync.NetworkWaterSyncRemote
+import com.dialysis.app.sync.NetworkWeightSyncRemote
+import com.dialysis.app.sync.WaterIntakeRecorder
 import com.dialysis.app.sync.WaterIntakeSyncScheduler
+import com.dialysis.app.sync.WaterSyncEngine
+import com.dialysis.app.sync.WaterSyncLog
+import com.dialysis.app.sync.WaterSyncRemote
+import com.dialysis.app.sync.WeightSyncEngine
+import com.dialysis.app.sync.WeightSyncRemote
 import com.dialysis.app.sync.UrineSyncScheduler
 import com.dialysis.app.ui.changepassword.ChangePasswordViewModel
 import com.dialysis.app.ui.daily.DailyReportViewModel
@@ -20,6 +32,9 @@ import com.dialysis.app.ui.drink.create.CreateDrinkViewModel
 import com.dialysis.app.ui.forgotpassword.ForgotPasswordViewModel
 import com.dialysis.app.ui.home.HomeViewModel
 import com.dialysis.app.ui.home.tabs.SettingsViewModel
+import com.dialysis.app.ui.home.tabs.profile.AccountProfileLoader
+import com.dialysis.app.ui.home.tabs.profile.AccountProfileViewModel
+import com.dialysis.app.ui.home.tabs.profile.RemoteAccountProfileLoader
 import com.dialysis.app.ui.info.InfoViewModel
 import com.dialysis.app.ui.login.LoginViewModel
 import com.dialysis.app.ui.main.IntroViewModel
@@ -31,6 +46,7 @@ import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -46,7 +62,8 @@ val NetworkModule = module {
         Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create(get<Gson>()))
     }
-    single { NetworkManager(get(), get(), get(), get()) }
+    single { SessionExpiredNotifier() }
+    single { NetworkManager(get(), get(), get(), get(), get()) }
 }
 
 val appModule = module {
@@ -57,7 +74,12 @@ val appModule = module {
             androidContext(),
             AppDatabase::class.java,
             "dialysis.db"
-        ).fallbackToDestructiveMigration().build()
+        )
+            .addMigrations(MIGRATION_5_6)
+            // Only pre-v5 schemas (no migration path) may be recreated; water data from v5 is migrated.
+            .fallbackToDestructiveMigrationFrom(true, 1, 2, 3, 4)
+            .fallbackToDestructiveMigrationOnDowngrade(true)
+            .build()
     }
     single { get<AppDatabase>().waterEntryDao() }
     single { get<AppDatabase>().weightEntryDao() }
@@ -65,21 +87,56 @@ val appModule = module {
     single { WaterIntakeSyncScheduler(androidContext()) }
     single { UrineSyncScheduler(androidContext()) }
     single { WaterTrackingRepository(get(), get()) }
+    single<WaterSyncRemote> { NetworkWaterSyncRemote(get()) }
+    single {
+        val accountSharePref = get<AccountSharePref>()
+        WaterSyncEngine(
+            repository = get(),
+            remote = get(),
+            isLoggedIn = { accountSharePref.getToken().isNotBlank() },
+            onSyncCompleted = accountSharePref::setLastWaterSyncAt,
+            log = WaterSyncLog::d
+        )
+    }
+    single { NetworkMonitor(androidContext()) } bind ConnectivityChecker::class
+    single {
+        val accountSharePref = get<AccountSharePref>()
+        val networkMonitor = get<NetworkMonitor>()
+        val scheduler = get<WaterIntakeSyncScheduler>()
+        WaterIntakeRecorder(
+            repository = get(),
+            remote = get(),
+            isLoggedIn = { accountSharePref.getToken().isNotBlank() },
+            isOnline = networkMonitor::isOnline,
+            requestSync = scheduler::enqueue
+        )
+    }
     single { WeightTrackingRepository(get()) }
+    single<WeightSyncRemote> { NetworkWeightSyncRemote(get()) }
+    single {
+        val accountSharePref = get<AccountSharePref>()
+        val networkMonitor = get<NetworkMonitor>()
+        WeightSyncEngine(
+            repository = get(),
+            remote = get(),
+            isLoggedIn = { accountSharePref.getToken().isNotBlank() },
+            isOnline = networkMonitor::isOnline
+        )
+    }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
     single { RequestPasswordResetOtpUseCase(get()) }
     single { ChangePasswordUseCase(get()) }
 }
 
 val RegisterModule = module {
-    viewModel { RegisterViewModel(get()) }
-    viewModel { OtpVerifyViewModel(get(), get(), get(), get()) }
+    viewModel { RegisterViewModel(get(), get()) }
+    viewModel { OtpVerifyViewModel(get(), get(), get(), get(), get(), get()) }
 }
 
 val LoginModule = module {
-    viewModel { LoginViewModel(get(), get(), get(), get(), get()) }
-    viewModel { ForgotPasswordViewModel(get()) }
-    viewModel { ChangePasswordViewModel(get()) }
+    viewModel { LoginViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { ForgotPasswordViewModel(get(), get()) }
+    viewModel { ChangePasswordViewModel(get(), get()) }
 }
 
 val CreateDrinkModule = module {
@@ -87,20 +144,33 @@ val CreateDrinkModule = module {
 }
 
 val HomeModule = module {
-    viewModel { HomeViewModel(get(), get(), get(), get(), get()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory<AccountProfileLoader> {
+        val networkManager = get<NetworkManager>()
+        val sessionExpiredNotifier = get<SessionExpiredNotifier>()
+        RemoteAccountProfileLoader(
+            fetchMe = { networkManager.syncAppServices.me() },
+            resolve = { block -> networkManager.resolve(block) },
+            onSessionExpired = { sessionExpiredNotifier.raise() }
+        )
+    }
+    viewModel {
+        val accountSharePref = get<AccountSharePref>()
+        AccountProfileViewModel(loader = get(), currentToken = accountSharePref::getToken)
+    }
 }
 
 val DailyReportModule = module {
-    viewModel { DailyReportViewModel(get(), get(), get(), get()) }
+    viewModel { DailyReportViewModel(get(), get(), get(), get(), get()) }
 }
 
 val InfoModule = module {
-    viewModel { InfoViewModel(get(), get(), get(), get()) }
+    viewModel { InfoViewModel(get(), get(), get(), get(), get()) }
 }
 
 val WeightModule = module {
-    viewModel { WeightViewModel(get(), get(), get(), get()) }
+    viewModel { WeightViewModel(get(), get(), get(), get(), get()) }
 }
 
 val IntroModule = module {

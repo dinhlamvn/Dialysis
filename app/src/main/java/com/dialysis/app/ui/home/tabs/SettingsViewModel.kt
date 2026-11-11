@@ -5,13 +5,19 @@ import com.dialysis.app.R
 import com.dialysis.app.base.BaseViewModel
 import com.dialysis.app.data.local.WaterTrackingRepository
 import com.dialysis.app.data.local.WeightTrackingRepository
+import com.dialysis.app.data.network.ConnectivityChecker
 import com.dialysis.app.data.network.NetworkManager
+import com.dialysis.app.data.network.isNoInternet
+import com.dialysis.app.data.network.isNoInternetFailure
 import com.dialysis.app.data.network.request.UrineLogRequest
 import com.dialysis.app.data.network.response.UrineHistoryItem
 import com.dialysis.app.sharepref.LocalUrineSample
 import com.dialysis.app.sync.UrineSyncScheduler
+import com.dialysis.app.sync.WaterSyncEngine
+import com.dialysis.app.sync.WaterSyncOutcome
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -21,7 +27,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import com.dialysis.app.data.network.request.WaterIntakeRequest
 
 class SettingsViewModel(
     private val accountSharePref: AccountSharePref,
@@ -29,7 +34,9 @@ class SettingsViewModel(
     private val waterTrackingRepository: WaterTrackingRepository,
     private val weightTrackingRepository: WeightTrackingRepository,
     private val networkManager: NetworkManager,
-    private val urineSyncScheduler: UrineSyncScheduler
+    private val urineSyncScheduler: UrineSyncScheduler,
+    private val waterSyncEngine: WaterSyncEngine,
+    private val connectivityChecker: ConnectivityChecker
 ) : BaseViewModel<SettingsState>(SettingsState()) {
 
     val isLoadingAccountState = collectStateUI(SettingsState::isLoadingAccount)
@@ -56,6 +63,7 @@ class SettingsViewModel(
     val syncWaterSuccessState = collectStateUI(SettingsState::syncWaterSuccess)
     val syncWaterErrorState = collectStateUI(SettingsState::syncWaterError)
     val syncWaterErrorResIdState = collectStateUI(SettingsState::syncWaterErrorResId)
+    val showNoInternetDialogState = collectStateUI(SettingsState::showNoInternetDialog)
 
     private val deleteAccountRequestInFlight = AtomicBoolean(false)
     private val urineSaveRequestInFlight = AtomicBoolean(false)
@@ -126,6 +134,8 @@ class SettingsViewModel(
     fun clearDeleteAccountError() = setState {
         copy(deleteAccountError = null, deleteAccountErrorResId = null)
     }
+
+    fun dismissNoInternetDialog() = setState { copy(showNoInternetDialog = false) }
 
     fun openUrineSamples() {
         setState { copy(urineSamplesMode = UrineSamplesMode.Main) }
@@ -337,6 +347,16 @@ class SettingsViewModel(
                 }
                 return@getState
             }
+            if (!connectivityChecker.isOnline()) {
+                setState {
+                    copy(
+                        showDeleteAccountConfirm = false,
+                        isDeletingAccount = false,
+                        showNoInternetDialog = true
+                    )
+                }
+                return@getState
+            }
             if (!deleteAccountRequestInFlight.compareAndSet(false, true)) return@getState
             setState {
                 copy(
@@ -355,6 +375,14 @@ class SettingsViewModel(
                             showDeleteAccountConfirm = false,
                             isDeletingAccount = false
                         )
+                    } else if (result.isNoInternetFailure()) {
+                        setState {
+                            copy(
+                                showDeleteAccountConfirm = false,
+                                isDeletingAccount = false,
+                                showNoInternetDialog = true
+                            )
+                        }
                     } else {
                         setState {
                             copy(
@@ -396,47 +424,34 @@ class SettingsViewModel(
                 setState { copy(syncWaterErrorResId = R.string.settings_urine_login_required) }
                 return@getState
             }
+            if (!connectivityChecker.isOnline()) {
+                setState { copy(isSyncingWater = false, showNoInternetDialog = true) }
+                return@getState
+            }
             setState { copy(isSyncingWater = true, syncWaterSuccess = false, syncWaterError = null, syncWaterErrorResId = null) }
             viewModelScope.launch(Dispatchers.IO) {
-                var hasFailure = false
-                var didSync = false
-                try {
-                    val dailyGoalMl = userProfileSharePref.getDailyWaterGoalMl().coerceAtLeast(1)
-                    val entries = waterTrackingRepository.getUnsyncedEntriesBetween(startMillis, endMillis)
-                    if (entries.isEmpty()) {
-                        setState {
-                            copy(
-                                isSyncingWater = false,
-                                syncWaterSuccess = true
-                            )
-                        }
-                        return@launch
-                    }
-                    entries.forEach { entry ->
-                        val request = WaterIntakeRequest(
-                            drinkName = entry.drinkName,
-                            rawAmount = entry.amountMl,
-                            weightRatio = entry.amountMl.toDouble() / dailyGoalMl.toDouble(),
-                            loggedAt = Instant.ofEpochMilli(entry.createdAt).toString()
-                        )
-                        val result = networkManager.resolve { networkManager.appServices.syncWaterIntake(request) }
-                        if (result.isSuccess) {
-                            val syncedId = result.getOrNull()?.id ?: return@forEach
-                            waterTrackingRepository.markEntrySynced(entry.id, syncedId)
-                            didSync = true
-                        } else {
-                            hasFailure = true
-                        }
-                    }
-                    if (!hasFailure && didSync) {
-                        accountSharePref.setLastWaterSyncAt(System.currentTimeMillis())
-                        setState { copy(isSyncingWater = false, syncWaterSuccess = true) }
-                    } else if (didSync) {
+                val outcome = try {
+                    Result.success(waterSyncEngine.runSyncSequence(pendingCreatedBetween = startMillis..endMillis))
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+                // The engine swallows remote errors, so a FAILED run is checked against connectivity.
+                val failed = outcome.isFailure || outcome.getOrNull() == WaterSyncOutcome.FAILED
+                val lostConnection = failed &&
+                    (outcome.exceptionOrNull()?.isNoInternet() == true || !connectivityChecker.isOnline())
+                if (lostConnection) {
+                    setState { copy(isSyncingWater = false, showNoInternetDialog = true) }
+                    return@launch
+                }
+                outcome.onSuccess { result ->
+                    if (result == WaterSyncOutcome.FAILED) {
                         setState { copy(isSyncingWater = false, syncWaterError = null, syncWaterErrorResId = R.string.settings_sync_water_failed) }
                     } else {
-                        setState { copy(isSyncingWater = false, syncWaterError = null, syncWaterErrorResId = R.string.settings_sync_water_failed) }
+                        setState { copy(isSyncingWater = false, syncWaterSuccess = true) }
                     }
-                } catch (e: Exception) {
+                }.onFailure { e ->
                     setState { copy(isSyncingWater = false, syncWaterError = e.message ?: e.toString(), syncWaterErrorResId = R.string.settings_sync_water_failed) }
                 }
             }

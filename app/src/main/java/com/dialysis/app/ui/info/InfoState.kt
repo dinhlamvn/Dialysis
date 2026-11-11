@@ -14,5 +14,6 @@ data class InfoState(
     val dialysisFreqWeek: Int = 0,
     val dailyUrineMl: Int = 0,
     val shouldOpenHome: Boolean = false,
+    val showNoInternetDialog: Boolean = false,
 ): BaseState
 

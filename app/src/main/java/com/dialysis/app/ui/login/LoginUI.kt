@@ -39,6 +39,7 @@ import com.dialysis.app.R
 import com.dialysis.app.router.Router
 import com.dialysis.app.ui.components.InputCardField
 import com.dialysis.app.ui.components.Loading
+import com.dialysis.app.ui.components.NoInternetDialog
 import com.dialysis.app.ui.components.PrimaryButton
 import com.dialysis.app.ui.components.TextStyles
 
@@ -57,6 +58,7 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), onBackClick: () -> Unit
     val isPasswordVisible by viewModel.isPasswordVisibleState.collectAsStateWithLifecycle()
     val isLoginLoading by viewModel.isLoginLoadingState.collectAsStateWithLifecycle()
     val loginError by viewModel.loginErrorState.collectAsStateWithLifecycle()
+    val showNoInternetDialog by viewModel.showNoInternetDialogState.collectAsStateWithLifecycle()
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -200,5 +202,6 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel(), onBackClick: () -> Unit
         if (isLoginLoading) {
             Loading()
         }
+        NoInternetDialog(visible = showNoInternetDialog, onDismiss = viewModel::dismissNoInternetDialog)
     }
 }

@@ -40,8 +40,20 @@ class WeightTrackingRepository(
     }
 
     suspend fun replaceAll(entries: List<WeightEntryEntity>) {
-        weightEntryDao.clearAll()
-        entries.forEach { weightEntryDao.upsert(it) }
+        weightEntryDao.replaceAllKeepingPending(entries)
+    }
+
+    suspend fun getLatestEntry(): WeightEntryEntity? = weightEntryDao.getLatestEntry()
+
+    suspend fun getPendingEntries(): List<WeightEntryEntity> = weightEntryDao.getPendingEntries()
+
+    suspend fun markSynced(entry: WeightEntryEntity, serverId: Long) {
+        weightEntryDao.markSynced(entry.id, entry.updatedAt, serverId)
+    }
+
+    suspend fun hasPendingEntriesInRange(startMillis: Long, endMillis: Long): Boolean {
+        val range = startOfDay(startMillis)..endOfDay(endMillis)
+        return weightEntryDao.getPendingEntries().any { it.dayStartMillis in range }
     }
 
     suspend fun clearAll() {

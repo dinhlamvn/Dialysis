@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dialysis.app.R
 import com.dialysis.app.ui.components.Loading
+import com.dialysis.app.ui.components.NoInternetDialog
 import com.dialysis.app.ui.components.PrimaryButton
 import com.dialysis.app.ui.components.TextStyles
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -72,6 +73,7 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) 
     val age by viewModel.ageState.collectAsStateWithLifecycle()
     val dialysisYear by viewModel.dialysisStartYearState.collectAsStateWithLifecycle()
     val urinePerDay by viewModel.dailyUrineMlState.collectAsStateWithLifecycle()
+    val showNoInternetDialog by viewModel.showNoInternetDialogState.collectAsStateWithLifecycle()
     
 
     val weightValues = remember { (30..150).toList() }
@@ -173,7 +175,7 @@ fun InfoScreen(viewModel: InfoViewModel = viewModel(), onBackClick: () -> Unit) 
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        
+        NoInternetDialog(visible = showNoInternetDialog, onDismiss = viewModel::dismissNoInternetDialog)
     }
 }
 

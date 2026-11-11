@@ -11,5 +11,6 @@ data class ChangePasswordState(
     val isConfirmPasswordVisible: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val isSuccess: Boolean = false
+    val isSuccess: Boolean = false,
+    val showNoInternetDialog: Boolean = false
 ) : BaseState

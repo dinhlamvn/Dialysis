@@ -52,6 +52,7 @@ import com.dialysis.app.ui.components.TextStyles
 import com.dialysis.app.ui.daily.DailyReportViewModel
 import com.dialysis.app.ui.home.tabs.SettingsViewModel
 import com.dialysis.app.ui.home.tabs.SettingsScreen
+import com.dialysis.app.ui.home.tabs.profile.AccountProfileViewModel
 import com.dialysis.app.ui.statistics.StatisticsScreen
 import com.dialysis.app.ui.weight.WeightScreen
 import com.dialysis.app.ui.weight.WeightViewModel
@@ -70,6 +71,7 @@ class HomeActivity : BaseActivity() {
     private val dailyReportViewModel: DailyReportViewModel by viewModel()
     private val weightViewModel: WeightViewModel by viewModel()
     private val settingsViewModel: SettingsViewModel by viewModel()
+    private val accountProfileViewModel: AccountProfileViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -160,7 +162,7 @@ class HomeActivity : BaseActivity() {
                         dailyGoalMl = dailyWaterGoalMl,
                         dailyReportViewModel = dailyReportViewModel
                     )
-                    3 -> SettingsScreen(viewModel = settingsViewModel)
+                    3 -> SettingsScreen(viewModel = settingsViewModel, profileViewModel = accountProfileViewModel)
                 }
             }
 

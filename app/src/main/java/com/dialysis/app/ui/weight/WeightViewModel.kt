@@ -8,6 +8,7 @@ import com.dialysis.app.data.local.entity.WeightEntryEntity
 import com.dialysis.app.data.network.NetworkManager
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
+import com.dialysis.app.sync.WeightSyncEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,8 @@ class WeightViewModel(
     private val weightTrackingRepository: WeightTrackingRepository,
     private val userProfileSharePref: UserProfileSharePref,
     private val accountSharePref: AccountSharePref,
-    private val networkManager: NetworkManager
+    private val networkManager: NetworkManager,
+    private val weightSyncEngine: WeightSyncEngine
 ) : BaseViewModel<WeightState>(WeightState()) {
 
     private val remoteMediator = WeightRemoteMediator(accountSharePref, networkManager)
@@ -112,12 +114,16 @@ class WeightViewModel(
             copy(
                 weightGoalKg = goalWeight,
                 initialWeightKg = initialWeight,
-                currentWeightKg = if (initialWeight > 0f) initialWeight else 0f,
                 draftWeightKg = if (initialWeight > 0f) initialWeight else 0f,
                 chartStats = null
             )
         }
-        refreshFromServer()
+        viewModelScope.launch(Dispatchers.IO) {
+            val latestLocal = weightTrackingRepository.getLatestEntry()
+            setState { copy(currentWeightKg = displayedCurrentWeight(latestLocal?.weightKg, initialWeight)) }
+            weightSyncEngine.syncPending()
+            loadFromServer()
+        }
     }
 
     fun resetAfterSignOut() {
@@ -242,13 +248,15 @@ class WeightViewModel(
     }
 
     private fun refreshFromServer() {
-        viewModelScope.launch(Dispatchers.IO) {
-            setState { copy(isLoading = true) }
-            refreshRemoteHistory()
-            refreshRemoteCurrentWeight()
-            loadRemoteChart(selectedTabFlow.value, latestRange)
-            setState { copy(isLoading = false) }
-        }
+        viewModelScope.launch(Dispatchers.IO) { loadFromServer() }
+    }
+
+    private suspend fun loadFromServer() {
+        setState { copy(isLoading = true) }
+        refreshRemoteHistory()
+        refreshRemoteCurrentWeight()
+        loadRemoteChart(selectedTabFlow.value, latestRange)
+        setState { copy(isLoading = false) }
     }
 
     private suspend fun refreshRemoteHistory() {
@@ -260,7 +268,8 @@ class WeightViewModel(
     private suspend fun refreshRemoteCurrentWeight() {
         val current = remoteMediator.fetchCurrentWeight() ?: return
         if (!remoteMediator.hasAuthToken()) return
-        setState { copy(currentWeightKg = current) }
+        val latestLocal = weightTrackingRepository.getLatestEntry()
+        setState { copy(currentWeightKg = currentWeightAfterServerRefresh(current, latestLocal)) }
     }
 
     private suspend fun syncInitialWeightToServer(weightKg: Float): Boolean =
@@ -272,6 +281,8 @@ class WeightViewModel(
     private suspend fun loadRemoteChart(tab: WeightReportTab, range: WeightReportRange) {
         val result = remoteMediator.fetchChart(tab, range, currentStateGoal()) ?: return
         if (!remoteMediator.hasAuthToken()) return
+        // The server chart would hide a pending entry; the local chart already shows it.
+        if (weightTrackingRepository.hasPendingEntriesInRange(range.startMillis, range.endMillis)) return
         setState {
             copy(
                 chartData = result.chart.points,
