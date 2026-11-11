@@ -15,8 +15,8 @@ android {
         applicationId = "com.dialysis.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 8
-        versionName = "1.6.0"
+        versionCode = 10
+        versionName = "1.7.0"
     }
 
     signingConfigs {

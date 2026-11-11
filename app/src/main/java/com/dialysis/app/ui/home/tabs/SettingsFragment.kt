@@ -284,8 +284,9 @@ private fun SettingsMainContent(
             AccountEntrySection(onAccountClick = onAccountClick)
         }
         AppInformationSection()
-        NotificationSection()
-        HealthSettingsSection(onUrineSamplesClick = onUrineSamplesClick, onSyncWaterClick = onSyncWaterClick)
+        if (isLoggedIn) {
+            HealthSettingsSection(onUrineSamplesClick = onUrineSamplesClick, onSyncWaterClick = onSyncWaterClick)
+        }
         PreferencesSection(
             isLoadingAccount = isLoadingAccount,
             accountContact = accountContact,
@@ -663,19 +664,6 @@ private fun AppInformationSection() {
             )
         }
     }
-}
-
-@Composable
-private fun NotificationSection() {
-    SettingsSection(
-        title = stringResource(R.string.settings_notification),
-        rows = listOf(
-            SettingsRowData(
-                title = stringResource(R.string.settings_notification_title),
-                showChevron = true
-            )
-        )
-    )
 }
 
 @Composable
