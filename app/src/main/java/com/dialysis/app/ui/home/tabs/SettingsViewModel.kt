@@ -10,8 +10,11 @@ import com.dialysis.app.data.network.request.UrineLogRequest
 import com.dialysis.app.data.network.response.UrineHistoryItem
 import com.dialysis.app.sharepref.LocalUrineSample
 import com.dialysis.app.sync.UrineSyncScheduler
+import com.dialysis.app.sync.WaterSyncEngine
+import com.dialysis.app.sync.WaterSyncOutcome
 import com.dialysis.app.sharepref.AccountSharePref
 import com.dialysis.app.sharepref.UserProfileSharePref
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -21,7 +24,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import com.dialysis.app.data.network.request.WaterIntakeRequest
 
 class SettingsViewModel(
     private val accountSharePref: AccountSharePref,
@@ -29,7 +31,8 @@ class SettingsViewModel(
     private val waterTrackingRepository: WaterTrackingRepository,
     private val weightTrackingRepository: WeightTrackingRepository,
     private val networkManager: NetworkManager,
-    private val urineSyncScheduler: UrineSyncScheduler
+    private val urineSyncScheduler: UrineSyncScheduler,
+    private val waterSyncEngine: WaterSyncEngine
 ) : BaseViewModel<SettingsState>(SettingsState()) {
 
     val isLoadingAccountState = collectStateUI(SettingsState::isLoadingAccount)
@@ -398,45 +401,20 @@ class SettingsViewModel(
             }
             setState { copy(isSyncingWater = true, syncWaterSuccess = false, syncWaterError = null, syncWaterErrorResId = null) }
             viewModelScope.launch(Dispatchers.IO) {
-                var hasFailure = false
-                var didSync = false
-                try {
-                    val dailyGoalMl = userProfileSharePref.getDailyWaterGoalMl().coerceAtLeast(1)
-                    val entries = waterTrackingRepository.getUnsyncedEntriesBetween(startMillis, endMillis)
-                    if (entries.isEmpty()) {
-                        setState {
-                            copy(
-                                isSyncingWater = false,
-                                syncWaterSuccess = true
-                            )
-                        }
-                        return@launch
-                    }
-                    entries.forEach { entry ->
-                        val request = WaterIntakeRequest(
-                            drinkName = entry.drinkName,
-                            rawAmount = entry.amountMl,
-                            weightRatio = entry.amountMl.toDouble() / dailyGoalMl.toDouble(),
-                            loggedAt = Instant.ofEpochMilli(entry.createdAt).toString()
-                        )
-                        val result = networkManager.resolve { networkManager.appServices.syncWaterIntake(request) }
-                        if (result.isSuccess) {
-                            val syncedId = result.getOrNull()?.id ?: return@forEach
-                            waterTrackingRepository.markEntrySynced(entry.id, syncedId)
-                            didSync = true
-                        } else {
-                            hasFailure = true
-                        }
-                    }
-                    if (!hasFailure && didSync) {
-                        accountSharePref.setLastWaterSyncAt(System.currentTimeMillis())
-                        setState { copy(isSyncingWater = false, syncWaterSuccess = true) }
-                    } else if (didSync) {
+                val outcome = try {
+                    Result.success(waterSyncEngine.runSyncSequence(pendingCreatedBetween = startMillis..endMillis))
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+                outcome.onSuccess { result ->
+                    if (result == WaterSyncOutcome.FAILED) {
                         setState { copy(isSyncingWater = false, syncWaterError = null, syncWaterErrorResId = R.string.settings_sync_water_failed) }
                     } else {
-                        setState { copy(isSyncingWater = false, syncWaterError = null, syncWaterErrorResId = R.string.settings_sync_water_failed) }
+                        setState { copy(isSyncingWater = false, syncWaterSuccess = true) }
                     }
-                } catch (e: Exception) {
+                }.onFailure { e ->
                     setState { copy(isSyncingWater = false, syncWaterError = e.message ?: e.toString(), syncWaterErrorResId = R.string.settings_sync_water_failed) }
                 }
             }

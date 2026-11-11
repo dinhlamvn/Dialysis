@@ -11,6 +11,8 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ChangePasswordActivity : BaseActivity() {
+    override val showsSessionExpiredDialog = false
+
     private val viewModel: ChangePasswordViewModel by viewModel()
 
     @Composable

@@ -12,6 +12,8 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class LoginActivity : BaseActivity() {
+    override val showsSessionExpiredDialog = false
+
     private val viewModel: LoginViewModel by viewModel()
 
     @Composable

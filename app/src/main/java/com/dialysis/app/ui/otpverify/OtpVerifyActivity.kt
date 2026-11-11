@@ -11,6 +11,8 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class OtpVerifyActivity : BaseActivity() {
+    override val showsSessionExpiredDialog = false
+
     private val viewModel: OtpVerifyViewModel by viewModel()
 
     @Composable

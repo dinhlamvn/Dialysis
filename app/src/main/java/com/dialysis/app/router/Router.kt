@@ -58,6 +58,11 @@ object Router {
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
     }
 
+    fun loginAfterSessionExpired(context: Context): Intent {
+        return Intent(context, LoginActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    }
+
     fun forgotPassword(context: Context): Intent {
         return Intent(context, ForgotPasswordActivity::class.java)
     }

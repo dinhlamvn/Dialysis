@@ -1,12 +1,16 @@
 package com.dialysis.app.data.network
 
 import com.dialysis.app.BuildConfig
+import com.dialysis.app.data.network.auth.SessionExpiredNotifier
+import com.dialysis.app.data.network.auth.withSilentRelogin
 import com.dialysis.app.data.network.interceptor.AuthenticationInterceptor
+import com.dialysis.app.data.network.request.LoginRequest
 import com.dialysis.app.data.network.response.ApiResponse
 import com.dialysis.app.data.network.services.AppPublicServices
 import com.dialysis.app.data.network.services.AppServices
 import com.dialysis.app.extensions.parseNetworkErrorResponse
 import com.dialysis.app.sharepref.AccountSharePref
+import com.dialysis.app.sync.WaterSyncLog
 import com.google.gson.Gson
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -18,6 +22,7 @@ class NetworkManager(
     private val okHttpClient: OkHttpClient,
     private val retrofitBuilder: Retrofit.Builder,
     private val accountSharePref: AccountSharePref,
+    private val sessionExpiredNotifier: SessionExpiredNotifier,
 ) {
 
     val appPublicServices: AppPublicServices by lazy {
@@ -36,6 +41,35 @@ class NetworkManager(
             )
             .create(AppServices::class.java)
     }
+
+    /**
+     * Only for the water/urine sync calls: on 401 (token revoked by another device's login) it
+     * silently logs in again as the stored user and retries once; without a stored username it
+     * raises the session-expired event instead. Other calls use [appServices].
+     */
+    val syncAppServices: AppServices by lazy {
+        retrofitBuilder.baseUrl(BuildConfig.SERVER_URL)
+            .buildWithClient(
+                okHttpClient.withSilentRelogin(
+                    store = accountSharePref,
+                    onSessionExpired = { sessionExpiredNotifier.raise() },
+                    log = WaterSyncLog::d,
+                    relogin = ::relogin,
+                )
+            )
+            .create(AppServices::class.java)
+    }
+
+    /** Public client without body logging, so the re-login password never reaches logcat. */
+    private val reloginServices: AppPublicServices by lazy {
+        retrofitBuilder.baseUrl(BuildConfig.SERVER_URL)
+            .buildWithClient(okHttpClient, shouldLog = false)
+            .create(AppPublicServices::class.java)
+    }
+
+    private fun relogin(identifier: String, password: String) =
+        reloginServices.loginCall(LoginRequest(identifier, password)).execute()
+            .body()?.takeIf { it.success }?.data
 
     suspend fun <T> resolve(block: suspend () -> ApiResponse<T>): Result<T> {
         return try {

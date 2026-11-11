@@ -3,67 +3,22 @@ package com.dialysis.app.sync
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.dialysis.app.data.local.WaterTrackingRepository
-import com.dialysis.app.data.network.NetworkManager
-import com.dialysis.app.data.network.request.WaterIntakeRequest
-import com.dialysis.app.sharepref.AccountSharePref
-import com.dialysis.app.sharepref.UserProfileSharePref
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.time.Instant
 
+/** Runs [WaterSyncEngine]; WorkManager retries with backoff when any step fails. */
 class WaterIntakeSyncWorker(
     appContext: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams), KoinComponent {
 
-    private val waterTrackingRepository: WaterTrackingRepository by inject()
-    private val networkManager: NetworkManager by inject()
-    private val accountSharePref: AccountSharePref by inject()
-    private val userProfileSharePref: UserProfileSharePref by inject()
+    private val waterSyncEngine: WaterSyncEngine by inject()
 
     override suspend fun doWork(): Result {
-        if (accountSharePref.getToken().isBlank()) return Result.success()
-
-        var hasFailure = false
-        var didSyncData = false
-        val dailyGoalMl = userProfileSharePref.getDailyWaterGoalMl().coerceAtLeast(1)
-
-        waterTrackingRepository.getUnsyncedEntries().forEach { entry ->
-            val request = WaterIntakeRequest(
-                drinkName = entry.drinkName,
-                rawAmount = entry.amountMl,
-                weightRatio = entry.amountMl.toDouble() / dailyGoalMl.toDouble(),
-                loggedAt = Instant.ofEpochMilli(entry.createdAt).toString()
-            )
-            val result = networkManager.resolve {
-                networkManager.appServices.syncWaterIntake(request)
-            }
-            if (result.isSuccess) {
-                val syncedId = result.getOrNull()?.id ?: return@forEach
-                waterTrackingRepository.markEntrySynced(entry.id, syncedId)
-                didSyncData = true
-            } else {
-                hasFailure = true
-            }
+        return when (waterSyncEngine.runSyncSequence()) {
+            WaterSyncOutcome.FAILED -> Result.retry()
+            WaterSyncOutcome.SKIPPED,
+            WaterSyncOutcome.SUCCESS -> Result.success()
         }
-
-        waterTrackingRepository.getPendingDeletes().forEach { pending ->
-            val result = networkManager.resolveNullable {
-                networkManager.appServices.deleteWaterIntake(pending.syncedId)
-            }
-            if (result.isSuccess) {
-                waterTrackingRepository.removePendingDelete(pending.id)
-                didSyncData = true
-            } else {
-                hasFailure = true
-            }
-        }
-
-        if (!hasFailure && didSyncData) {
-            accountSharePref.setLastWaterSyncAt(System.currentTimeMillis())
-        }
-
-        return if (hasFailure) Result.retry() else Result.success()
     }
 }

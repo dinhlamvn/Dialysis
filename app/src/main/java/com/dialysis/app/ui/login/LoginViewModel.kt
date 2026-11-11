@@ -66,6 +66,7 @@ class LoginViewModel(
                     val data = result.getOrNull() ?: return@launch
                     accountSharePref.setToken(data.token)
                     accountSharePref.setTokenType(data.tokenType)
+                    accountSharePref.setLoginIdentifier(data.user.username)
                     data.user.initialWeight?.toFloat()?.takeIf { it > 0f }?.let {
                         userProfileSharePref.saveInitialWeightKg(it)
                     }

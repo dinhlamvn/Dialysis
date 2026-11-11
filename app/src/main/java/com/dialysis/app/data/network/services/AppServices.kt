@@ -1,5 +1,6 @@
 package com.dialysis.app.data.network.services
 
+import com.dialysis.app.data.network.request.MobileSyncRequest
 import com.dialysis.app.data.network.request.WaterIntakeRequest
 import com.dialysis.app.data.network.request.SymptomLogRequest
 import com.dialysis.app.data.network.request.UrineLogRequest
@@ -8,6 +9,7 @@ import com.dialysis.app.data.network.request.WeightLogRequest
 import com.dialysis.app.data.network.request.ProfileUpdateRequest
 import com.dialysis.app.data.network.response.ApiResponse
 import com.dialysis.app.data.network.response.LoginUser
+import com.dialysis.app.data.network.response.MobileSyncResponseData
 import com.dialysis.app.data.network.response.UrineHistoryItem
 import com.dialysis.app.data.network.response.UrineLogResponse
 import com.dialysis.app.data.network.response.WaterIntakeResponse
@@ -40,6 +42,11 @@ interface AppServices {
     suspend fun syncWaterIntake(
         @Body request: WaterIntakeRequest
     ): ApiResponse<WaterIntakeResponse>
+
+    @POST("mobile/sync")
+    suspend fun syncOffline(
+        @Body request: MobileSyncRequest
+    ): ApiResponse<MobileSyncResponseData>
 
     @GET("mobile/water/history")
     suspend fun getWaterHistory(
