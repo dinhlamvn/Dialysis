@@ -32,6 +32,9 @@ import com.dialysis.app.ui.drink.create.CreateDrinkViewModel
 import com.dialysis.app.ui.forgotpassword.ForgotPasswordViewModel
 import com.dialysis.app.ui.home.HomeViewModel
 import com.dialysis.app.ui.home.tabs.SettingsViewModel
+import com.dialysis.app.ui.home.tabs.profile.AccountProfileLoader
+import com.dialysis.app.ui.home.tabs.profile.AccountProfileViewModel
+import com.dialysis.app.ui.home.tabs.profile.RemoteAccountProfileLoader
 import com.dialysis.app.ui.info.InfoViewModel
 import com.dialysis.app.ui.login.LoginViewModel
 import com.dialysis.app.ui.main.IntroViewModel
@@ -143,6 +146,19 @@ val CreateDrinkModule = module {
 val HomeModule = module {
     viewModel { HomeViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory<AccountProfileLoader> {
+        val networkManager = get<NetworkManager>()
+        val sessionExpiredNotifier = get<SessionExpiredNotifier>()
+        RemoteAccountProfileLoader(
+            fetchMe = { networkManager.syncAppServices.me() },
+            resolve = { block -> networkManager.resolve(block) },
+            onSessionExpired = { sessionExpiredNotifier.raise() }
+        )
+    }
+    viewModel {
+        val accountSharePref = get<AccountSharePref>()
+        AccountProfileViewModel(loader = get(), currentToken = accountSharePref::getToken)
+    }
 }
 
 val DailyReportModule = module {

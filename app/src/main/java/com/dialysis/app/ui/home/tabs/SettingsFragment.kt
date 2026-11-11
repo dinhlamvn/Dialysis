@@ -27,6 +27,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -43,11 +44,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dialysis.app.BuildConfig
 import com.dialysis.app.R
 import com.dialysis.app.base.BaseFragment
 import com.dialysis.app.router.Router
+import com.dialysis.app.ui.home.tabs.profile.AccountProfileCard
+import com.dialysis.app.ui.home.tabs.profile.AccountProfileState
+import com.dialysis.app.ui.home.tabs.profile.AccountProfileViewModel
 import com.dialysis.app.ui.components.NoInternetDialog
 import com.dialysis.app.ui.components.PrimaryButton
 import com.dialysis.app.ui.components.TextStyles
@@ -59,17 +64,18 @@ import java.util.Locale
 
 class SettingsFragment : BaseFragment() {
     private val settingsViewModel: SettingsViewModel by viewModel()
+    private val accountProfileViewModel: AccountProfileViewModel by viewModel()
 
     @Composable
     override fun ContentView() {
         AppTheme {
-            SettingsScreen(viewModel = settingsViewModel)
+            SettingsScreen(viewModel = settingsViewModel, profileViewModel = accountProfileViewModel)
         }
     }
 }
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel) {
+fun SettingsScreen(viewModel: SettingsViewModel, profileViewModel: AccountProfileViewModel) {
     val context = LocalContext.current
     var showAccountDetails by rememberSaveable { mutableStateOf(false) }
     var showUrineSamples by rememberSaveable { mutableStateOf(false) }
@@ -98,6 +104,17 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     val syncWaterError = viewModel.syncWaterErrorState.collectAsStateWithLifecycle().value
     val syncWaterErrorResId = viewModel.syncWaterErrorResIdState.collectAsStateWithLifecycle().value
     val showNoInternetDialog = viewModel.showNoInternetDialogState.collectAsStateWithLifecycle().value
+    val profileState = profileViewModel.state.collectAsStateWithLifecycle().value
+    val showProfileNoInternetDialog = profileViewModel.showNoInternetDialog.collectAsStateWithLifecycle().value
+    val isAccountScreenShown = showAccountDetails && isLoggedIn && !showUrineSamples
+
+    LaunchedEffect(isAccountScreenShown) {
+        if (isAccountScreenShown) profileViewModel.load()
+    }
+    LifecycleResumeEffect(profileViewModel) {
+        profileViewModel.onScreenResumed()
+        onPauseOrDispose { }
+    }
 
     Box(
         modifier = Modifier
@@ -140,6 +157,8 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             } else if (showAccountDetails && isLoggedIn) {
                 item {
                     AccountDetailsContent(
+                        profileState = profileState,
+                        onProfileRetry = profileViewModel::retry,
                         onDeleteAccountClick = viewModel::requestDeleteAccount,
                         onBackClick = { showAccountDetails = false }
                     )
@@ -241,6 +260,10 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         }
 
         NoInternetDialog(visible = showNoInternetDialog, onDismiss = viewModel::dismissNoInternetDialog)
+        NoInternetDialog(
+            visible = showProfileNoInternetDialog && !showNoInternetDialog,
+            onDismiss = profileViewModel::dismissNoInternetDialog
+        )
     }
 }
 
@@ -497,11 +520,14 @@ private fun UrineSampleRow(sample: UrineSampleUiModel) {
 
 @Composable
 private fun AccountDetailsContent(
+    profileState: AccountProfileState,
+    onProfileRetry: () -> Unit,
     onDeleteAccountClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
         AccountDetailsHeader(onBackClick = onBackClick)
+        AccountProfileCard(state = profileState, onRetry = onProfileRetry)
         AccountDeleteSection(onDeleteAccountClick = onDeleteAccountClick)
     }
 }
