@@ -67,7 +67,7 @@ class NetworkManager(
     }
 
     private fun relogin(identifier: String, password: String) =
-        reloginServices.loginCall(LoginRequest(identifier, password)).execute()
+        reloginServices.loginCall(LoginRequest.create(identifier, password)).execute()
             .body()?.takeIf { it.success }?.data
 
     suspend fun <T> resolve(block: suspend () -> ApiResponse<T>): Result<T> {

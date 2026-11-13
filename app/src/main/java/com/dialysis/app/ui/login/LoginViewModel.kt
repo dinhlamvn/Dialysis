@@ -61,7 +61,7 @@ class LoginViewModel(
             }
 
             viewModelScope.launch(Dispatchers.IO) {
-                val request = LoginRequest(
+                val request = LoginRequest.create(
                     identifier = state.identifier.trim(),
                     password = state.password
                 )
